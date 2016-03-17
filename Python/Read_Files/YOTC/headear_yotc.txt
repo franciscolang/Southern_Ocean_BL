@@ -1,0 +1,42 @@
+OrderedDict([(u'longitude', <type 'netCDF4._netCDF4.Variable'>
+float32 longitude(longitude)
+    units: degrees_east
+    long_name: longitude
+unlimited dimensions: 
+current shape = (240,)
+filling off
+), (u'latitude', <type 'netCDF4._netCDF4.Variable'>
+float32 latitude(latitude)
+    units: degrees_north
+    long_name: latitude
+unlimited dimensions: 
+current shape = (121,)
+filling off
+), (u'level', <type 'netCDF4._netCDF4.Variable'>
+int32 level(level)
+    long_name: model_level_number
+unlimited dimensions: 
+current shape = (20,)
+filling off
+), (u'time', <type 'netCDF4._netCDF4.Variable'>
+int32 time(time)
+    units: hours since 1900-01-01 00:00:0.0
+    long_name: time
+    calendar: gregorian
+unlimited dimensions: time
+current shape = (1460,)
+filling off
+), (u't', <type 'netCDF4._netCDF4.Variable'>
+int16 t(time, level, latitude, longitude)
+    scale_factor: 0.00290141288214
+    add_offset: 227.00464518
+    _FillValue: -32767
+    missing_value: -32767
+    units: K
+    long_name: Temperature
+    standard_name: air_temperature
+unlimited dimensions: time
+current shape = (1460, 20, 121, 240)
+filling off
+)])
+
