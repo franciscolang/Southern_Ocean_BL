@@ -33,7 +33,9 @@ q= mat['q'][:] #kg/kg
 #Leyendo Alturas y press
 file_levels = np.genfromtxt('levels.csv', delimiter=',')
 
-hght_yovt
+hlev_yotc=file_levels[:30,6]
+plev_yotc=file_levels[:30,3]
+
 
 #*****************************************************************************\
 #Dataframe datos per level
