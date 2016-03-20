@@ -5,6 +5,7 @@ import pandas as pd
 import scipy.io as sio
 import os
 import csv
+#import skewt import SkewT
 
 base_dir = os.path.expanduser('~')
 path_data=base_dir+'/Dropbox/Monas Uni/SO/MAC/Data'
@@ -35,6 +36,13 @@ file_levels = np.genfromtxt('levels.csv', delimiter=',')
 
 hlev_yotc=file_levels[:30,6]
 plev_yotc=file_levels[:30,3]
+
+#*****************************************************************************\
+#Calculate Virtual Temperature
+
+theta=(temp)*(1000/plev_yotc)**287;
+theta0=(temp[0,-1])*(1000/plev_yotc[-1]);
+thetav=(1+0.61*(1/1000))*theta;
 
 
 #*****************************************************************************\

@@ -18,7 +18,7 @@ mac = {'name': 'Macquarie Island, Australia', 'lat': -54.62, 'lon': 158.85}
 
 #temperatura
 #******************************************************************************
-file = Dataset(base_dir+'yotc_temp.nc', 'r')
+file = Dataset(base_dir+'2008_temp.nc', 'r')
 
 #print ' '
 #print ' '
