@@ -60,11 +60,13 @@ theta=(temp)*(1000./plev_yotc)**0.287;
 pot_temp=(1+0.61*(mixr/1000.))*theta;
 #Calculate Potential Temperature
 pot_temp_grad=np.zeros(pot_temp.shape)
-vert_shear=np.zeros(pot_temp.shape)
+vert_shear=np.empty(pot_temp.shape)
 #Calculate Wind Shear
-for i in range(1,len(hlev_yotc)-1):
-    pot_temp_grad[:,i]=pot_temp[:,i+1]-pot_temp[:,i]
-    vert_shear[:,i]=np.sqrt((u[:,i]-u[:,i])**2+(v[:,i]-v[:,i-1]**2))/(hlev_yotc[i]-hlev_yotc[i-1])
+
+for j in range(0,90):
+    for i in range(1,len(hlev_yotc)-1):
+        pot_temp_grad[j,i]=pot_temp[j,i+1]-pot_temp[j,i]
+        vert_shear[j,i]=np.sqrt((u[j,i]-u[j,i-1])**2+(v[j,i]-v[j,i-1]**2))/(hlev_yotc[i]-hlev_yotc[i-1])
 
 #******************************************************************************
 #Boundary Layer Height Inversion 1 and 2
@@ -72,6 +74,7 @@ for i in range(1,len(hlev_yotc)-1):
 
 #Variables Initialization
 sec_ind=np.empty(len(time))
+main_inv=np.empty(len(time))
 sec_inv=np.empty(len(time))
 main_inversion=np.empty(len(time))
 sec_inversion=np.empty(len(time))
@@ -108,7 +111,7 @@ for i in range(0,len(time)):
         else:
             sec_ind[i]=np.nan
     if main_inv[i]==twenty_m_index:
-        sec_ind[i]=numpy.nan
+        sec_ind[i]=np.nan
     #calcula la posicion de la sec inv (trata si se puede, si no asigna nan)
     try:
         sec_inv[i]=pot_temp_grad[i,twenty_m_index:sec_ind[i]].argmax(0)
@@ -117,11 +120,15 @@ for i in range(0,len(time)):
     except:
         sec_inv[i]=np.nan
 
+
+
+
+
     # main inversion must be > theta_v threshold
     if pot_temp_grad[i,main_inv[i]]<ptemp_thold_main:
-        main_inv[i]=numpy.nan
+        main_inv[main_inv==i]=np.nan
         main_inversion[i]=False
-        sec_inv[i]=numpy.nan
+        sec_inv[i]=np.nan
     else:
         minvhgt.append(hlev_yotc[main_inv[i]])
         main_inv_hght=np.array(minvhgt)
@@ -155,42 +162,20 @@ for i in range(0,len(time)):
         yotc_depth[i]=(hlev_yotc[main_inv[i]]-hlev_yotc[sec_inv[i]])
         yotc_hght_1invBL[i]=hlev_yotc[main_inv[i]]
         yotc_hght_2invBL[i]=hlev_yotc[sec_inv[i]]
+        yotc_hght_1invDL[i]=np.nan
+        yotc_hght_2invDL[i]=np.nan
     else:
         yotc_clas[i]=3
         yotc_hght_1invDL[i]=hlev_yotc[main_inv[i]]
         yotc_hght_2invDL[i]=hlev_yotc[sec_inv[i]]
         yotc_depth[i]=np.nan
+        yotc_hght_1invBL[i]=np.nan
+        yotc_hght_2invBL[i]=np.nan
 
-
-#*****************************************************************************\
-#Plot
-#plt.plot(theta[1,:15], plev_yotc[:15], marker='o', linestyle='--', color='r')
-#plt.xlabel('vitual temp (K)')
-#plt.ylabel('pressure (HPa)')
-#plt.grid(True)
-#plt.show()
-
-# Create a new figure. The dimensions here give a good aspect ratio
-# fig = plt.figure(figsize=(4, 7))
-# ax = fig.add_subplot(111)
-
-# plt.grid(True)
-
-# ax.semilogy(pot_temp[1,:], plev_yotc[:], 'r', marker='o', linestyle='--')
-# ax.semilogy(temp[1,:], plev_yotc[:], 'g', marker='o', linestyle='--')
-
-# # An example of a slanted line at constant X
-# l = ax.axvline(0, color='b')
-
-# # Disables the log-formatting that comes with semilogy
-# ax.yaxis.set_major_formatter(ScalarFormatter())
-# ax.set_yticks(np.linspace(100, 1000, 10))
-# ax.set_ylim(1050, 100)
-# #ax.xaxis.set_major_locator(MultipleLocator(10))
-# ax.set_xlim(200, 400)
-# plt.show()
+#np.count_nonzero(~np.isnan(main_inv))
 
 #*****************************************************************************\
+##*****************************************************************************\
 #Dataframe datos per level
 #nlevel=range(1,31)
 #Crear listas con variables y unirlas a dataframe 3D
@@ -201,5 +186,4 @@ for i in range(0,len(time)):
 
 #data={'temp':t_list, 'q':q_list,'u':u_list, 'v':v_list}
 #df=pd.DataFrame(data=data, index=date_range)
-#*****************************************************************************\
-#np.count_nonzero(~np.isnan(sec_ind)) contar non-nan
+

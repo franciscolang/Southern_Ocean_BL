@@ -4,21 +4,21 @@ from netCDF4 import Dataset
 from datetime import datetime, timedelta
 import pandas as pd
 import scipy.io as sio
+import os
 #from Scientific.IO.NetCDF import NetCDFFile
 #from glob import glob
 #from scipy.interpolate import griddata
 #import matplotlib.pyplot as plt
 #from mpl_toolkits.basemap import Basemap
 
-year=2009
-
-base_dir='../../../../Data/YOTC/'
+base_dir = os.path.expanduser('~')
+path_data=base_dir+'/fcolang/YOTC/'
 
 mac = {'name': 'Macquarie Island, Australia', 'lat': -54.62, 'lon': 158.85}
 
 #temperatura
 #******************************************************************************
-file = Dataset(base_dir+'2008_temp.nc', 'r')
+file = Dataset(path_data+'yotc_temp91.nc', 'r')
 
 #print ' '
 #print ' '
@@ -44,7 +44,7 @@ file.close
 
 #wind u
 #******************************************************************************
-file = Dataset(base_dir+'yotc_u.nc', 'r')
+file = Dataset(path_data+'yotc_u91.nc', 'r')
 
 #print ' '
 #print ' '
@@ -63,7 +63,7 @@ file.close
 
 #wind v
 #******************************************************************************
-file = Dataset(base_dir+'yotc_v.nc', 'r')
+file = Dataset(path_data+'yotc_v91.nc', 'r')
 
 #print ' '
 #print ' '
@@ -83,7 +83,7 @@ file.close
 #*****************************************************************************\
 #w
 #******************************************************************************
-file = Dataset(base_dir+'yotc_w.nc', 'r')
+file = Dataset(path_data+'yotc_w91.nc', 'r')
 
 #print ' '
 #print ' '
@@ -103,7 +103,7 @@ file.close
 #*****************************************************************************
 #q
 #******************************************************************************
-file = Dataset(base_dir+'yotc_q.nc', 'r')
+file = Dataset(path_data+'yotc_q91.nc', 'r')
 
 #print ' '
 #print ' '
@@ -128,4 +128,4 @@ file.close
 #*****************************************************************************\******************************************************************************
 #Write mat-file MAC
 
-sio.savemat(base_dir+'mat/yotc_mac2008-2010.mat', {'time':time,'temp':temp, 't_units':t_units,'u':u, 'u_units':u_units,'v':v, 'v_units':v_units,'w':w, 'w_units':w_units,'q':q, 'q_units':q_units })
+sio.savemat(base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/YOTC/mat/yotc_mac2008-2010.mat', {'time':time,'temp':temp, 't_units':t_units,'u':u, 'u_units':u_units,'v':v, 'v_units':v_units,'w':w, 'w_units':w_units,'q':q, 'q_units':q_units })
