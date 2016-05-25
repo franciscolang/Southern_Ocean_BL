@@ -87,6 +87,8 @@ yotc_hght_1invDL=np.empty(len(time))
 yotc_hght_2invDL=np.empty(len(time))
 yotc_hght_1inv=np.empty(len(time))
 yotc_hght_2inv=np.empty(len(time))
+yotc_strg_1inv=np.empty(len(time))
+yotc_strg_2inv=np.empty(len(time))
 
 #Main Inversion Position
 for ind,line in enumerate(hlev_yotc):
@@ -153,8 +155,10 @@ for i in range(0,len(time)):
         yotc_hght_2invBL[i]=np.nan
         yotc_hght_1invDL[i]=np.nan
         yotc_hght_2invDL[i]=np.nan
-        yotc_hght_1inv[i]=np.nan
+        yotc_hght_1inv[i]=hlev_yotc[main_inv[i]]
         yotc_hght_2inv[i]=np.nan
+        yotc_strg_1inv[i]=pot_temp_grad[i,main_inv[i]]
+        yotc_strg_2inv[i]=np.nan
     elif sec_inversion[i]==False and main_inversion[i]==False:
         yotc_clas[i]=1
         yotc_depth[i]=np.nan
@@ -164,6 +168,8 @@ for i in range(0,len(time)):
         yotc_hght_2invDL[i]=np.nan
         yotc_hght_1inv[i]=np.nan
         yotc_hght_2inv[i]=np.nan
+        yotc_strg_1inv[i]=np.nan
+        yotc_strg_2inv[i]=np.nan
     elif main_inversion[i]==True and sec_inversion[i]==True and yvert_shear[i,sec_inv[i]]>=shear_thold:
         yotc_clas[i]=4
         yotc_depth[i]=(hlev_yotc[main_inv[i]]-hlev_yotc[sec_inv[i]])
@@ -173,6 +179,8 @@ for i in range(0,len(time)):
         yotc_hght_2invDL[i]=np.nan
         yotc_hght_1inv[i]=hlev_yotc[main_inv[i]]
         yotc_hght_2inv[i]=hlev_yotc[sec_inv[i]]
+        yotc_strg_1inv[i]=pot_temp_grad[i,main_inv[i]]
+        yotc_strg_2inv[i]=pot_temp_grad[i,sec_inv[i]]
     else:
         yotc_clas[i]=3
         yotc_hght_1invDL[i]=hlev_yotc[main_inv[i]]
@@ -182,6 +190,8 @@ for i in range(0,len(time)):
         yotc_hght_2invBL[i]=np.nan
         yotc_hght_1inv[i]=hlev_yotc[main_inv[i]]
         yotc_hght_2inv[i]=hlev_yotc[sec_inv[i]]
+        yotc_strg_1inv[i]=pot_temp_grad[i,main_inv[i]]
+        yotc_strg_2inv[i]=pot_temp_grad[i,sec_inv[i]]
 
 #np.count_nonzero(~np.isnan(main_inv))
 
@@ -301,6 +311,8 @@ mac_hght_1invDL=np.empty([ni[2]])
 mac_hght_2invDL=np.empty([ni[2]])
 mac_hght_1inv=np.empty([ni[2]])
 mac_hght_2inv=np.empty([ni[2]])
+mac_strg_1inv=np.empty([ni[2]])
+mac_strg_2inv=np.empty([ni[2]])
 #*****************************************************************************\
 for j in range(0,ni[2]):
 #for j in range(0,2000):
@@ -320,8 +332,6 @@ for j in range(0,ni[2]):
         vcomp_initial[i,j]=-wspd[i,j]*(np.cos(np.radians(wdir_initial[i,j])))
         ucomp_initial[i,j]=-wspd[i,j]*(np.sin(np.radians(wdir_initial[i,j])))
         vert_shear[i,j]=np.sqrt(float((ucomp_initial[i,j]-ucomp_initial[i-1,j])**2+(vcomp_initial[i,j]-vcomp_initial[i-1,j])**2))/float(hght[i,j]-hght[i-1,j])
-
-#Interpolate BoM RH onto ave YOTC height levels
 
 #Smooth data 5 points
     for i in range(0,len(pres)-4):
@@ -437,8 +447,10 @@ for j in range(0,ni[2]):
         mac_hght_2invBL[j]=np.nan
         mac_hght_1invDL[j]=np.nan
         mac_hght_2invDL[j]=np.nan
-        mac_hght_1inv[j]=np.nan
+        mac_hght_1inv[j]=hght[main_m_inv[j],j]
         mac_hght_2inv[j]=np.nan
+        mac_strg_1inv[j]=ptemp_gmac[main_m_inv[j],j]
+        mac_strg_2inv[j]=np.nan
     elif sec_m_inversion[j]==False and main_m_inversion[j]==False:
         mac_clas[j]=1
         mac_depth[j]=np.nan
@@ -448,6 +460,8 @@ for j in range(0,ni[2]):
         mac_hght_2invDL[j]=np.nan
         mac_hght_1inv[j]=np.nan
         mac_hght_2inv[j]=np.nan
+        mac_strg_1inv[j]=np.nan
+        mac_strg_2inv[j]=np.nan
     elif main_m_inversion[j]==True and sec_m_inversion[j]==True and vert_shear[sec_m_inv[j],j]>=shear_thold:
         mac_clas[j]=4
         mac_depth[j]=(hght[main_m_inv[j],j]-hght[sec_m_inv[j],j])
@@ -457,6 +471,8 @@ for j in range(0,ni[2]):
         mac_hght_2invDL[j]=np.nan
         mac_hght_1inv[j]=hght[main_m_inv[j],j]
         mac_hght_2inv[j]=hght[sec_m_inv[j],j]
+        mac_strg_1inv[j]=ptemp_gmac[main_m_inv[j],j]
+        mac_strg_2inv[j]=ptemp_gmac[sec_m_inv[j],j]
     else:
         mac_clas[j]=3
         mac_hght_1invDL[j]=hght[main_m_inv[j],j]
@@ -466,6 +482,9 @@ for j in range(0,ni[2]):
         mac_hght_2invBL[j]=np.nan
         mac_hght_1inv[j]=hght[main_m_inv[j],j]
         mac_hght_2inv[j]=hght[sec_m_inv[j],j]
+        mac_strg_1inv[j]=ptemp_gmac[main_m_inv[j],j]
+        mac_strg_2inv[j]=ptemp_gmac[sec_m_inv[j],j]
+
 
 
 # #np.count_nonzero(~np.isnan(sec_m_ind))
@@ -561,6 +580,8 @@ mac_y_hght_1invBL=np.empty(ni[2])
 mac_y_hght_2invBL=np.empty(ni[2])
 mac_y_hght_1inv=np.empty(ni[2])
 mac_y_hght_2inv=np.empty(ni[2])
+mac_y_strg_1inv=np.empty(ni[2])
+mac_y_strg_2inv=np.empty(ni[2])
 
 #*****************************************************************************\
 for j in range(0,ni[2]):
@@ -659,8 +680,10 @@ for j in range(0,ni[2]):
         mac_y_hght_2invBL[j]=np.nan
         mac_y_hght_1invDL[j]=np.nan
         mac_y_hght_2invDL[j]=np.nan
-        mac_y_hght_1inv[j]=np.nan
+        mac_y_hght_1inv[j]=hlev_yotc[main_my_inv[j]]
         mac_y_hght_2inv[j]=np.nan
+        mac_y_strg_1inv[j]=ptemp_gmy[main_my_inv[j],j]
+        mac_y_strg_2inv[j]=np.nan
     elif sec_my_inversion[j]==False and main_my_inversion[j]==False:
         mac_y_clas[j]=1
         mac_y_depth[j]=np.nan
@@ -670,6 +693,8 @@ for j in range(0,ni[2]):
         mac_y_hght_2invDL[j]=np.nan
         mac_y_hght_1inv[j]=np.nan
         mac_y_hght_2inv[j]=np.nan
+        mac_y_strg_1inv[j]=np.nan
+        mac_y_strg_2inv[j]=np.nan
     elif main_my_inversion[j]==True and sec_my_inversion[j]==True and vert_shear_my[sec_my_inv[j],j]>=shear_thold:
         mac_y_clas[j]=4
         mac_y_depth[j]=(hlev_yotc[main_my_inv[j]]-hlev_yotc[sec_my_inv[j]])
@@ -679,6 +704,8 @@ for j in range(0,ni[2]):
         mac_y_hght_2invDL[j]=np.nan
         mac_y_hght_1inv[j]=hlev_yotc[main_my_inv[j]]
         mac_y_hght_2inv[j]=hlev_yotc[sec_my_inv[j]]
+        mac_y_strg_1inv[j]=ptemp_gmy[main_my_inv[j],j]
+        mac_y_strg_2inv[j]=ptemp_gmy[sec_my_inv[j],j]
     else:
         mac_y_clas[j]=3
         mac_y_hght_1invDL[j]=hlev_yotc[main_my_inv[j]]
@@ -688,6 +715,8 @@ for j in range(0,ni[2]):
         mac_y_hght_2invBL[j]=np.nan
         mac_y_hght_1inv[j]=hlev_yotc[main_my_inv[j]]
         mac_y_hght_2inv[j]=hlev_yotc[sec_my_inv[j]]
+        mac_y_strg_1inv[j]=ptemp_gmy[main_my_inv[j],j]
+        mac_y_strg_2inv[j]=ptemp_gmy[sec_my_inv[j],j]
 
 
 #*****************************************************************************\
@@ -803,7 +832,9 @@ dy={'Clas':yotc_clas,
 '1 Inv DL': yotc_hght_1invDL,
 '2 Inv DL': yotc_hght_2invDL,
 '1ra Inv': yotc_hght_1inv,
-'2da Inv': yotc_hght_2inv}
+'2da Inv': yotc_hght_2inv,
+'Strg 1inv': yotc_strg_1inv,
+'Strg 2inv': yotc_strg_2inv}
 
 df_yotc = pd.DataFrame(data=dy,index=date_yotc)
 df_yotc.index.name = 'Date'
@@ -820,7 +851,9 @@ dm={'Clas':mac_clas,
 '1 Inv DL': mac_hght_1invDL,
 '2 Inv DL': mac_hght_2invDL,
 '1ra Inv': mac_hght_1inv,
-'2da Inv': mac_hght_2inv}
+'2da Inv': mac_hght_2inv,
+'Strg 1inv': mac_strg_1inv,
+'Strg 2inv': mac_strg_2inv}
 
 df_mac = pd.DataFrame(data=dm,index=time_my)
 # Eliminate Duplicate Soundings
@@ -840,7 +873,9 @@ dmy={'Clas':mac_y_clas,
 '1 Inv DL': mac_y_hght_1invDL,
 '2 Inv DL': mac_y_hght_2invDL,
 '1ra Inv': mac_y_hght_1inv,
-'2da Inv': mac_y_hght_2inv}
+'2da Inv': mac_y_hght_2inv,
+'Strg 1inv': mac_y_strg_1inv,
+'Strg 2inv': mac_y_strg_2inv}
 
 df_mac_y = pd.DataFrame(data=dmy,index=time_my)
 # Eliminate Duplicate Soundings
@@ -850,12 +885,12 @@ df_macyotc_final=dfmy.reindex(date_index_all)
 df_macyotc_final.index.name = 'Date'
 #*****************************************************************************\
 #Saving CSV
-path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+# path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
 
-df_yotc.to_csv(path_data_save + 'df_yotc.csv', sep='\t', encoding='utf-8')
-df_yotc_all.to_csv(path_data_save + 'df_yotc_all.csv', sep='\t', encoding='utf-8')
-df_mac_final.to_csv(path_data_save + 'df_mac_final.csv', sep='\t', encoding='utf-8')
-df_macyotc_final.to_csv(path_data_save + 'df_macyotc_final.csv', sep='\t', encoding='utf-8')
+# df_yotc.to_csv(path_data_save + 'df_yotc.csv', sep='\t', encoding='utf-8')
+# df_yotc_all.to_csv(path_data_save + 'df_yotc_all.csv', sep='\t', encoding='utf-8')
+# df_mac_final.to_csv(path_data_save + 'df_mac_final.csv', sep='\t', encoding='utf-8')
+# df_macyotc_final.to_csv(path_data_save + 'df_macyotc_final.csv', sep='\t', encoding='utf-8')
 
 #*****************************************************************************\
 

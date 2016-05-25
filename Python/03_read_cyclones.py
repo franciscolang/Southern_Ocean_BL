@@ -170,7 +170,7 @@ array_cyc = np.concatenate(arrays, axis=0)
 CoLat=array_cyc[:,5]
 lat = 90.0 - (CoLat*0.01);
 indlan = np.nonzero(lat<-30.)
-lat2=lat[indlan]
+lat2=lat[indlan] #Eliminate North Hemisphere
 
 cycf1=array_cyc[indlan]
 
@@ -178,7 +178,7 @@ cycf1=array_cyc[indlan]
 CoLon=cycf1[:,6]
 lon=CoLon*0.01;
 indlon = np.nonzero(lon<180)
-lon2=lon[indlon]
+lon2=lon[indlon] #Eliminate
 
 cyc_close=cycf1[indlon]
 
@@ -206,7 +206,7 @@ dx=(-longi+lonMac);
 lim=15;
 
 distance=np.sqrt(dy**2+dx**2);
-ind_dist = np.nonzero(distance<lim)
+ind_dist = np.nonzero(distance<=lim)
 
 latitud=lati[ind_dist]
 longitud=longi[ind_dist]

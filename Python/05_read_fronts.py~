@@ -107,9 +107,9 @@ for j in range(0,n-1):
                     dist=dist*(-1)
                 elif (dx>0. and dy>0.):#after ok
                     dist=dist
-                elif (dx<0. and dy>0.):#before ok
+                elif (dx<0. and dy>0.):#before
                     dist=dist*(-1)
-                elif (dx>0. and dy<0.):#after ok
+                elif (dx>0. and dy<0.):#after
                     dist=dist
                 # print dist
                 # plot(x,y,'yo',x,recta,'--k',x1,y1,'go',x2,y2,'ro',x0,y0,'bo')
