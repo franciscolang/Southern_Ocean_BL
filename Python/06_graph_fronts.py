@@ -204,7 +204,7 @@ fsize0=12
 fsize1=14
 fsize2=16
 
-path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/fronts/'
+path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/fronts_ok/'
 
 #*****************************************************************************\
 x1=-15

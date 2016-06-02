@@ -41,7 +41,7 @@ date_yotc = pd.date_range(date_ini, periods=len(time), freq='12H')
 #Reading variables
 t_ori= mat['temp'][:] #K
 u_ori= mat['u'][:]
-v_ori= mat['v'][:] #Estaba mal!!!!!!!!!
+v_ori= mat['v'][:]
 q_ori= mat['q'][:]
 
 #rotate from surface to free atmosphere
@@ -50,24 +50,42 @@ u=u_ori[:,::-1]
 v=v_ori[:,::-1]
 q=q_ori[:,::-1] #kg/kg
 mixr= q*1000 #g/kg
-# #*****************************************************************************\
+
+
+#*****************************************************************************\
 #Leyendo Alturas y press
 file_levels = np.genfromtxt('./Read_Files/YOTC/levels.csv', delimiter=',')
 hlev_yotc=file_levels[:,6]
-plev_yotc=file_levels[:,3]
+#plev_yotc=file_levels[:,3]
+plev_yotc=file_levels[:,4] #value 10 is 925
 
 #*****************************************************************************\
+g=9.8 #m seg^-2
+
 #Calculate Virtual Temperature
 theta=(temp)*(1000./plev_yotc)**0.287;
-pot_temp=(1+0.61*(mixr/1000.))*theta;
 #Calculate Potential Temperature
+pot_temp=(1+0.61*(mixr/1000.))*theta;
+
 pot_temp_grad=np.zeros(pot_temp.shape)
-yvert_shear=np.empty(pot_temp.shape)
+yvert_shear=np.empty(pot_temp.shape)*np.nan
+brn_yotca=np.empty(pot_temp.shape)*np.nan
 #Calculate Wind Shear and Gradiente Potential Temp
 for j in range(0,len(time)):
     for i in range(1,len(hlev_yotc)-1):
         pot_temp_grad[j,i]=(pot_temp[j,i+1]-pot_temp[j,i])/float(hlev_yotc[i+1]-hlev_yotc[i])
         yvert_shear[j,i]=np.sqrt(float((u[j,i]-u[j,i-1])**2+(v[j,i]-v[j,i-1])**2))/float(hlev_yotc[i]-hlev_yotc[i-1])
+
+for j in range(0,len(time)):
+    for i in range(1,len(hlev_yotc)):
+        brn_yotca[j,i]=(g/float(pot_temp[j,0]))*((hlev_yotc[i]-hlev_yotc[0])*(pot_temp[j,i]-pot_temp[j,0]))/float((u[j,i]-u[j,0])**2+(v[j,i]-v[j,0])**2)
+
+
+
+#Calculate Relative Humidity
+relhum=0.263*plev_yotc*q*np.exp((17.67*(temp-273.16))/(temp-29.65))**(-1)*100
+relhum[relhum>100]=100
+relhum[relhum<0]=0
 
 #******************************************************************************
 #Boundary Layer Height Inversion 1 and 2
@@ -90,6 +108,16 @@ yotc_hght_2inv=np.empty(len(time))
 yotc_strg_1inv=np.empty(len(time))
 yotc_strg_2inv=np.empty(len(time))
 
+
+relhum_yotc=np.empty(len(time))
+temp_yotc=np.empty(len(time))
+u_yotc=np.empty(len(time))
+v_yotc=np.empty(len(time))
+mixr_yotc=np.empty(len(time))
+pot_temp_yotc=np.empty(len(time))
+brn_yotc=np.empty(len(time))
+
+#******************************************************************************
 #Main Inversion Position
 for ind,line in enumerate(hlev_yotc):
     if line>=float(100.):
@@ -193,6 +221,15 @@ for i in range(0,len(time)):
         yotc_strg_1inv[i]=pot_temp_grad[i,main_inv[i]]
         yotc_strg_2inv[i]=pot_temp_grad[i,sec_inv[i]]
 
+    #print
+
+    relhum_yotc[i]=relhum[i,10]
+    temp_yotc[i]=temp[i,10]
+    u_yotc[i]=u[i,10]
+    v_yotc[i]=v[i,10]
+    mixr_yotc[i]=mixr[i,10]
+    pot_temp_yotc[i]=pot_temp[i,10]
+    brn_yotc[i]=brn_yotca[i,10]
 #np.count_nonzero(~np.isnan(main_inv))
 
 #*****************************************************************************\
@@ -213,11 +250,11 @@ for i in range(0,len(time)):
 # plt.xlim([0,1])
 # #plt.show()
 
-#*****************************************************************************\
-#*****************************************************************************\
+# ****************************************************************************\
+# ****************************************************************************\
 #                            MAC Data Original Levels
 #*****************************************************************************\
-#*****************************************************************************\
+# ****************************************************************************\
 path_databom=base_dir+'/Dropbox/Monash_Uni/SO/MAC/MatFiles/files_bom/'
 matb= sio.loadmat(path_databom+'BOM_2006-2010.mat')
 #*****************************************************************************\
@@ -270,241 +307,16 @@ temp=bom[:,2,:].reshape(ni[0],ni[2])
 mixr=bom[:,5,:].reshape(ni[0],ni[2])
 wdir_initial=bom[:,6,:].reshape(ni[0],ni[2])
 wspd=bom[:,7,:].reshape(ni[0],ni[2])
-#*****************************************************************************\
-#Initialization Variables
-wdir=np.empty(pres.shape)
-spec_hum=np.empty(pres.shape)
-tempv=np.empty(pres.shape)
-ptemp=np.empty(pres.shape)
-ucomp=np.empty(pres.shape)
-vcomp=np.empty(pres.shape)
-ucomp_initial=np.empty(pres.shape)
-vcomp_initial=np.empty(pres.shape)
-vert_shear=np.empty(pres.shape)
+relh=bom[:,4,:].reshape(ni[0],ni[2])
 
-pres_ave=np.empty(pres.shape)
-hght_ave=np.empty(pres.shape)
-ptemp_ave=np.empty(pres.shape)
-mixr_ave=np.empty(pres.shape)
-ucomp_ave=np.empty(pres.shape)
-vcomp_ave=np.empty(pres.shape)
-wdir_ave=np.empty(pres.shape)
-#ptemp_gmac=np.empty(pres.shape)
-ptemp_gmac=np.empty(pres.shape)
-#twenty_index=np.empty([10])
-twenty_m_index=[]
-twokm=[]
-main_m_inv=np.empty([ni[2]])
-sec_m_inv=np.empty([ni[2]])
-sec_m_ind=np.empty([ni[2]])
-ptemp_comp1=np.empty([ni[2]])
-main_m_inv_hght=np.empty([ni[2]])
-main_m_inversion=np.empty([ni[2]])
-sec_m_inversion=np.empty([ni[2]])
-sec_m_inv_hght=np.empty([ni[2]])
-ftrop=[]
-mac_clas=np.empty([ni[2]])
-mac_depth=np.empty([ni[2]])
-mac_hght_1invBL=np.empty([ni[2]])
-mac_hght_2invBL=np.empty([ni[2]])
-mac_hght_1invDL=np.empty([ni[2]])
-mac_hght_2invDL=np.empty([ni[2]])
-mac_hght_1inv=np.empty([ni[2]])
-mac_hght_2inv=np.empty([ni[2]])
-mac_strg_1inv=np.empty([ni[2]])
-mac_strg_2inv=np.empty([ni[2]])
-#*****************************************************************************\
-for j in range(0,ni[2]):
-#for j in range(0,2000):
-#remove any reduntant measurementsat the same pressure
-#Calculate new variables
-    for i in range(0,len(pres)):
-        if 0.<=wdir_initial[i,j]<=90.:
-            wdir[i,j]=wdir_initial[i,j]+270.
-        elif 90.<=wdir_initial[i,j]<=360.:
-            wdir[i,j]=wdir_initial[i,j]-90.
+# vni=-wspd*(np.cos(np.radians(wdir_initial)))
+# uni=-wspd*(np.sin(np.radians(wdir_initial)))
 
-        spec_hum[i,j]=(float(mixr[i,j])/1000.)/(1+(float(mixr[i,j])/1000.))
-        tempv[i,j]=temp[i,j]*float(1+0.61*spec_hum[i,j])
-        ptemp[i,j]=(tempv[i,j]+273.15)*((1000./pres[i,j])**0.286) #Ok
-        vcomp[i,j]=-wspd[i,j]*(np.cos(np.radians(wdir[i,j])))
-        ucomp[i,j]=-wspd[i,j]*(np.sin(np.radians(wdir[i,j])))
-        vcomp_initial[i,j]=-wspd[i,j]*(np.cos(np.radians(wdir_initial[i,j])))
-        ucomp_initial[i,j]=-wspd[i,j]*(np.sin(np.radians(wdir_initial[i,j])))
-        vert_shear[i,j]=np.sqrt(float((ucomp_initial[i,j]-ucomp_initial[i-1,j])**2+(vcomp_initial[i,j]-vcomp_initial[i-1,j])**2))/float(hght[i,j]-hght[i-1,j])
-
-#Smooth data 5 points
-    for i in range(0,len(pres)-4):
-
-        ptemp_ave[i+2,j]=ptemp[i,j]*0.2+ptemp[i+1,j]*0.2+ptemp[i+2,j]*0.2+ptemp[i+3,j]*0.2+ptemp[i+4,j]*0.2
-
-        # pres_ave[i+2,j]=pres[i,j]*0.2+pres[i+1,j]*0.2+pres[i+2,j]*0.2+pres[i+2,j]*0.2+pres[i+4,j]*0.2
-        hght_ave[i+2,j]=hght[i,j]*0.2+hght[i+1,j]*0.2+hght[i+2,j]*0.2+hght[i+2,j]*0.2+hght[i+4,j]*0.2
-        # mixr_ave[i+2,j]=mixr[i,j]*0.2+mixr[i+1,j]*0.2+mixr[i+2,j]*0.2+mixr[i+2,j]*0.2+mixr[i+4,j]*0.2
-        # wdir_ave[i+2,j]=wdir[i,j]*0.2+wdir[i+1,j]*0.2+wdir[i+2,j]*0.2+wdir[i+2,j]*0.2+wdir[i+4,j]*0.2
-        # ucomp_ave[i+2,j]=ucomp[i,j]*0.2+ucomp[i+1,j]*0.2+ucomp[i+2,j]*0.2+ucomp[i+2,j]*0.2+ucomp[i+4,j]*0.2
-        # vcomp_ave[i+2,j]=vcomp[i,j]*0.2+vcomp[i+1,j]*0.2+vcomp[i+2,j]*0.2+vcomp[i+2,j]*0.2+vcomp[i+4,j]*0.2
-
-    ptemp_ave[0:1,j]=np.nan
-    hght_ave[0:1,j]=np.nan
-
-#Smooth further by binning every 2 hPa
-    bin_size=5
-    lower_p=np.empty(ni[2])
-    higher_p=np.empty(ni[2])
-    smooth_shear_a=np.empty(ni[2])
-    smooth_hght_a=np.empty(ni[2])
-    smooth_pres_a=np.empty(ni[2])
-    current_bin=[]
-    lower_p=np.rint(pres[0,j])
-    higher_p=np.rint(lower_p+bin_size)
-    largos=np.zeros(((higher_p-500)/bin_size),'float')
-    smooth_shear_a=np.empty([len(largos)+1,ni[2]])
-
-    for ii in range(0,len(largos)):
-        current_bin=[]
-        for jj in range(0,len(pres)):
-            if lower_p<pres[jj,j]<=higher_p:
-                current_bin=np.append(current_bin,vert_shear[jj,j])
-        smooth_shear_a[ii]=np.nanmean(current_bin)
-        higher_p-=bin_size
-        lower_p-=bin_size
-
-#Gradiente Potential Temp
-    for ind in range(0,len(ptemp_ave)-1):
-        ptemp_gmac[ind,j]=(ptemp_ave[ind+1,j]-ptemp_ave[ind,j])/float(hght_ave[ind+1,j]-hght_ave[ind,j])
-
-#Main Inversion Position
-    for z,line in enumerate(hght[:,j]):
-        if line>=float(100.):
-            twenty_m_index=np.append(twenty_m_index,z)
-            break
-    for z,line in enumerate(hght[:,j]):
-        if line>=2500:
-            twokm=np.append(twokm,z)
-            break
-
-#posicion main inv mas indice de sobre 100 m
-    main_m_inv[j]=ptemp_gmac[twenty_m_index[j]:twokm[j],j].argmax(axis=0)
-    [i for i, k in enumerate(ptemp_gmac[twenty_m_index[j]:twokm[j],j]) if k == main_m_inv[j]]
-    main_m_inv[j]+=twenty_m_index[j] #
-
-# Second Inversion Position
-    for ind in range(int(twenty_m_index[j]),int(main_m_inv[j])):
-    #    print ind
-    # height 2da inv 80% main inv
-        if hght[ind,j]>=(0.8)*hght[main_m_inv[j],j]:
-            sec_m_ind[j]=ind
-            break
-        else:
-            sec_m_ind[j]=np.nan
-
-    if main_m_inv[j]==twenty_m_index[j]:
-        sec_m_ind[j]=np.nan
-    #calcula la posicion de la sec inv (trata si se puede, si no asigna nan)
-    try:
-        sec_m_inv[j]=ptemp_gmac[twenty_m_index[j]:sec_m_ind[j],j].argmax(0)
-        #[z for z, k in enumerate(ptemp_gmac[twenty_m_index:sec_m_ind[j],j]) if k == sec_m_inv[j]]
-        sec_m_inv[j]+=twenty_m_index[j]
-    except:
-        sec_m_inv[j]=np.nan
-
-
-# main inversion must be > theta_v threshold
-    ptemp_comp1[j]=ptemp_gmac[main_m_inv[j],j]#.diagonal() #extrae diagonal de pot temp
-#for i in range(0,len(time)):
-    if ptemp_comp1[j]<ptemp_thold_main:
-        #main_m_inv[i]=np.nan
-        main_m_inv[j]=-9999 # Cannot convert float NaN to integer
-        main_m_inversion[j]=False
-        sec_m_inv[j]=np.nan
-    else:
-        main_m_inv_hght[j]=hght[main_m_inv[j],j]
-        main_m_inversion[j]=True
-
-    if main_m_inv_hght[j]<=1:
-        main_m_inv_hght[j]=np.nan #Corrige el -9999 para calcular alt
-
- # secondary inversion must be > theta_v threshold
-    if np.isnan(sec_m_inv[j])==False and ptemp_gmac[sec_m_inv[j],j]>=ptemp_thold_sec:
-        sec_m_inversion[j]=True
-        sec_m_inv_hght[j]=hght[sec_m_inv[j],j]
-    else:
-        sec_m_inversion[j]=False
-        sec_m_inv_hght[j]=np.nan
- # height of the free troposphere
-    if np.isnan(main_m_inv[j])==False and sec_m_inversion[j]==True:
-        for ind,line in enumerate(hght[:,j]):
-            if line>=(hght[main_m_inv[j],j]+1000.):
-                ftropo[j]=ind
-            break
-
-#Clasification
-    if sec_m_inversion[j]==False and main_m_inversion[j]==True:
-        mac_clas[j]=2
-        mac_depth[j]=np.nan
-        mac_hght_1invBL[j]=np.nan
-        mac_hght_2invBL[j]=np.nan
-        mac_hght_1invDL[j]=np.nan
-        mac_hght_2invDL[j]=np.nan
-        mac_hght_1inv[j]=hght[main_m_inv[j],j]
-        mac_hght_2inv[j]=np.nan
-        mac_strg_1inv[j]=ptemp_gmac[main_m_inv[j],j]
-        mac_strg_2inv[j]=np.nan
-    elif sec_m_inversion[j]==False and main_m_inversion[j]==False:
-        mac_clas[j]=1
-        mac_depth[j]=np.nan
-        mac_hght_1invBL[j]=np.nan
-        mac_hght_2invBL[j]=np.nan
-        mac_hght_1invDL[j]=np.nan
-        mac_hght_2invDL[j]=np.nan
-        mac_hght_1inv[j]=np.nan
-        mac_hght_2inv[j]=np.nan
-        mac_strg_1inv[j]=np.nan
-        mac_strg_2inv[j]=np.nan
-    elif main_m_inversion[j]==True and sec_m_inversion[j]==True and vert_shear[sec_m_inv[j],j]>=shear_thold:
-        mac_clas[j]=4
-        mac_depth[j]=(hght[main_m_inv[j],j]-hght[sec_m_inv[j],j])
-        mac_hght_1invBL[j]=hght[main_m_inv[j],j]
-        mac_hght_2invBL[j]=hght[sec_m_inv[j],j]
-        mac_hght_1invDL[j]=np.nan
-        mac_hght_2invDL[j]=np.nan
-        mac_hght_1inv[j]=hght[main_m_inv[j],j]
-        mac_hght_2inv[j]=hght[sec_m_inv[j],j]
-        mac_strg_1inv[j]=ptemp_gmac[main_m_inv[j],j]
-        mac_strg_2inv[j]=ptemp_gmac[sec_m_inv[j],j]
-    else:
-        mac_clas[j]=3
-        mac_hght_1invDL[j]=hght[main_m_inv[j],j]
-        mac_hght_2invDL[j]=hght[sec_m_inv[j],j]
-        mac_depth[j]=(hght[main_m_inv[j],j]-hght[sec_m_inv[j],j])
-        mac_hght_1invBL[j]=np.nan
-        mac_hght_2invBL[j]=np.nan
-        mac_hght_1inv[j]=hght[main_m_inv[j],j]
-        mac_hght_2inv[j]=hght[sec_m_inv[j],j]
-        mac_strg_1inv[j]=ptemp_gmac[main_m_inv[j],j]
-        mac_strg_2inv[j]=ptemp_gmac[sec_m_inv[j],j]
+u=wspd*(np.cos(np.radians(270-wdir_initial)))
+v=wspd*(np.sin(np.radians(270-wdir_initial)))
 
 
 
-# #np.count_nonzero(~np.isnan(sec_m_ind))
-# #*****************************************************************************\
-# # #Histogram
-# n, bin_edges =np.histogram(mac_clas, bins=[1, 2, 3, 4,5],normed=1)
-
-# plt.figure(0)
-# y=bin_edges[0:4]
-
-# #clas = ('No Inv.', 'Single Inv.', 'Decoupled L.', 'Buffer L.')
-# clas = ('NI', 'SI', 'DL', 'BL')
-# y_pos = np.arange(len(clas))
-
-# plt.barh(y_pos, n, align='center', color='green')
-# plt.yticks(y_pos, clas)
-# plt.xticks(np.arange(0, 1.1, 0.1))
-# plt.xlabel('Performance')
-# plt.xlim([0,1])
-# plt.show()
 
 #*****************************************************************************\
 #*****************************************************************************\
@@ -516,10 +328,12 @@ for j in range(0,ni[2]):
 # plt.show()
 
 prutemp=np.empty((len(hlev_yotc),0))
-pruwspd=np.empty((len(hlev_yotc),0))
-pruwdir=np.empty((len(hlev_yotc),0))
 prumixr=np.empty((len(hlev_yotc),0))
-
+# pruwspd=np.empty((len(hlev_yotc),0))
+# pruwdir=np.empty((len(hlev_yotc),0))
+pruu=np.empty((len(hlev_yotc),0))
+pruv=np.empty((len(hlev_yotc),0))
+prurelh=np.empty((len(hlev_yotc),0))
 
 for j in range(0,ni[2]):
 #for j in range(0,100):
@@ -532,56 +346,83 @@ for j in range(0,ni[2]):
     rest=interp1d(x,yt)(new_x)
     prutemp=np.append(prutemp,rest)
 
-    yw=wspd[:,j]
-    resw=interp1d(x,yw)(new_x)
-    pruwspd=np.append(pruwspd,resw)
-
-    yd=wdir_initial[:,j]
-    resd=interp1d(x,yd)(new_x)
-    pruwdir=np.append(pruwdir,resd)
-
     ym=mixr[:,j]
     resm=interp1d(x,ym)(new_x)
     prumixr=np.append(prumixr,resm)
 
+    yw=u[:,j]
+    resw=interp1d(x,yw)(new_x)
+    pruu=np.append(pruu,resw)
+
+    yd=v[:,j]
+    resd=interp1d(x,yd)(new_x)
+    pruv=np.append(pruv,resd)
+
+    yr=relh[:,j]
+    resr=interp1d(x,yr)(new_x)
+    prurelh=np.append(prurelh,resr)
+
 tempmac_ylev=prutemp.reshape(-1,len(hlev_yotc)).transpose()
-wspdmac_ylev=pruwspd.reshape(-1,len(hlev_yotc)).transpose()
-wdirmac_ylev=pruwdir.reshape(-1,len(hlev_yotc)).transpose()
+umac_ylev=pruu.reshape(-1,len(hlev_yotc)).transpose()
+vmac_ylev=pruv.reshape(-1,len(hlev_yotc)).transpose()
 mixrmac_ylev=prumixr.reshape(-1,len(hlev_yotc)).transpose()
+relhmac_ylev=prurelh.reshape(-1,len(hlev_yotc)).transpose()
+
+# wspdmac_ylev=pruwspd.reshape(-1,len(hlev_yotc)).transpose()
+# wdirmac_ylev=pruwdir.reshape(-1,len(hlev_yotc)).transpose()
+
+wspdmac_ylev=np.sqrt(umac_ylev**2 + vmac_ylev**2)
+wdirmac_ylev=np.arctan2(-umac_ylev, -vmac_ylev)*(180/np.pi)
+wdirmac_ylev[(umac_ylev == 0) & (vmac_ylev == 0)]=0
+
 
 
 #*****************************************************************************\
 #Initialization Variables
 wdir_my=np.empty(tempmac_ylev.shape)
+
 spec_hum_my=np.empty(tempmac_ylev.shape)
 tempv_my=np.empty(tempmac_ylev.shape)
 ptemp_my=np.empty(tempmac_ylev.shape)
+brn_mya=np.empty(tempmac_ylev.shape)
+
 ucomp_my=np.empty(tempmac_ylev.shape)
 vcomp_my=np.empty(tempmac_ylev.shape)
+
 ucomp_initial_my=np.empty(tempmac_ylev.shape)
 vcomp_initial_my=np.empty(tempmac_ylev.shape)
-vert_shear_my=np.empty(tempmac_ylev.shape)
-ptemp_gmy=np.empty(tempmac_ylev.shape)
-main_my_inv=np.empty(ni[2])
+
+vert_shear_my=np.empty(tempmac_ylev.shape)*np.nan
+ptemp_gmy=np.empty(tempmac_ylev.shape)*np.nan
+main_my_inv=np.empty(ni[2])*np.nan
 twenty_my_index=[]
 twokmy=[]
-sec_my_ind=np.empty(ni[2])
-sec_my_inv=np.empty(ni[2])
-ptemp_comp2=np.empty(ni[2])
-main_my_inv_hght=np.empty(ni[2])
-main_my_inversion=np.empty(ni[2])
-sec_my_inv_hght=np.empty(ni[2])
-sec_my_inversion=np.empty(ni[2])
-mac_y_clas=np.empty(ni[2])
-mac_y_hght_1invDL=np.empty(ni[2])
-mac_y_hght_2invDL=np.empty(ni[2])
-mac_y_depth=np.empty(ni[2])
-mac_y_hght_1invBL=np.empty(ni[2])
-mac_y_hght_2invBL=np.empty(ni[2])
-mac_y_hght_1inv=np.empty(ni[2])
-mac_y_hght_2inv=np.empty(ni[2])
-mac_y_strg_1inv=np.empty(ni[2])
-mac_y_strg_2inv=np.empty(ni[2])
+sec_my_ind=np.empty(ni[2])*np.nan
+sec_my_inv=np.empty(ni[2])*np.nan
+ptemp_comp2=np.empty(ni[2])*np.nan
+main_my_inv_hght=np.empty(ni[2])*np.nan
+main_my_inversion=np.empty(ni[2])*np.nan
+sec_my_inv_hght=np.empty(ni[2])*np.nan
+sec_my_inversion=np.empty(ni[2])*np.nan
+mac_y_clas=np.empty(ni[2])*np.nan
+mac_y_hght_1invDL=np.empty(ni[2])*np.nan
+mac_y_hght_2invDL=np.empty(ni[2])*np.nan
+mac_y_depth=np.empty(ni[2])*np.nan
+mac_y_hght_1invBL=np.empty(ni[2])*np.nan
+mac_y_hght_2invBL=np.empty(ni[2])*np.nan
+mac_y_hght_1inv=np.empty(ni[2])*np.nan
+mac_y_hght_2inv=np.empty(ni[2])*np.nan
+mac_y_strg_1inv=np.empty(ni[2])*np.nan
+mac_y_strg_2inv=np.empty(ni[2])*np.nan
+
+
+relhum_my=np.empty(ni[2])*np.nan
+temp_my=np.empty(ni[2])*np.nan
+u_my=np.empty(ni[2])*np.nan
+v_my=np.empty(ni[2])*np.nan
+mixr_my=np.empty(ni[2])*np.nan
+pot_temp_my=np.empty(ni[2])*np.nan
+brn_my=np.empty(ni[2])*np.nan
 
 #*****************************************************************************\
 for j in range(0,ni[2]):
@@ -596,16 +437,18 @@ for j in range(0,ni[2]):
         spec_hum_my[i,j]=(float(mixrmac_ylev[i,j])/1000.)/(1+(float(mixrmac_ylev[i,j])/1000.))
 
         tempv_my[i,j]=tempmac_ylev[i,j]*float(1+0.61*spec_hum_my[i,j])
-        ptemp_my[i,j]=(tempv_my[i,j]+273.15)*((1000./plev_yotc[i])**0.286) #Ok
+        ptemp_my[i,j]=(tempv_my[i,j]+273.16)*((1000./plev_yotc[i])**0.286) #Ok
 
-        vcomp_my[i,j]=-wspdmac_ylev[i,j]*(np.cos(np.radians(wdir_my[i,j])))
-        ucomp_my[i,j]=-wspdmac_ylev[i,j]*(np.sin(np.radians(wdir_my[i,j])))
+        brn_mya[i,j]=(g/float(ptemp_my[0,j]))*((hlev_yotc[i]-hlev_yotc[0])*(ptemp_my[i,j]-ptemp_my[0,j]))/float((umac_ylev[i,j]-umac_ylev[0,j])**2+(vmac_ylev[i,j]-vmac_ylev[0,j])**2)
 
-        vcomp_initial_my[i,j]=-wspdmac_ylev[i,j]*(np.cos(np.radians(wdirmac_ylev[i,j])))
-        ucomp_initial_my[i,j]=-wspdmac_ylev[i,j]*(np.sin(np.radians(wdirmac_ylev[i,j])))
+        # vcomp_my[i,j]=-wspdmac_ylev[i,j]*(np.cos(np.radians(wdir_my[i,j])))
+        # ucomp_my[i,j]=-wspdmac_ylev[i,j]*(np.sin(np.radians(wdir_my[i,j])))
+
+        # vcomp_initial_my[i,j]=-wspdmac_ylev[i,j]*(np.cos(np.radians(wdirmac_ylev[i,j])))
+        # ucomp_initial_my[i,j]=-wspdmac_ylev[i,j]*(np.sin(np.radians(wdirmac_ylev[i,j])))
 
     for i in range(0,len(hlev_yotc)-1):
-        vert_shear_my[i,j]=np.sqrt(float((ucomp_initial_my[i,j]-ucomp_initial_my[i-1,j])**2+(vcomp_initial_my[i,j]-vcomp_initial_my[i-1,j])**2))/float(hlev_yotc[i+1]-hlev_yotc[i])
+        vert_shear_my[i,j]=np.sqrt(float((umac_ylev[i,j]-umac_ylev[i-1,j])**2+(vmac_ylev[i,j]-vmac_ylev[i-1,j])**2))/float(hlev_yotc[i+1]-hlev_yotc[i])
 
         ptemp_gmy[i,j]=(ptemp_my[i+1,j]-ptemp_my[i,j])/float(hlev_yotc[i+1]-hlev_yotc[i])
 
@@ -719,6 +562,13 @@ for j in range(0,ni[2]):
         mac_y_strg_2inv[j]=ptemp_gmy[sec_my_inv[j],j]
 
 
+    relhum_my[j]=relhmac_ylev[10,j]
+    temp_my[j]=tempmac_ylev[10,j]+273.16
+    u_my[j]=umac_ylev[10,j]
+    v_my[j]=vmac_ylev[10,j]
+    mixr_my[j]=mixrmac_ylev[10,j]
+    pot_temp_my[j]=ptemp_my[10,j]
+    brn_my[j]=brn_mya[10,j]
 #*****************************************************************************\
 # #Histogram
 # n, bin_edges =np.histogram(mac_y_clas, bins=[1, 2, 3, 4,5],normed=1)
@@ -834,7 +684,14 @@ dy={'Clas':yotc_clas,
 '1ra Inv': yotc_hght_1inv,
 '2da Inv': yotc_hght_2inv,
 'Strg 1inv': yotc_strg_1inv,
-'Strg 2inv': yotc_strg_2inv}
+'Strg 2inv': yotc_strg_2inv,
+'Mix R 925':mixr_yotc,
+'T 925':temp_yotc,
+'Theta v 925':pot_temp_yotc,
+'u 925':u_yotc,
+'v 925':v_yotc,
+'RH 925':relhum_yotc,
+'BRN 925':brn_yotc}
 
 df_yotc = pd.DataFrame(data=dy,index=date_yotc)
 df_yotc.index.name = 'Date'
@@ -842,29 +699,29 @@ df_yotc.index.name = 'Date'
 #Dataframe YOTC All
 df_yotc_all=df_yotc.reindex(date_index_all)
 df_yotc_all.index.name = 'Date'
-#*****************************************************************************\
-#Dataframe MAC
-dm={'Clas':mac_clas,
-'Depth':mac_depth,
-'1 Inv BL': mac_hght_1invBL,
-'2 Inv BL': mac_hght_2invBL,
-'1 Inv DL': mac_hght_1invDL,
-'2 Inv DL': mac_hght_2invDL,
-'1ra Inv': mac_hght_1inv,
-'2da Inv': mac_hght_2inv,
-'Strg 1inv': mac_strg_1inv,
-'Strg 2inv': mac_strg_2inv}
+# #*****************************************************************************\
+# #Dataframe MAC
+# dm={'Clas':mac_clas,
+# 'Depth':mac_depth,
+# '1 Inv BL': mac_hght_1invBL,
+# '2 Inv BL': mac_hght_2invBL,
+# '1 Inv DL': mac_hght_1invDL,
+# '2 Inv DL': mac_hght_2invDL,
+# '1ra Inv': mac_hght_1inv,
+# '2da Inv': mac_hght_2inv,
+# 'Strg 1inv': mac_strg_1inv,
+# 'Strg 2inv': mac_strg_2inv}
 
-df_mac = pd.DataFrame(data=dm,index=time_my)
-# Eliminate Duplicate Soundings
+# df_mac = pd.DataFrame(data=dm,index=time_my)
+# # Eliminate Duplicate Soundings
 
-dfm=df_mac.reset_index().drop_duplicates(cols='index',take_last=True).set_index('index')
+# dfm=df_mac.reset_index().drop_duplicates(cols='index',take_last=True).set_index('index')
 
-df_mac_final=dfm.reindex(date_index_all)
-df_mac_final.index.name = 'Date'
-# count_nan = len(df_my_final) - df_my_final.count()
+# df_mac_final=dfm.reindex(date_index_all)
+# df_mac_final.index.name = 'Date'
+# # count_nan = len(df_my_final) - df_my_final.count()
 
-#*****************************************************************************\
+# #*****************************************************************************\
 #Dataframe MAC YOTC levels
 dmy={'Clas':mac_y_clas,
 'Depth':mac_y_depth,
@@ -875,7 +732,14 @@ dmy={'Clas':mac_y_clas,
 '1ra Inv': mac_y_hght_1inv,
 '2da Inv': mac_y_hght_2inv,
 'Strg 1inv': mac_y_strg_1inv,
-'Strg 2inv': mac_y_strg_2inv}
+'Strg 2inv': mac_y_strg_2inv,
+'Mix R 925':mixr_my,
+'T 925':temp_my,
+'Theta v 925':pot_temp_my,
+'u 925':u_my,
+'v 925':v_my,
+'RH 925':relhum_my,
+'BRN 925':brn_my}
 
 df_mac_y = pd.DataFrame(data=dmy,index=time_my)
 # Eliminate Duplicate Soundings
@@ -887,27 +751,27 @@ df_macyotc_final.index.name = 'Date'
 #Saving CSV
 path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
 
-df_yotc.to_csv(path_data_save + 'df_yotc.csv', sep='\t', encoding='utf-8')
-df_yotc_all.to_csv(path_data_save + 'df_yotc_all.csv', sep='\t', encoding='utf-8')
-df_mac_final.to_csv(path_data_save + 'df_mac_final.csv', sep='\t', encoding='utf-8')
-df_macyotc_final.to_csv(path_data_save + 'df_macyotc_final.csv', sep='\t', encoding='utf-8')
+df_yotc.to_csv(path_data_save + 'df_yotc925.csv', sep='\t', encoding='utf-8')
+df_yotc_all.to_csv(path_data_save + 'df_yotc_all925.csv', sep='\t', encoding='utf-8')
+# df_mac_final.to_csv(path_data_save + 'df_mac_final.csv', sep='\t', encoding='utf-8')
+df_macyotc_final.to_csv(path_data_save + 'df_macyotc_final925.csv', sep='\t', encoding='utf-8')
 
 #*****************************************************************************\
 
-#T1 = pd.read_csv(path_data_save + 'df_macyotc_final.csv', sep='\t')
+# #T1 = pd.read_csv(path_data_save + 'df_macyotc_final.csv', sep='\t')
 
 
 
 
 
-#Dataframe datos per level
-#nlevel=range(1,31)
-#Crear listas con variables y unirlas a dataframe 3D
-#t_list=temp.tolist()
-#u_list=u.tolist()
-#v_list=v.tolist()
-#q_list=q.tolist()
+# #Dataframe datos per level
+# #nlevel=range(1,31)
+# #Crear listas con variables y unirlas a dataframe 3D
+# #t_list=temp.tolist()
+# #u_list=u.tolist()
+# #v_list=v.tolist()
+# #q_list=q.tolist()
 
-#data={'temp':t_list, 'q':q_list,'u':u_list, 'v':v_list}
-#df=pd.DataFrame(data=data, index=date_range)
+# #data={'temp':t_list, 'q':q_list,'u':u_list, 'v':v_list}
+# #df=pd.DataFrame(data=data, index=date_range)
 
