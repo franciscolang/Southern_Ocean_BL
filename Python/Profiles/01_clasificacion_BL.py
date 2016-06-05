@@ -29,7 +29,7 @@ shear_thold=0.015               # 1/s
 #*****************************************************************************\
 #                            YOTC Data
 #*****************************************************************************\
-# #*****************************************************************************\
+#*****************************************************************************\
 mat= sio.loadmat(path_data+'yotc_data.mat')
 #*****************************************************************************\
 #Crear fecha de inicio leyendo time
@@ -54,7 +54,7 @@ mixr= q*1000 #g/kg
 
 #*****************************************************************************\
 #Leyendo Alturas y press
-file_levels = np.genfromtxt('./Read_Files/YOTC/levels.csv', delimiter=',')
+file_levels = np.genfromtxt('./../Read_Files/YOTC/levels.csv', delimiter=',')
 hlev_yotc=file_levels[:,6]
 #plev_yotc=file_levels[:,3]
 plev_yotc=file_levels[:,4] #value 10 is 925
@@ -79,8 +79,6 @@ for j in range(0,len(time)):
 for j in range(0,len(time)):
     for i in range(1,len(hlev_yotc)):
         brn_yotca[j,i]=(g/float(pot_temp[j,0]))*((hlev_yotc[i]-hlev_yotc[0])*(pot_temp[j,i]-pot_temp[j,0]))/float((u[j,i]-u[j,0])**2+(v[j,i]-v[j,0])**2)
-
-
 
 #Calculate Relative Humidity
 relhum=0.263*plev_yotc*q*np.exp((17.67*(temp-273.16))/(temp-29.65))**(-1)*100
@@ -109,13 +107,35 @@ yotc_strg_1inv=np.empty(len(time))
 yotc_strg_2inv=np.empty(len(time))
 
 
-relhum_yotc=np.empty(len(time))
-temp_yotc=np.empty(len(time))
-u_yotc=np.empty(len(time))
-v_yotc=np.empty(len(time))
-mixr_yotc=np.empty(len(time))
-pot_temp_yotc=np.empty(len(time))
-brn_yotc=np.empty(len(time))
+relhum_yotcNI=np.empty(relhum.shape)*np.nan
+temp_yotcNI=np.empty(relhum.shape)*np.nan
+u_yotcNI=np.empty(relhum.shape)*np.nan
+v_yotcNI=np.empty(relhum.shape)*np.nan
+mixr_yotcNI=np.empty(relhum.shape)*np.nan
+pot_temp_yotcNI=np.empty(relhum.shape)*np.nan
+
+relhum_yotcSI=np.empty(relhum.shape)*np.nan
+temp_yotcSI=np.empty(relhum.shape)*np.nan
+u_yotcSI=np.empty(relhum.shape)*np.nan
+v_yotcSI=np.empty(relhum.shape)*np.nan
+mixr_yotcSI=np.empty(relhum.shape)*np.nan
+pot_temp_yotcSI=np.empty(relhum.shape)*np.nan
+
+relhum_yotcDL=np.empty(relhum.shape)*np.nan
+temp_yotcDL=np.empty(relhum.shape)*np.nan
+u_yotcDL=np.empty(relhum.shape)*np.nan
+v_yotcDL=np.empty(relhum.shape)*np.nan
+mixr_yotcDL=np.empty(relhum.shape)*np.nan
+pot_temp_yotcDL=np.empty(relhum.shape)*np.nan
+
+relhum_yotcBL=np.empty(relhum.shape)*np.nan
+temp_yotcBL=np.empty(relhum.shape)*np.nan
+u_yotcBL=np.empty(relhum.shape)*np.nan
+v_yotcBL=np.empty(relhum.shape)*np.nan
+mixr_yotcBL=np.empty(relhum.shape)*np.nan
+pot_temp_yotcBL=np.empty(relhum.shape)*np.nan
+
+indDL=np.empty(len(time))*np.nan
 
 #******************************************************************************
 #Main Inversion Position
@@ -187,6 +207,12 @@ for i in range(0,len(time)):
         yotc_hght_2inv[i]=np.nan
         yotc_strg_1inv[i]=pot_temp_grad[i,main_inv[i]]
         yotc_strg_2inv[i]=np.nan
+        relhum_yotcNI[i,:]=relhum[i,:]
+        temp_yotcNI[i,:]=temp[i,:]
+        u_yotcNI[i,:]=u[i,:]
+        v_yotcNI[i,:]=v[i,:]
+        mixr_yotcNI[i,:]=mixr[i,:]
+        pot_temp_yotcNI[i,:]=pot_temp[i,:]
     elif sec_inversion[i]==False and main_inversion[i]==False:
         yotc_clas[i]=1
         yotc_depth[i]=np.nan
@@ -198,6 +224,12 @@ for i in range(0,len(time)):
         yotc_hght_2inv[i]=np.nan
         yotc_strg_1inv[i]=np.nan
         yotc_strg_2inv[i]=np.nan
+        relhum_yotcSI[i,:]=relhum[i,:]
+        temp_yotcSI[i,:]=temp[i,:]
+        u_yotcSI[i,:]=u[i,:]
+        v_yotcSI[i,:]=v[i,:]
+        mixr_yotcSI[i,:]=mixr[i,:]
+        pot_temp_yotcSI[i,:]=pot_temp[i,:]
     elif main_inversion[i]==True and sec_inversion[i]==True and yvert_shear[i,sec_inv[i]]>=shear_thold:
         yotc_clas[i]=4
         yotc_depth[i]=(hlev_yotc[main_inv[i]]-hlev_yotc[sec_inv[i]])
@@ -209,6 +241,12 @@ for i in range(0,len(time)):
         yotc_hght_2inv[i]=hlev_yotc[sec_inv[i]]
         yotc_strg_1inv[i]=pot_temp_grad[i,main_inv[i]]
         yotc_strg_2inv[i]=pot_temp_grad[i,sec_inv[i]]
+        relhum_yotcBL[i,:]=relhum[i,:]
+        temp_yotcBL[i,:]=temp[i,:]
+        u_yotcBL[i,:]=u[i,:]
+        v_yotcBL[i,:]=v[i,:]
+        mixr_yotcBL[i,:]=mixr[i,:]
+        pot_temp_yotcBL[i,:]=pot_temp[i,:]
     else:
         yotc_clas[i]=3
         yotc_hght_1invDL[i]=hlev_yotc[main_inv[i]]
@@ -220,35 +258,13 @@ for i in range(0,len(time)):
         yotc_hght_2inv[i]=hlev_yotc[sec_inv[i]]
         yotc_strg_1inv[i]=pot_temp_grad[i,main_inv[i]]
         yotc_strg_2inv[i]=pot_temp_grad[i,sec_inv[i]]
-
-    #print
-
-    relhum_yotc[i]=relhum[i,10]
-    temp_yotc[i]=temp[i,10]
-    u_yotc[i]=u[i,10]
-    v_yotc[i]=v[i,10]
-    mixr_yotc[i]=mixr[i,10]
-    pot_temp_yotc[i]=pot_temp[i,10]
-    brn_yotc[i]=brn_yotca[i,10]
-#np.count_nonzero(~np.isnan(main_inv))
-
-#*****************************************************************************\
-# # #Histogram
-# n, bin_edges =np.histogram(yotc_clas, bins=[1, 2, 3, 4,5],normed=1)
-
-# plt.figure(0)
-# y=bin_edges[0:4]
-
-# #clas = ('No Inv.', 'Single Inv.', 'Decoupled L.', 'Buffer L.')
-# clas = ('NI', 'SI', 'DL', 'BL')
-# y_pos = np.arange(len(clas))
-
-# plt.barh(y_pos, n, align='center', color='green')
-# plt.yticks(y_pos, clas)
-# plt.xticks(np.arange(0, 1.1, 0.1))
-# plt.xlabel('Performance')
-# plt.xlim([0,1])
-# #plt.show()
+        relhum_yotcDL[i,:]=relhum[i,:]
+        temp_yotcDL[i,:]=temp[i,:]
+        u_yotcDL[i,:]=u[i,:]
+        v_yotcDL[i,:]=v[i,:]
+        mixr_yotcDL[i,:]=mixr[i,:]
+        pot_temp_yotcDL[i,:]=pot_temp[i,:]
+        indDL[i]=i
 
 # ****************************************************************************\
 # ****************************************************************************\
@@ -309,14 +325,8 @@ wdir_initial=bom[:,6,:].reshape(ni[0],ni[2])
 wspd=bom[:,7,:].reshape(ni[0],ni[2])
 relh=bom[:,4,:].reshape(ni[0],ni[2])
 
-# vni=-wspd*(np.cos(np.radians(wdir_initial)))
-# uni=-wspd*(np.sin(np.radians(wdir_initial)))
-
 u=wspd*(np.cos(np.radians(270-wdir_initial)))
 v=wspd*(np.sin(np.radians(270-wdir_initial)))
-
-
-
 
 #*****************************************************************************\
 #*****************************************************************************\
@@ -324,19 +334,13 @@ v=wspd*(np.sin(np.radians(270-wdir_initial)))
 #*****************************************************************************\
 #*****************************************************************************\
 #Interpolation to YOTC Levels
-# plt.plot(hght[0:200,1], 'ro')
-# plt.show()
-
 prutemp=np.empty((len(hlev_yotc),0))
 prumixr=np.empty((len(hlev_yotc),0))
-# pruwspd=np.empty((len(hlev_yotc),0))
-# pruwdir=np.empty((len(hlev_yotc),0))
 pruu=np.empty((len(hlev_yotc),0))
 pruv=np.empty((len(hlev_yotc),0))
 prurelh=np.empty((len(hlev_yotc),0))
 
 for j in range(0,ni[2]):
-#for j in range(0,100):
 #height initialization
     x=hght[:,j]
     x[-1]=np.nan
@@ -368,14 +372,9 @@ vmac_ylev=pruv.reshape(-1,len(hlev_yotc)).transpose()
 mixrmac_ylev=prumixr.reshape(-1,len(hlev_yotc)).transpose()
 relhmac_ylev=prurelh.reshape(-1,len(hlev_yotc)).transpose()
 
-# wspdmac_ylev=pruwspd.reshape(-1,len(hlev_yotc)).transpose()
-# wdirmac_ylev=pruwdir.reshape(-1,len(hlev_yotc)).transpose()
-
 wspdmac_ylev=np.sqrt(umac_ylev**2 + vmac_ylev**2)
 wdirmac_ylev=np.arctan2(-umac_ylev, -vmac_ylev)*(180/np.pi)
 wdirmac_ylev[(umac_ylev == 0) & (vmac_ylev == 0)]=0
-
-
 
 #*****************************************************************************\
 #Initialization Variables
@@ -426,7 +425,6 @@ brn_my=np.empty(ni[2])*np.nan
 
 #*****************************************************************************\
 for j in range(0,ni[2]):
-#for j in range(0,100):
 #Calculate new variables
     for i in range(0,len(hlev_yotc)):
         if 0.<=wdirmac_ylev[i,j]<=90.:
@@ -440,12 +438,6 @@ for j in range(0,ni[2]):
         ptemp_my[i,j]=(tempv_my[i,j]+273.16)*((1000./plev_yotc[i])**0.286) #Ok
 
         brn_mya[i,j]=(g/float(ptemp_my[0,j]))*((hlev_yotc[i]-hlev_yotc[0])*(ptemp_my[i,j]-ptemp_my[0,j]))/float((umac_ylev[i,j]-umac_ylev[0,j])**2+(vmac_ylev[i,j]-vmac_ylev[0,j])**2)
-
-        # vcomp_my[i,j]=-wspdmac_ylev[i,j]*(np.cos(np.radians(wdir_my[i,j])))
-        # ucomp_my[i,j]=-wspdmac_ylev[i,j]*(np.sin(np.radians(wdir_my[i,j])))
-
-        # vcomp_initial_my[i,j]=-wspdmac_ylev[i,j]*(np.cos(np.radians(wdirmac_ylev[i,j])))
-        # ucomp_initial_my[i,j]=-wspdmac_ylev[i,j]*(np.sin(np.radians(wdirmac_ylev[i,j])))
 
     for i in range(0,len(hlev_yotc)-1):
         vert_shear_my[i,j]=np.sqrt(float((umac_ylev[i,j]-umac_ylev[i-1,j])**2+(vmac_ylev[i,j]-vmac_ylev[i-1,j])**2))/float(hlev_yotc[i+1]-hlev_yotc[i])
@@ -570,24 +562,6 @@ for j in range(0,ni[2]):
     pot_temp_my[j]=ptemp_my[10,j]
     brn_my[j]=brn_mya[10,j]
 #*****************************************************************************\
-# #Histogram
-# n, bin_edges =np.histogram(mac_y_clas, bins=[1, 2, 3, 4,5],normed=1)
-
-# plt.figure(0)
-# y=bin_edges[0:4]
-
-# #clas = ('No Inv.', 'Single Inv.', 'Decoupled L.', 'Buffer L.')
-# clas = ('NI', 'SI', 'DL', 'BL')
-# y_pos = np.arange(len(clas))
-
-# plt.barh(y_pos, n, align='center', color='green')
-# plt.yticks(y_pos, clas)
-# plt.xticks(np.arange(0, 1.1, 0.1))
-# plt.xlabel('Performance')
-# plt.xlim([0,1])
-# #plt.show()
-
-#*****************************************************************************\
 #Cambiar fechas
 timestamp = [datenum_to_datetime(t) for t in timesd]
 time_my = np.array(timestamp)
@@ -684,14 +658,7 @@ dy={'Clas':yotc_clas,
 '1ra Inv': yotc_hght_1inv,
 '2da Inv': yotc_hght_2inv,
 'Strg 1inv': yotc_strg_1inv,
-'Strg 2inv': yotc_strg_2inv,
-'Mix R 925':mixr_yotc,
-'T 925':temp_yotc,
-'Theta v 925':pot_temp_yotc,
-'u 925':u_yotc,
-'v 925':v_yotc,
-'RH 925':relhum_yotc,
-'BRN 925':brn_yotc}
+'Strg 2inv': yotc_strg_2inv}
 
 df_yotc = pd.DataFrame(data=dy,index=date_yotc)
 df_yotc.index.name = 'Date'
@@ -699,29 +666,7 @@ df_yotc.index.name = 'Date'
 #Dataframe YOTC All
 df_yotc_all=df_yotc.reindex(date_index_all)
 df_yotc_all.index.name = 'Date'
-# #*****************************************************************************\
-# #Dataframe MAC
-# dm={'Clas':mac_clas,
-# 'Depth':mac_depth,
-# '1 Inv BL': mac_hght_1invBL,
-# '2 Inv BL': mac_hght_2invBL,
-# '1 Inv DL': mac_hght_1invDL,
-# '2 Inv DL': mac_hght_2invDL,
-# '1ra Inv': mac_hght_1inv,
-# '2da Inv': mac_hght_2inv,
-# 'Strg 1inv': mac_strg_1inv,
-# 'Strg 2inv': mac_strg_2inv}
-
-# df_mac = pd.DataFrame(data=dm,index=time_my)
-# # Eliminate Duplicate Soundings
-
-# dfm=df_mac.reset_index().drop_duplicates(cols='index',take_last=True).set_index('index')
-
-# df_mac_final=dfm.reindex(date_index_all)
-# df_mac_final.index.name = 'Date'
-# # count_nan = len(df_my_final) - df_my_final.count()
-
-# #*****************************************************************************\
+#*****************************************************************************\
 #Dataframe MAC YOTC levels
 dmy={'Clas':mac_y_clas,
 'Depth':mac_y_depth,
@@ -732,14 +677,7 @@ dmy={'Clas':mac_y_clas,
 '1ra Inv': mac_y_hght_1inv,
 '2da Inv': mac_y_hght_2inv,
 'Strg 1inv': mac_y_strg_1inv,
-'Strg 2inv': mac_y_strg_2inv,
-'Mix R 925':mixr_my,
-'T 925':temp_my,
-'Theta v 925':pot_temp_my,
-'u 925':u_my,
-'v 925':v_my,
-'RH 925':relhum_my,
-'BRN 925':brn_my}
+'Strg 2inv': mac_y_strg_2inv}
 
 df_mac_y = pd.DataFrame(data=dmy,index=time_my)
 # Eliminate Duplicate Soundings
@@ -748,30 +686,99 @@ dfmy=df_mac_y.reset_index().drop_duplicates(cols='index',take_last=True).set_ind
 df_macyotc_final=dfmy.reindex(date_index_all)
 df_macyotc_final.index.name = 'Date'
 #*****************************************************************************\
-#Saving CSV
-# path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+#*****************************************************************************\
+#*****************************************************************************\
+#                          Dataframes 3D                        \
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#No Inversion
+t_list=temp_yotcNI.tolist()
+u_list=u_yotcNI.tolist()
+v_list=v_yotcNI.tolist()
+rh_list=relhum_yotcNI.tolist()
+mr_list=mixr_yotcNI.tolist()
+theta_list=pot_temp_yotcNI.tolist()
 
-# df_yotc.to_csv(path_data_save + 'df_yotc925.csv', sep='\t', encoding='utf-8')
-# df_yotc_all.to_csv(path_data_save + 'df_yotc_all925.csv', sep='\t', encoding='utf-8')
-# # df_mac_final.to_csv(path_data_save + 'df_mac_final.csv', sep='\t', encoding='utf-8')
-# df_macyotc_final.to_csv(path_data_save + 'df_macyotc_final925.csv', sep='\t', encoding='utf-8')
+data={'temp':t_list, 'thetav':theta_list, 'u':u_list, 'v':u_list, 'RH':rh_list, 'mixr':mr_list}
+df=pd.DataFrame(data=data, index=date_yotc)
+
+df_yotcNI=df.reindex(date_index_all)
+df_yotcNI.index.name = 'Date'
+del df, data
+
+#Single Inversion
+t_list=temp_yotcSI.tolist()
+u_list=u_yotcSI.tolist()
+v_list=v_yotcSI.tolist()
+rh_list=relhum_yotcSI.tolist()
+mr_list=mixr_yotcSI.tolist()
+theta_list=pot_temp_yotcSI.tolist()
+
+data={'temp':t_list, 'thetav':theta_list, 'u':u_list, 'v':u_list, 'RH':rh_list, 'mixr':mr_list}
+df=pd.DataFrame(data=data, index=date_yotc)
+
+df_yotcSI=df.reindex(date_index_all)
+df_yotcSI.index.name = 'Date'
+del df, data
+
+#Decopled Layer
+t_list=temp_yotcDL.tolist()
+u_list=u_yotcDL.tolist()
+v_list=v_yotcDL.tolist()
+rh_list=relhum_yotcDL.tolist()
+mr_list=mixr_yotcDL.tolist()
+theta_list=pot_temp_yotcDL.tolist()
+
+data={'temp':t_list, 'thetav':theta_list, 'u':u_list, 'v':u_list, 'RH':rh_list, 'mixr':mr_list}
+df=pd.DataFrame(data=data, index=date_yotc)
+
+df_yotcDL=df.reindex(date_index_all)
+df_yotcDL.index.name = 'Date'
+del df, data
+
+#Buffer Layer
+t_list=temp_yotcBL.tolist()
+u_list=u_yotcBL.tolist()
+v_list=v_yotcBL.tolist()
+rh_list=relhum_yotcBL.tolist()
+mr_list=mixr_yotcBL.tolist()
+theta_list=pot_temp_yotcBL.tolist()
+
+data={'temp':t_list, 'thetav':theta_list, 'u':u_list, 'v':u_list, 'RH':rh_list, 'mixr':mr_list}
+df=pd.DataFrame(data=data, index=date_yotc)
+
+df_yotcBL=df.reindex(date_index_all)
+df_yotcBL.index.name = 'Date'
+#del df, data
 
 #*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#Reading Fronts File
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+path_data_csv=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+df_front= pd.read_csv(path_data_csv + 'df_front.csv', sep='\t', parse_dates=['Date'])
+df_front= df_front.set_index('Date')
 
-# #T1 = pd.read_csv(path_data_save + 'df_macyotc_final.csv', sep='\t')
+#Merge datraframe mac with
+df_yotcfroNI=pd.concat([df_yotcNI, df_front],axis=1)
+df_yotcfroSI=pd.concat([df_yotcSI, df_front],axis=1)
+df_yotcfroDL=pd.concat([df_yotcDL, df_front],axis=1)
+df_yotcfroBL=pd.concat([df_yotcBL, df_front],axis=1)
+
+#*****************************************************************************\
+df_yotcfroNI=df_yotcfroNI[np.isfinite(df_yotcfroNI['Dist Front'])]
+#*****************************************************************************\
+df1=df_yotcfroNI[(df_yotcfroNI['Dist Front']>=0) & (df_yotcfroNI['Dist Front']<=1)]
+
+uu=np.asarray(df1['u'])
+u1=np.hstack(df1['u'])
+
+#b = np.matrix(np.array(df1['u']))
 
 
-
-
-
-# #Dataframe datos per level
-# #nlevel=range(1,31)
-# #Crear listas con variables y unirlas a dataframe 3D
-# #t_list=temp.tolist()
-# #u_list=u.tolist()
-# #v_list=v.tolist()
-# #q_list=q.tolist()
-
-# #data={'temp':t_list, 'q':q_list,'u':u_list, 'v':v_list}
-# #df=pd.DataFrame(data=data, index=date_range)
+#df=df_yotcfroNI.hist(by=df_yotcfroNI['Dist Front'])
 

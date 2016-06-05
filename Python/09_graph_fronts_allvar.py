@@ -176,7 +176,6 @@ upre=np.array(df_premy['u 925'])
 vpre=np.array(df_premy['v 925'])
 
 wsp_premy=np.sqrt(upre**2 + vpre**2)
-
 #dir_premy=np.arctan2(upre, vpre)*(180/np.pi)+180
 dir_premy=np.arctan2(-upre, -vpre)*(180/np.pi)
 
@@ -795,7 +794,7 @@ ax4.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,labe
 ax4.tick_params(axis='both', which='major', labelsize=14)
 ax4.set_xticks(bx)
 ax4.set_ylim([yy1,yy2])
-ax4.legend(loc='upper right')
+#ax4.legend(loc='upper right')
 ax4.set_xlabel('Distance from front (deg)',fontsize = 12)
 ax4.set_ylabel('mix. ratio (g kg$^{-1}$)',fontsize = 12)
 ax4.set_title('No Inversion (YOTC)',fontsize = 14 ,fontweight='bold')
@@ -1393,3 +1392,76 @@ ax9.grid()
 plt.suptitle('YOTC (925 hPa)',fontsize = 14 ,fontweight='bold')
 fig.savefig(path_data_save + 'windclas_yotc_fronts.eps', format='eps', dpi=1200)
 
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#                                   BRN
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+yy1=0
+yy2=20
+by=np.arange(yy1,yy2+2,2)
+
+row = 2
+column = 1
+
+fig, axes = plt.subplots(row, column, facecolor='w', figsize=(7,8))
+ax1, ax2 =axes.flat
+#*****************************************************************************\
+#*****************************************************************************\
+# MAC Ave
+#*****************************************************************************\
+#*****************************************************************************\
+
+df_myclas = df_myfro[np.isfinite(df_myfro['Clas'])]
+#*****************************************************************************\
+df_mydist = df_myclas[np.isfinite(df_myclas['Dist Front'])]
+x1=np.array(df_mydist['Dist Front'])
+y1=np.array(df_mydist['BRN 925'])
+
+bin_means, bin_edges, binnumber = stats.binned_statistic(x1, y1, statistic='mean', bins=30)
+bin_std, _, _ = stats.binned_statistic(x1, y1, statistic=np.std, bins=30)
+
+ax1.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='prefront',yerr=[np.zeros(15), bin_std[0:df1]], error_kw=error_config)
+
+ax1.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='postfront',yerr=[np.zeros(15), bin_std[df1:df2]], error_kw=error_config)
+
+
+ax1.tick_params(axis='both', which='major', labelsize=14)
+ax1.set_xticks(bx)
+ax1.set_ylim([yy1,yy2])
+ax1.legend(loc='upper right')
+ax1.set_xlabel('Distance from front (deg)',fontsize = 12)
+#ax1.set_ylabel('Temp. ($^o$C)',fontsize = 12)
+ax1.set_title('MAC$_{AVE}$',fontsize = 14 ,fontweight='bold')
+ax1.grid()
+
+#*****************************************************************************\
+#*****************************************************************************\
+# YOTC
+#*****************************************************************************\
+#*****************************************************************************\
+df_yotcclas = df_yotcfro[np.isfinite(df_yotcfro['Clas'])]
+df_yotcdist = df_yotcclas[np.isfinite(df_yotcclas['Dist Front'])]
+x1=np.array(df_yotcdist['Dist Front'])
+y1=np.array(df_yotcdist['BRN 925'])
+
+bin_means, bin_edges, binnumber = stats.binned_statistic(x1, y1, statistic='mean', bins=30)
+bin_std, _, _ = stats.binned_statistic(x1, y1, statistic=np.std, bins=30)
+
+ax2.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='prefront',yerr=[np.zeros(15), bin_std[0:df1]], error_kw=error_config)
+
+ax2.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='postfront',yerr=[np.zeros(15), bin_std[df1:df2]], error_kw=error_config)
+
+
+ax2.tick_params(axis='both', which='major', labelsize=14)
+ax2.set_xticks(bx)
+ax2.set_ylim([yy1,yy2])
+ax2.set_xlabel('Distance from front (deg)',fontsize = 12)
+#ax2.set_ylabel(r'$\theta_v$ ($^o$C)',fontsize = 12)
+ax2.set_title('YOTC',fontsize = 14 ,fontweight='bold')
+ax2.grid()
+
+fig.tight_layout()
+fig.savefig(path_data_save + 'brn_fronts.eps', format='eps', dpi=1200)
