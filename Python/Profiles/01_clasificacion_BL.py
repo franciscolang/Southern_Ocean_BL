@@ -685,6 +685,9 @@ dfmy=df_mac_y.reset_index().drop_duplicates(cols='index',take_last=True).set_ind
 
 df_macyotc_final=dfmy.reindex(date_index_all)
 df_macyotc_final.index.name = 'Date'
+
+
+
 #*****************************************************************************\
 #*****************************************************************************\
 #*****************************************************************************\
@@ -700,57 +703,14 @@ rh_list=relhum_yotcNI.tolist()
 mr_list=mixr_yotcNI.tolist()
 theta_list=pot_temp_yotcNI.tolist()
 
-data={'temp':t_list, 'thetav':theta_list, 'u':u_list, 'v':u_list, 'RH':rh_list, 'mixr':mr_list}
+
+data={'u': u_list, 'v': v_list}
 df=pd.DataFrame(data=data, index=date_yotc)
 
 df_yotcNI=df.reindex(date_index_all)
 df_yotcNI.index.name = 'Date'
-del df, data
+del df, data, u_list, v_list
 
-#Single Inversion
-t_list=temp_yotcSI.tolist()
-u_list=u_yotcSI.tolist()
-v_list=v_yotcSI.tolist()
-rh_list=relhum_yotcSI.tolist()
-mr_list=mixr_yotcSI.tolist()
-theta_list=pot_temp_yotcSI.tolist()
-
-data={'temp':t_list, 'thetav':theta_list, 'u':u_list, 'v':u_list, 'RH':rh_list, 'mixr':mr_list}
-df=pd.DataFrame(data=data, index=date_yotc)
-
-df_yotcSI=df.reindex(date_index_all)
-df_yotcSI.index.name = 'Date'
-del df, data
-
-#Decopled Layer
-t_list=temp_yotcDL.tolist()
-u_list=u_yotcDL.tolist()
-v_list=v_yotcDL.tolist()
-rh_list=relhum_yotcDL.tolist()
-mr_list=mixr_yotcDL.tolist()
-theta_list=pot_temp_yotcDL.tolist()
-
-data={'temp':t_list, 'thetav':theta_list, 'u':u_list, 'v':u_list, 'RH':rh_list, 'mixr':mr_list}
-df=pd.DataFrame(data=data, index=date_yotc)
-
-df_yotcDL=df.reindex(date_index_all)
-df_yotcDL.index.name = 'Date'
-del df, data
-
-#Buffer Layer
-t_list=temp_yotcBL.tolist()
-u_list=u_yotcBL.tolist()
-v_list=v_yotcBL.tolist()
-rh_list=relhum_yotcBL.tolist()
-mr_list=mixr_yotcBL.tolist()
-theta_list=pot_temp_yotcBL.tolist()
-
-data={'temp':t_list, 'thetav':theta_list, 'u':u_list, 'v':u_list, 'RH':rh_list, 'mixr':mr_list}
-df=pd.DataFrame(data=data, index=date_yotc)
-
-df_yotcBL=df.reindex(date_index_all)
-df_yotcBL.index.name = 'Date'
-#del df, data
 
 #*****************************************************************************\
 #*****************************************************************************\
@@ -765,20 +725,10 @@ df_front= df_front.set_index('Date')
 
 #Merge datraframe mac with
 df_yotcfroNI=pd.concat([df_yotcNI, df_front],axis=1)
-df_yotcfroSI=pd.concat([df_yotcSI, df_front],axis=1)
-df_yotcfroDL=pd.concat([df_yotcDL, df_front],axis=1)
-df_yotcfroBL=pd.concat([df_yotcBL, df_front],axis=1)
-
-#*****************************************************************************\
-df_yotcfroNI=df_yotcfroNI[np.isfinite(df_yotcfroNI['Dist Front'])]
-#*****************************************************************************\
-df1=df_yotcfroNI[(df_yotcfroNI['Dist Front']>=0) & (df_yotcfroNI['Dist Front']<=1)]
-
-uu=np.asarray(df1['u'])
-u1=np.hstack(df1['u'])
-
-#b = np.matrix(np.array(df1['u']))
 
 
-#df=df_yotcfroNI.hist(by=df_yotcfroNI['Dist Front'])
+# #*****************************************************************************\
+# df_yotcfroNI=df_yotcfroNI[np.isfinite(df_yotcfroNI['Dist Front'])]
+
+
 
