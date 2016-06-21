@@ -677,10 +677,10 @@ date_index_all = pd.date_range('2006-01-01 00:00', periods=3652, freq='12H')
 #Dataframe YOTC 2008-2010
 dy={'Clas':yotc_clas,
 'Depth':yotc_depth,
-'1 Inv BL': yotc_hght_1invBL,
-'2 Inv BL': yotc_hght_2invBL,
-'1 Inv DL': yotc_hght_1invDL,
-'2 Inv DL': yotc_hght_2invDL,
+#'1 Inv BL': yotc_hght_1invBL,
+#'2 Inv BL': yotc_hght_2invBL,
+#'1 Inv DL': yotc_hght_1invDL,
+#'2 Inv DL': yotc_hght_2invDL,
 '1ra Inv': yotc_hght_1inv,
 '2da Inv': yotc_hght_2inv,
 'Strg 1inv': yotc_strg_1inv,
@@ -690,8 +690,8 @@ dy={'Clas':yotc_clas,
 'Theta v 925':pot_temp_yotc,
 'u 925':u_yotc,
 'v 925':v_yotc,
-'RH 925':relhum_yotc,
-'BRN 925':brn_yotc}
+'RH 925':relhum_yotc}
+#'BRN 925':brn_yotc}
 
 df_yotc = pd.DataFrame(data=dy,index=date_yotc)
 df_yotc.index.name = 'Date'
@@ -725,10 +725,10 @@ df_yotc_all.index.name = 'Date'
 #Dataframe MAC YOTC levels
 dmy={'Clas':mac_y_clas,
 'Depth':mac_y_depth,
-'1 Inv BL': mac_y_hght_1invBL,
-'2 Inv BL': mac_y_hght_2invBL,
-'1 Inv DL': mac_y_hght_1invDL,
-'2 Inv DL': mac_y_hght_2invDL,
+# '1 Inv BL': mac_y_hght_1invBL,
+# '2 Inv BL': mac_y_hght_2invBL,
+# '1 Inv DL': mac_y_hght_1invDL,
+# '2 Inv DL': mac_y_hght_2invDL,
 '1ra Inv': mac_y_hght_1inv,
 '2da Inv': mac_y_hght_2inv,
 'Strg 1inv': mac_y_strg_1inv,
@@ -738,8 +738,7 @@ dmy={'Clas':mac_y_clas,
 'Theta v 925':pot_temp_my,
 'u 925':u_my,
 'v 925':v_my,
-'RH 925':relhum_my,
-'BRN 925':brn_my}
+'RH 925':relhum_my}
 
 df_mac_y = pd.DataFrame(data=dmy,index=time_my)
 # Eliminate Duplicate Soundings
@@ -749,12 +748,12 @@ df_macyotc_final=dfmy.reindex(date_index_all)
 df_macyotc_final.index.name = 'Date'
 #*****************************************************************************\
 #Saving CSV
-# path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
 
-# df_yotc.to_csv(path_data_save + 'df_yotc925.csv', sep='\t', encoding='utf-8')
-# df_yotc_all.to_csv(path_data_save + 'df_yotc_all925.csv', sep='\t', encoding='utf-8')
-# # df_mac_final.to_csv(path_data_save + 'df_mac_final.csv', sep='\t', encoding='utf-8')
-# df_macyotc_final.to_csv(path_data_save + 'df_macyotc_final925.csv', sep='\t', encoding='utf-8')
+#df_yotc.to_csv(path_data_save + 'df_yotc925.csv', sep='\t', encoding='utf-8')
+df_yotc_all.to_csv(path_data_save + 'df_yotc_all925.csv', sep='\t', encoding='utf-8')
+# df_mac_final.to_csv(path_data_save + 'df_mac_final.csv', sep='\t', encoding='utf-8')
+df_macyotc_final.to_csv(path_data_save + 'df_macyotc_final925.csv', sep='\t', encoding='utf-8')
 
 #*****************************************************************************\
 

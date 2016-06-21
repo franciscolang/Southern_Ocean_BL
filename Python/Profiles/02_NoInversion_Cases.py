@@ -11,7 +11,6 @@ import scipy as sp
 from scipy.interpolate import UnivariateSpline
 import scipy.interpolate as si
 from scipy.interpolate import interp1d
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 base_dir = os.path.expanduser('~')
 path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/YOTC/mat/'
@@ -63,9 +62,10 @@ plev_yotc=file_levels[:,4] #value 10 is 925
 #*****************************************************************************\
 g=9.8 #m seg^-2
 
-#Calculate Virtual Temperature
-theta=(temp)*(1000./plev_yotc)**0.287;
+
 #Calculate Potential Temperature
+theta=(temp)*(1000./plev_yotc)**0.287;
+#Calculate Virtual Potential Temperature
 pot_temp=(1+0.61*(mixr/1000.))*theta;
 
 pot_temp_grad=np.zeros(pot_temp.shape)
@@ -113,6 +113,7 @@ u_yotc=np.empty(relhum.shape)*np.nan
 v_yotc=np.empty(relhum.shape)*np.nan
 mixr_yotc=np.empty(relhum.shape)*np.nan
 pot_temp_yotc=np.empty(relhum.shape)*np.nan
+theta_yotc=np.empty(relhum.shape)*np.nan
 
 #******************************************************************************
 #Main Inversion Position
@@ -227,12 +228,11 @@ u_yotc=u
 v_yotc=v
 mixr_yotc=mixr
 pot_temp_yotc=pot_temp
-dthetav_yotc=pot_temp_grad
-vertshear_yotc=yvert_shear
+theta_yotc=theta
 
 # ****************************************************************************\
 # ****************************************************************************\
-#                            MAC Data Original Levels
+#                            MAC Data
 #*****************************************************************************\
 # ****************************************************************************\
 path_databom=base_dir+'/Dropbox/Monash_Uni/SO/MAC/MatFiles/files_bom/'
@@ -346,6 +346,7 @@ wdir_my=np.empty(tempmac_ylev.shape)
 
 spec_hum_my=np.empty(tempmac_ylev.shape)
 tempv_my=np.empty(tempmac_ylev.shape)
+theta_my=np.empty(tempmac_ylev.shape)
 ptemp_my=np.empty(tempmac_ylev.shape)
 brn_mya=np.empty(tempmac_ylev.shape)
 
@@ -399,7 +400,8 @@ for j in range(0,ni[2]):
         spec_hum_my[i,j]=(float(mixrmac_ylev[i,j])/1000.)/(1+(float(mixrmac_ylev[i,j])/1000.))
 
         tempv_my[i,j]=tempmac_ylev[i,j]*float(1+0.61*spec_hum_my[i,j])
-        ptemp_my[i,j]=(tempv_my[i,j]+273.16)*((1000./plev_yotc[i])**0.286) #Ok
+        ptemp_my[i,j]=(tempv_my[i,j]+273.16)*((1000./plev_yotc[i])**0.286) #Virtual Potential Tempertarure
+        theta_my[i,j]=(tempmac_ylev[i,j]+273.16)*((1000./plev_yotc[i])**0.286) #Potential Tempertarure
 
         brn_mya[i,j]=(g/float(ptemp_my[0,j]))*((hlev_yotc[i]-hlev_yotc[0])*(ptemp_my[i,j]-ptemp_my[0,j]))/float((umac_ylev[i,j]-umac_ylev[0,j])**2+(vmac_ylev[i,j]-vmac_ylev[0,j])**2)
 
@@ -524,8 +526,7 @@ u_my=umac_ylev.T
 v_my=vmac_ylev.T
 mixr_my=mixrmac_ylev.T
 pot_temp_my=ptemp_my.T
-dthetav_my=ptemp_gmy.T
-vertshear_my=vert_shear_my.T
+theta_my=theta_my.T
 
 #*****************************************************************************\
 #Cambiar fechas
@@ -621,8 +622,7 @@ v_list=v_yotc.tolist()
 rh_list=relhum_yotc.tolist()
 mr_list=mixr_yotc.tolist()
 thetav_list=pot_temp_yotc.tolist()
-dthetav_list=dthetav_yotc.tolist()
-vertshear_list=vertshear_yotc.tolist()
+theta_list=theta_yotc.tolist()
 
 dy={'Clas':yotc_clas,
 'Depth':yotc_depth,
@@ -636,8 +636,7 @@ dy={'Clas':yotc_clas,
 'Strg 2inv': yotc_strg_2inv,
 'temp':t_list,
 'thetav':thetav_list,
-'dthetav':dthetav_list,
-'vertshear':vertshear_list,
+'theta':theta_list,
 'u':u_list,
 'v':u_list,
 'RH':rh_list,
@@ -657,10 +656,7 @@ v_list=v_my.tolist()
 rh_list=relhum_my.tolist()
 mr_list=mixr_my.tolist()
 thetav_list=pot_temp_my.tolist()
-dthetav_list=dthetav_my.tolist()
-vertshear_list=vertshear_my.tolist()
-
-
+theta_list=theta_my.tolist()
 
 dmy={'Clas':mac_y_clas,
 'Depth':mac_y_depth,
@@ -674,8 +670,7 @@ dmy={'Clas':mac_y_clas,
 'Strg 2inv': mac_y_strg_2inv,
 'temp':t_list,
 'thetav':thetav_list,
-'dthetav':dthetav_list,
-'vertshear':vertshear_list,
+'theta':theta_list,
 'u':u_list,
 'v':u_list,
 'RH':rh_list,
@@ -707,331 +702,93 @@ df_front= df_front.set_index('Date')
 
 #Merge datraframe mac with
 df_yotcfro=pd.concat([df_yotc_all, df_front],axis=1)
+
 df_myfro=pd.concat([df_macyotc_final, df_front],axis=1)
 
+#*****************************************************************************\
 
 #*****************************************************************************\
 #*****************************************************************************\
+# No Inversion Profiles
 #*****************************************************************************\
-# Profiles
 #*****************************************************************************\
-#*****************************************************************************\
+#YOTC
 #*****************************************************************************\
 #Selecciotion of NI with fronts
-#df_NI1 = df_yotcfro[df_yotcfro['Clas']==2]
-df_NI1 = df_myfro
+df_NI1 = df_yotcfro[df_yotcfro['Clas']==1]
 df_yotcfroNI = df_NI1[np.isfinite(df_NI1['Dist Front'])]
-df_yotcfroNI = df_myfro
 
-#Extraction of Variables
-df_1 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=0)&(df_yotcfroNI['Dist Front']<=1)]
-df_2 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>1)&(df_yotcfroNI['Dist Front']<=2)]
-df_3 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>2)&(df_yotcfroNI['Dist Front']<=3)]
-df_4 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>3)&(df_yotcfroNI['Dist Front']<=4)]
-df_5 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>4)&(df_yotcfroNI['Dist Front']<=5)]
-df_6 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>5)&(df_yotcfroNI['Dist Front']<=6)]
-df_7 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>6)&(df_yotcfroNI['Dist Front']<=7)]
-df_8 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>7)&(df_yotcfroNI['Dist Front']<=8)]
-df_9 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>8)&(df_yotcfroNI['Dist Front']<=9)]
-df_10 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>9)&(df_yotcfroNI['Dist Front']<=10)]
+#Extraction of Variables Close to Fronts
+df_posyotcNI = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=0)&(df_yotcfroNI['Dist Front']<=1)]
+df_preyotcNI = df_yotcfroNI[(df_yotcfroNI['Dist Front']>-1)&(df_yotcfroNI['Dist Front']<=0)]
 
 
-df_11 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=-1)&(df_yotcfroNI['Dist Front']<0)]
-df_12 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=-2)&(df_yotcfroNI['Dist Front']<-1)]
-df_13 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=-3)&(df_yotcfroNI['Dist Front']<2)]
-df_14 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=-4)&(df_yotcfroNI['Dist Front']<3)]
-df_15 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=-5)&(df_yotcfroNI['Dist Front']<4)]
-df_16 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=-6)&(df_yotcfroNI['Dist Front']<5)]
-df_17 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=-7)&(df_yotcfroNI['Dist Front']<6)]
-df_18 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=-8)&(df_yotcfroNI['Dist Front']<7)]
-df_19 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=-9)&(df_yotcfroNI['Dist Front']<8)]
-df_20 = df_yotcfroNI[(df_yotcfroNI['Dist Front']>=-10)&(df_yotcfroNI['Dist Front']<9)]
 
 
-temp1=np.empty([len(df_1),91])*np.nan
-temp2=np.empty([len(df_2),91])*np.nan
-temp3=np.empty([len(df_3),91])*np.nan
-temp4=np.empty([len(df_4),91])*np.nan
-temp5=np.empty([len(df_5),91])*np.nan
-temp6=np.empty([len(df_6),91])*np.nan
-temp7=np.empty([len(df_7),91])*np.nan
-temp8=np.empty([len(df_8),91])*np.nan
-temp9=np.empty([len(df_9),91])*np.nan
-temp10=np.empty([len(df_10),91])*np.nan
-temp11=np.empty([len(df_11),91])*np.nan
-temp12=np.empty([len(df_12),91])*np.nan
-temp13=np.empty([len(df_13),91])*np.nan
-temp14=np.empty([len(df_14),91])*np.nan
-temp15=np.empty([len(df_15),91])*np.nan
-temp16=np.empty([len(df_16),91])*np.nan
-temp17=np.empty([len(df_17),91])*np.nan
-temp18=np.empty([len(df_18),91])*np.nan
-temp19=np.empty([len(df_19),91])*np.nan
-temp20=np.empty([len(df_20),91])*np.nan
 
-thetav1=np.empty([len(df_1),91])*np.nan
-thetav2=np.empty([len(df_2),91])*np.nan
-thetav3=np.empty([len(df_3),91])*np.nan
-thetav4=np.empty([len(df_4),91])*np.nan
-thetav5=np.empty([len(df_5),91])*np.nan
-thetav6=np.empty([len(df_6),91])*np.nan
-thetav7=np.empty([len(df_7),91])*np.nan
-thetav8=np.empty([len(df_8),91])*np.nan
-thetav9=np.empty([len(df_9),91])*np.nan
-thetav10=np.empty([len(df_10),91])*np.nan
-thetav11=np.empty([len(df_11),91])*np.nan
-thetav12=np.empty([len(df_12),91])*np.nan
-thetav13=np.empty([len(df_13),91])*np.nan
-thetav14=np.empty([len(df_14),91])*np.nan
-thetav15=np.empty([len(df_15),91])*np.nan
-thetav16=np.empty([len(df_16),91])*np.nan
-thetav17=np.empty([len(df_17),91])*np.nan
-thetav18=np.empty([len(df_18),91])*np.nan
-thetav19=np.empty([len(df_19),91])*np.nan
-thetav20=np.empty([len(df_20),91])*np.nan
 
-RH1=np.empty([len(df_1),91])*np.nan
-RH2=np.empty([len(df_2),91])*np.nan
-RH3=np.empty([len(df_3),91])*np.nan
-RH4=np.empty([len(df_4),91])*np.nan
-RH5=np.empty([len(df_5),91])*np.nan
-RH6=np.empty([len(df_6),91])*np.nan
-RH7=np.empty([len(df_7),91])*np.nan
-RH8=np.empty([len(df_8),91])*np.nan
-RH9=np.empty([len(df_9),91])*np.nan
-RH10=np.empty([len(df_10),91])*np.nan
-RH11=np.empty([len(df_11),91])*np.nan
-RH12=np.empty([len(df_12),91])*np.nan
-RH13=np.empty([len(df_13),91])*np.nan
-RH14=np.empty([len(df_14),91])*np.nan
-RH15=np.empty([len(df_15),91])*np.nan
-RH16=np.empty([len(df_16),91])*np.nan
-RH17=np.empty([len(df_17),91])*np.nan
-RH18=np.empty([len(df_18),91])*np.nan
-RH19=np.empty([len(df_19),91])*np.nan
-RH20=np.empty([len(df_20),91])*np.nan
 
+
+#*****************************************************************************\
+#MAC Ave
+#*****************************************************************************\
+#Selecciotion of NI with fronts
+df_NI1 = df_myfro[df_myfro['Clas']==4]
+df_myfroNI = df_NI1[np.isfinite(df_NI1['Dist Front'])]
+
+#Extraction of Variables Close to Fronts
+df_posmyNI = df_myfroNI[(df_myfroNI['Dist Front']>=0)&(df_myfroNI['Dist Front']<=1)]
+df_premyNI = df_myfroNI[(df_myfroNI['Dist Front']>-1)&(df_myfroNI['Dist Front']<=0)]
+
+thethav_premy=np.empty([len(df_premyNI),91])*np.nan
+thetha_premy=np.empty([len(df_premyNI),91])*np.nan
+mixr_premy=np.empty([len(df_premyNI),91])*np.nan
+u_premy=np.empty([len(df_premyNI),91])*np.nan
+v_premy=np.empty([len(df_premyNI),91])*np.nan
+
+thethav_posmy=np.empty([len(df_posmyNI),91])*np.nan
 
 #Building variables
-for i in range(0, len(df_1)):
-    temp1[i,:]=np.array(df_1['dthetav'][i])
-    thetav1[i,:]=np.array(df_1['thetav'][i])
-    RH1[i,:]=np.array(df_1['vertshear'][i])
-for i in range(0, len(df_2)):
-    temp2[i,:]=np.array(df_2['dthetav'][i])
-    thetav2[i,:]=np.array(df_2['thetav'][i])
-    RH2[i,:]=np.array(df_2['vertshear'][i])
-for i in range(0, len(df_3)):
-    temp3[i,:]=np.array(df_3['dthetav'][i])
-    thetav3[i,:]=np.array(df_3['thetav'][i])
-    RH3[i,:]=np.array(df_3['vertshear'][i])
-for i in range(0, len(df_4)):
-    temp4[i,:]=np.array(df_4['dthetav'][i])
-    thetav4[i,:]=np.array(df_4['thetav'][i])
-    RH4[i,:]=np.array(df_4['vertshear'][i])
-for i in range(0, len(df_5)):
-    temp5[i,:]=np.array(df_5['dthetav'][i])
-    thetav5[i,:]=np.array(df_5['thetav'][i])
-    RH5[i,:]=np.array(df_5['vertshear'][i])
-for i in range(0, len(df_6)):
-    temp6[i,:]=np.array(df_6['dthetav'][i])
-    thetav6[i,:]=np.array(df_6['thetav'][i])
-    RH6[i,:]=np.array(df_6['vertshear'][i])
-for i in range(0, len(df_7)):
-    temp7[i,:]=np.array(df_7['dthetav'][i])
-    thetav7[i,:]=np.array(df_7['thetav'][i])
-    RH7[i,:]=np.array(df_7['vertshear'][i])
-for i in range(0, len(df_8)):
-    temp8[i,:]=np.array(df_8['dthetav'][i])
-    thetav8[i,:]=np.array(df_8['thetav'][i])
-    RH8[i,:]=np.array(df_8['vertshear'][i])
-for i in range(0, len(df_9)):
-    temp9[i,:]=np.array(df_9['dthetav'][i])
-    thetav9[i,:]=np.array(df_9['thetav'][i])
-    RH9[i,:]=np.array(df_9['vertshear'][i])
-for i in range(0, len(df_10)):
-    temp10[i,:]=np.array(df_10['dthetav'][i])
-    thetav10[i,:]=np.array(df_10['thetav'][i])
-    RH10[i,:]=np.array(df_10['vertshear'][i])
-for i in range(0, len(df_11)):
-    temp11[i,:]=np.array(df_11['dthetav'][i])
-    thetav11[i,:]=np.array(df_11['thetav'][i])
-    RH11[i,:]=np.array(df_11['vertshear'][i])
-for i in range(0, len(df_12)):
-    temp12[i,:]=np.array(df_12['dthetav'][i])
-    thetav12[i,:]=np.array(df_12['thetav'][i])
-    RH12[i,:]=np.array(df_12['vertshear'][i])
-for i in range(0, len(df_13)):
-    temp13[i,:]=np.array(df_13['dthetav'][i])
-    thetav13[i,:]=np.array(df_13['thetav'][i])
-    RH13[i,:]=np.array(df_13['vertshear'][i])
-for i in range(0, len(df_14)):
-    temp14[i,:]=np.array(df_14['dthetav'][i])
-    thetav14[i,:]=np.array(df_14['thetav'][i])
-    RH14[i,:]=np.array(df_14['vertshear'][i])
-for i in range(0, len(df_15)):
-    temp15[i,:]=np.array(df_15['dthetav'][i])
-    thetav15[i,:]=np.array(df_15['thetav'][i])
-    RH15[i,:]=np.array(df_15['vertshear'][i])
-for i in range(0, len(df_16)):
-    temp16[i,:]=np.array(df_16['dthetav'][i])
-    thetav16[i,:]=np.array(df_16['thetav'][i])
-    RH16[i,:]=np.array(df_16['vertshear'][i])
-for i in range(0, len(df_17)):
-    temp17[i,:]=np.array(df_17['dthetav'][i])
-    thetav17[i,:]=np.array(df_17['thetav'][i])
-    RH17[i,:]=np.array(df_17['vertshear'][i])
-for i in range(0, len(df_18)):
-    temp18[i,:]=np.array(df_18['dthetav'][i])
-    thetav18[i,:]=np.array(df_18['thetav'][i])
-    RH18[i,:]=np.array(df_18['vertshear'][i])
-for i in range(0, len(df_19)):
-    temp19[i,:]=np.array(df_19['dthetav'][i])
-    thetav19[i,:]=np.array(df_19['thetav'][i])
-    RH19[i,:]=np.array(df_19['vertshear'][i])
-for i in range(0, len(df_20)):
-    temp20[i,:]=np.array(df_20['dthetav'][i])
-    thetav20[i,:]=np.array(df_20['thetav'][i])
-    RH20[i,:]=np.array(df_20['vertshear'][i])
+for i in range(0, len(df_premyNI)):
+    thethav_premy[i,:]=np.array(df_premyNI['thetav'][i])
+    thetha_premy[i,:]=np.array(df_premyNI['theta'][i])
+    mixr_premy[i,:]=np.array(df_premyNI['mixr'][i])
+    u_premy[i,:]=np.array(df_premyNI['u'][i])
+    v_premy[i,:]=np.array(df_premyNI['v'][i])
 
-meantemp1=np.nanmean(temp1, axis=0)
-meantemp2=np.nanmean(temp2, axis=0)
-meantemp3=np.nanmean(temp3, axis=0)
-meantemp4=np.nanmean(temp4, axis=0)
-meantemp5=np.nanmean(temp5, axis=0)
-meantemp6=np.nanmean(temp6, axis=0)
-meantemp7=np.nanmean(temp7, axis=0)
-meantemp8=np.nanmean(temp8, axis=0)
-meantemp9=np.nanmean(temp9, axis=0)
-meantemp10=np.nanmean(temp10, axis=0)
-meantemp11=np.nanmean(temp11, axis=0)
-meantemp12=np.nanmean(temp12, axis=0)
-meantemp13=np.nanmean(temp13, axis=0)
-meantemp14=np.nanmean(temp14, axis=0)
-meantemp15=np.nanmean(temp15, axis=0)
-meantemp16=np.nanmean(temp16, axis=0)
-meantemp17=np.nanmean(temp17, axis=0)
-meantemp18=np.nanmean(temp18, axis=0)
-meantemp19=np.nanmean(temp19, axis=0)
-meantemp20=np.nanmean(temp20, axis=0)
-
-meanthetav1=np.nanmean(thetav1, axis=0)
-meanthetav2=np.nanmean(thetav2, axis=0)
-meanthetav3=np.nanmean(thetav3, axis=0)
-meanthetav4=np.nanmean(thetav4, axis=0)
-meanthetav5=np.nanmean(thetav5, axis=0)
-meanthetav6=np.nanmean(thetav6, axis=0)
-meanthetav7=np.nanmean(thetav7, axis=0)
-meanthetav8=np.nanmean(thetav8, axis=0)
-meanthetav9=np.nanmean(thetav9, axis=0)
-meanthetav10=np.nanmean(thetav10, axis=0)
-meanthetav11=np.nanmean(thetav11, axis=0)
-meanthetav12=np.nanmean(thetav12, axis=0)
-meanthetav13=np.nanmean(thetav13, axis=0)
-meanthetav14=np.nanmean(thetav14, axis=0)
-meanthetav15=np.nanmean(thetav15, axis=0)
-meanthetav16=np.nanmean(thetav16, axis=0)
-meanthetav17=np.nanmean(thetav17, axis=0)
-meanthetav18=np.nanmean(thetav18, axis=0)
-meanthetav19=np.nanmean(thetav19, axis=0)
-meanthetav20=np.nanmean(thetav20, axis=0)
-
-meanRH1=np.nanmean(RH1, axis=0)
-meanRH2=np.nanmean(RH2, axis=0)
-meanRH3=np.nanmean(RH3, axis=0)
-meanRH4=np.nanmean(RH4, axis=0)
-meanRH5=np.nanmean(RH5, axis=0)
-meanRH6=np.nanmean(RH6, axis=0)
-meanRH7=np.nanmean(RH7, axis=0)
-meanRH8=np.nanmean(RH8, axis=0)
-meanRH9=np.nanmean(RH9, axis=0)
-meanRH10=np.nanmean(RH10, axis=0)
-meanRH11=np.nanmean(RH11, axis=0)
-meanRH12=np.nanmean(RH12, axis=0)
-meanRH13=np.nanmean(RH13, axis=0)
-meanRH14=np.nanmean(RH14, axis=0)
-meanRH15=np.nanmean(RH15, axis=0)
-meanRH16=np.nanmean(RH16, axis=0)
-meanRH17=np.nanmean(RH17, axis=0)
-meanRH18=np.nanmean(RH18, axis=0)
-meanRH19=np.nanmean(RH19, axis=0)
-meanRH20=np.nanmean(RH20, axis=0)
+for i in range(0, len(df_posmyNI)):
+    thethav_posmy[i,:]=np.array(df_posmyNI['thetav'][i])
 
 #*****************************************************************************\
-meantemp=np.vstack([meantemp10, meantemp9, meantemp8, meantemp7, meantemp6, meantemp5, meantemp4, meantemp3, meantemp2, meantemp1,meantemp11, meantemp12, meantemp13, meantemp14, meantemp15, meantemp16, meantemp17, meantemp18, meantemp19, meantemp20])
-meanthetav=np.vstack([meanthetav10, meanthetav9, meanthetav8, meanthetav7, meanthetav6, meanthetav5, meanthetav4, meanthetav3, meanthetav2, meanthetav1,meanthetav11, meanthetav12, meanthetav13, meanthetav14, meanthetav15, meanthetav16, meanthetav17, meanthetav18, meanthetav19, meanthetav20])
-meanRH=np.vstack([meanRH10, meanRH9, meanRH8, meanRH7, meanRH6, meanRH5, meanRH4, meanRH3, meanRH2, meanRH1,meanRH11, meanRH12, meanRH13, meanRH14, meanRH15, meanRH16, meanRH17, meanRH18, meanRH19, meanRH20])
-#*****************************************************************************\
-#Humidity
-levels=25
-#*****************************************************************************\
-vmin=0
-vmax=0.02
 
-fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-img = ax.pcolor(meanRH[:,0:levels].T,cmap='jet',vmin=vmin, vmax=vmax)
-#img = ax.pcolor(meanRH[:,0:levels].T,cmap='jet')
+t=thethav_posmy[1,:]
+p=plev_yotc
 
-div = make_axes_locatable(ax)
-cax = div.append_axes("right", size="6%", pad=0.05)
-cbar = plt.colorbar(img, cax=cax, format="%.4f")
-cbar.ax.set_title('(%)', size=12)
-
-ax.set_title('Relative humidity', size=18)
-ax.set_xticklabels(np.arange(-15,15,5))
-#ax.set_yticklabels([0, hlev_yotc[0],hlev_yotc[5],hlev_yotc[10],hlev_yotc[15],hlev_yotc[20],hlev_yotc[25]])
-
-ax.set_ylabel('Altitude (m)', size=18)
-ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-ax.margins(0.05)
-plt.tight_layout()
-plt.show()
-#*****************************************************************************\
-#Temperature
-#*****************************************************************************\
-vmin=250
-vmax=280
-
-fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-#img = ax.pcolor(meantemp[:,0:levels].T,cmap='jet',vmin=vmin, vmax=vmax)
-#img = ax.pcolor(meantemp[:,0:levels].T,cmap='seismic')
-img = ax.pcolor(meantemp[:,5:levels].T,cmap='jet')
-
-div = make_axes_locatable(ax)
-cax = div.append_axes("right", size="6%", pad=0.05)
-cbar = plt.colorbar(img, cax=cax, format="%.3f")
-cbar.ax.set_title('(K)', size=12)
-
-ax.set_title('Temperature', size=18)
-ax.set_xticklabels(np.arange(-15,15,5))
-ax.set_yticklabels([0, hlev_yotc[0],hlev_yotc[5],hlev_yotc[10],hlev_yotc[15],hlev_yotc[20],hlev_yotc[25]])
-
-ax.set_ylabel('Altitude (m)', size=18)
-ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-ax.margins(0.05)
-plt.tight_layout()
+fig = plt.figure(figsize=(5, 10))
+ax1 = fig.add_subplot(111)
+ax1.plot(t,p, label = "Top_sensor")
+ax1.set_ylabel("Pressure (hPa)")
+ax1.set_xlabel("Virtual Pot. Temp. (K)")
+ax1.set_ylim(p.max(), 600)
+ax1.set_yticks(np.arange(1000,550,-50))
+ax1.set_xlim(275, 300)
+ax1.grid()
 
 #*****************************************************************************\
-#Vritual Pot Temperature
-vmin=270
-vmax=300
+#Skew-T / Ln-P diagrams
+#*****************************************************************************\
+import pymeteo.skewt as skewt
 
-fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-img = ax.pcolor(meanthetav[:,0:levels].T,cmap='jet',vmin=vmin, vmax=vmax)
+ncas=1
 
-div = make_axes_locatable(ax)
-cax = div.append_axes("right", size="6%", pad=0.05)
-cbar = plt.colorbar(img, cax=cax, format="%.0f")
-cbar.ax.set_title('(K)', size=12)
+z=hlev_yotc
+p=plev_yotc
+th=thetha_premy[ncas,:]
+qv=mixr_premy[ncas,:]
+v=v_premy[ncas,:]
+u=u_premy[ncas,:]
 
-ax.set_title('Temperature', size=18)
-ax.set_xticklabels(np.arange(-15,15,5))
-ax.set_yticklabels([0, hlev_yotc[0],hlev_yotc[5],hlev_yotc[10],hlev_yotc[15],hlev_yotc[20],hlev_yotc[25]])
 
-ax.set_ylabel('Altitude (m)', size=18)
-ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
+skewt.plot(None, z, th, p, qv, u, v, 'output,pdf')
 
-ax.margins(0.05)
-plt.tight_layout()
+
