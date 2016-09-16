@@ -13,6 +13,7 @@ import scipy.interpolate as si
 from scipy.interpolate import interp1d
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pylab import plot,show, grid
+import random as rd
 
 base_dir = os.path.expanduser('~')
 path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/YOTC/mat/'
@@ -89,6 +90,10 @@ for j in range(0,len(time)):
 relhum=0.263*plev_yotc*q*np.exp((17.67*(temp-273.16))/(temp-29.65))**(-1)*100
 relhum[relhum>100]=100
 relhum[relhum<0]=0
+tempC=temp-273.16
+
+dwpoy=243.04*(np.log(relhum/100)+((17.625*tempC)/(243.04+tempC)))/(17.625-np.log(relhum/100)-((17.625*tempC)/(243.04+tempC)))
+
 
 #******************************************************************************
 #Boundary Layer Height Inversion 1 and 2
@@ -234,6 +239,7 @@ pot_temp_v_yotc=pot_temp_v
 dthetav_yotc=pot_temp_grad
 vertshear_yotc=yvert_shear
 pot_temp_yotc=pot_temp
+dwpo_yotc=dwpoy
 # ****************************************************************************\
 # ****************************************************************************\
 #                            MAC Data Original Levels
@@ -297,8 +303,10 @@ hght=bom[:,1,:].reshape(ni[0],ni[2])
 temp=bom[:,2,:].reshape(ni[0],ni[2])
 mixr=bom[:,5,:].reshape(ni[0],ni[2])
 wdir_initial=bom[:,6,:].reshape(ni[0],ni[2])
-wspd=bom[:,7,:].reshape(ni[0],ni[2])
+wspd=bom[:,7,:].reshape(ni[0],ni[2])*0.5144444
 relh=bom[:,4,:].reshape(ni[0],ni[2])
+dwpo=bom[:,3,:].reshape(ni[0],ni[2])
+
 
 u=wspd*(np.cos(np.radians(270-wdir_initial)))
 v=wspd*(np.sin(np.radians(270-wdir_initial)))
@@ -314,6 +322,7 @@ prumixr=np.empty((len(hlev_yotc),0))
 pruu=np.empty((len(hlev_yotc),0))
 pruv=np.empty((len(hlev_yotc),0))
 prurelh=np.empty((len(hlev_yotc),0))
+prudwpo=np.empty((len(hlev_yotc),0))
 
 for j in range(0,ni[2]):
 #height initialization
@@ -341,11 +350,16 @@ for j in range(0,ni[2]):
     resr=interp1d(x,yr)(new_x)
     prurelh=np.append(prurelh,resr)
 
+    ydp=dwpo[:,j]
+    resr=interp1d(x,ydp)(new_x)
+    prudwpo=np.append(prudwpo,resr)
+
 tempmac_ylev=prutemp.reshape(-1,len(hlev_yotc)).transpose()
 umac_ylev=pruu.reshape(-1,len(hlev_yotc)).transpose()
 vmac_ylev=pruv.reshape(-1,len(hlev_yotc)).transpose()
 mixrmac_ylev=prumixr.reshape(-1,len(hlev_yotc)).transpose()
 relhmac_ylev=prurelh.reshape(-1,len(hlev_yotc)).transpose()
+dwpomac_ylev=prudwpo.reshape(-1,len(hlev_yotc)).transpose()
 
 wspdmac_ylev=np.sqrt(umac_ylev**2 + vmac_ylev**2)
 wdirmac_ylev=np.arctan2(-umac_ylev, -vmac_ylev)*(180/np.pi)
@@ -400,6 +414,7 @@ mixr_my=np.empty(ni[2])*np.nan
 pot_temp_my=np.empty(ni[2])*np.nan
 pot_temp_v_my=np.empty(ni[2])*np.nan
 brn_my=np.empty(ni[2])*np.nan
+dwpo_my=np.empty(ni[2])*np.nan
 
 #*****************************************************************************\
 for j in range(0,ni[2]):
@@ -544,6 +559,7 @@ pot_temp_v_my=ptemp_v_my.T
 pot_temp_my=ptemp_my.T
 dthetav_my=ptemp_v_gmy.T
 vertshear_my=vert_shear_my.T
+dwpo_my=dwpomac_ylev.T
 
 #*****************************************************************************\
 #Cambiar fechas
@@ -638,12 +654,13 @@ for i in range(0,ni[2]):
 
 #*****************************************************************************\
 #*****************************************************************************\
-#                          Dataframes 2006-2010                               \
+#                          Dataframes 1995-2010                               \
 #*****************************************************************************\
 #*****************************************************************************\
 #Date index del periodo 2006-2010
+#date_index_all = pd.date_range('2006-01-01 00:00', periods=3652, freq='12H')
 date_index_all = pd.date_range('1995-01-01 00:00', periods=11688, freq='12H')
-# #*****************************************************************************\
+#*****************************************************************************\
 #Dataframe YOTC 2008-2010
 t_list=temp_yotc.tolist()
 u_list=u_yotc.tolist()
@@ -654,6 +671,7 @@ thetav_list=pot_temp_v_yotc.tolist()
 theta_list=pot_temp_yotc.tolist()
 dthetav_list=dthetav_yotc.tolist()
 vertshear_list=vertshear_yotc.tolist()
+dwpo_list=dwpo_yotc.tolist()
 
 dy={'Clas':yotc_clas,
 'Depth':yotc_depth,
@@ -673,6 +691,7 @@ dy={'Clas':yotc_clas,
 'u':u_list,
 'v':u_list,
 'RH':rh_list,
+'dwpo':dwpo_list,
 'mixr':mr_list}
 
 df_yotc = pd.DataFrame(data=dy,index=date_yotc)
@@ -692,7 +711,7 @@ theta_list=pot_temp_my.tolist()
 thetav_list=pot_temp_v_my.tolist()
 dthetav_list=dthetav_my.tolist()
 vertshear_list=vertshear_my.tolist()
-
+dwpo_list=dwpo_my.tolist()
 
 
 dmy={'Clas':mac_y_clas,
@@ -713,6 +732,7 @@ dmy={'Clas':mac_y_clas,
 'u':u_list,
 'v':u_list,
 'RH':rh_list,
+'dwpo':dwpo_list,
 'mixr':mr_list}
 
 df_mac_y = pd.DataFrame(data=dmy,index=time_my)
@@ -736,7 +756,7 @@ df_macyotc_final.index.name = 'Date'
 #*****************************************************************************\
 #*****************************************************************************\
 path_data_csv=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
-df_front= pd.read_csv(path_data_csv + 'df_cfront_19952010.csv', sep='\t', parse_dates=['Date'])
+df_front= pd.read_csv(path_data_csv + 'df_front_19952010.csv', sep=',', parse_dates=['Date'])
 df_front= df_front.set_index('Date')
 
 #Merge datraframe mac with
@@ -754,389 +774,189 @@ path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/fronts_ok/profiles/'
 #*****************************************************************************\
 #MAC Ave
 #*****************************************************************************\
-df=df_myfro
+dfm=df_myfro
 bins=np.arange(-10,11,1)
 
-df['catdist_fron'] = pd.cut(df['Dist CFront'], bins, labels=bins[0:-1])
-ncount=pd.value_counts(df['catdist_fron'])
+dfm['catdist_fron'] = pd.cut(dfm['Dist Front'], bins, labels=bins[0:-1])
+ncountm=pd.value_counts(dfm['catdist_fron'])
+
+dfm2 = dfm[np.isfinite(dfm['catdist_fron'])]
+dfm2 = dfm2[np.isfinite(dfm2['Clas'])]
+ncount_my=pd.value_counts(dfm2['catdist_fron'])
+
+#*****************************************************************************\
+#YOTC
+#*****************************************************************************\
+dfy=df_yotcfro
+bins=np.arange(-10,11,1)
+
+dfy['catdist_fron'] = pd.cut(dfy['Dist Front'], bins, labels=bins[0:-1])
+ncounty=pd.value_counts(dfy['catdist_fron'])
+
+dfy2 = dfy[np.isfinite(dfy['catdist_fron'])]
+dfy2 = dfy2[np.isfinite(dfy2['Clas'])]
+
+ncount_yotc=pd.value_counts(dfy2['catdist_fron'])
+
+#*****************************************************************************\
+dfc=pd.concat([dfy2,dfm2])
+
+ncount_c=pd.value_counts(dfc['catdist_fron'])
 
 
-Mrelhum=np.empty([20,91])*np.nan
-RH=np.empty([max(ncount),91])*np.nan
-
-Mdthetav=np.empty([20,91])*np.nan
-dthetav=np.empty([max(ncount),91])*np.nan
-
-Mtheta=np.empty([20,91])*np.nan
-theta=np.empty([max(ncount),91])*np.nan
+#*****************************************************************************\
+#MAC Ave
+#*****************************************************************************\
+#Crea un arreglo 3D con los valores de cada pixel para cada distancia
+ncount=ncount_my
+RHmy=np.empty([max(ncount),91,len(ncount)])*np.nan
+DPmy=np.empty([max(ncount),91,len(ncount)])*np.nan
 
 k1=0
-k2=0
-
+df=dfm2
 for j in range(-10,10):
-
     for i in range(0, len(df)):
         if df['catdist_fron'][i]==j:
-            RH[k2,:]=np.array(df['RH'][i])
-            dthetav[k2,:]=np.array(df['dthetav'][i])
-            theta[k2,:]=np.array(df['theta'][i])
-            k2=k2+1
-        Mrelhum[k1,:]=np.nanmean(RH, axis=0)
-        Mdthetav[k1,:]=np.nanmean(dthetav, axis=0)
-        Mtheta[k1,:]=np.nanmean(theta, axis=0)
-        #print j, k2
-    k1=k1+1
-    k2=0
-
-
-#Flip West-East (Negative Postfront condition)
-Mrelhum=Mrelhum[::-1]
-Mdthetav=Mdthetav[::-1]
-Mtheta=Mtheta[::-1]
+            RHmy[k1,:,j]=np.array(df['RH'][i])
+            DPmy[k1,:,j]=np.array(df['dwpo'][i])
+            k1=k1+1
+    k1=0
 #*****************************************************************************\
-# #Rescale
-# nlev=27
-# height_new=np.arange(0,5001,200) #(22,)
-# height_new[0]=10
-# hlev=hlev_yotc[0:nlev]
-
-# Mrelhum=Mrelhum[:,0:nlev]
-# n1,n2=Mrelhum.shape
-# Mdthetav=Mdthetav[:,0:nlev]
-# Mtheta=Mtheta[:,0:nlev]
-
-
-# #Interpolation
-# Mrh_my=np.empty([n1,len(height_new)])*np.nan
-# Mdthetav_my=np.empty([n1,len(height_new)])*np.nan
-# Mtheta_my=np.empty([n1,len(height_new)])*np.nan
-
-# x=hlev
-# new_x=height_new
-
-# for i in range(0,n1):
-#     y=Mrelhum[i,:]
-#     Mrh_my[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-#     del y
-#     y=Mdthetav[i,:]
-#     Mdthetav_my[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-#     del y
-#     y=Mtheta[i,:]
-#     Mtheta_my[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-# #*****************************************************************************\
-# #Setup
-# #*****************************************************************************\
-# xtick=[0, height_new[0],height_new[5],height_new[10],height_new[15],height_new[20],height_new[25]]
-# #*****************************************************************************\
-# #Relative Humidity
-# #*****************************************************************************\
-# vmin=30
-# vmax=100
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mrh_my.T,cmap='jet',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(%)', size=12)
-
-# ax.set_title('Relative humidity', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_RH_my.eps', format='eps', dpi=1200)
-
-# #*****************************************************************************\
-# #Strenght (Virtual Potential Temperature)
-# #*****************************************************************************\
-# vmin=0
-# vmax=0.01
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mdthetav_my.T,cmap='jet',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.3f")
-# cbar.ax.set_title('(K m$^{-1}$)', size=12)
-
-# ax.set_title(r'Strength of the inversion ($d\theta_v/dz$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_strenght_my.eps', format='eps', dpi=1200)
-# #*****************************************************************************\
-# #Potential Temperature
-# #*****************************************************************************\
-# vmin=270
-# vmax=300
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mtheta_my.T,cmap='jet',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(K)', size=12)
-
-# ax.set_title(r'Potential temperature ($\theta$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_ptemp_my.eps', format='eps', dpi=1200)
-
-
-
-# #*****************************************************************************\
-# #*****************************************************************************\
-# #YOTC
-# #*****************************************************************************\
-# #*****************************************************************************\
-# df=df_yotcfro
-# bins=np.arange(-10,11,1)
-
-# df['catdist_fron'] = pd.cut(df['Dist Front'], bins, labels=bins[0:-1])
-# ncount=pd.value_counts(df['catdist_fron'])
-
-
-# Mrelhum=np.empty([20,91])*np.nan
-# RH=np.empty([max(ncount),91])*np.nan
-
-# Mdthetav=np.empty([20,91])*np.nan
-# dthetav=np.empty([max(ncount),91])*np.nan
-
-# Mtheta=np.empty([20,91])*np.nan
-# theta=np.empty([max(ncount),91])*np.nan
-
-# k1=0
-# k2=0
-
-# for j in range(-10,10):
-
-#     for i in range(0, len(df)):
-#         if df['catdist_fron'][i]==j:
-#             RH[k2,:]=np.array(df['RH'][i])
-#             dthetav[k2,:]=np.array(df['dthetav'][i])
-#             theta[k2,:]=np.array(df['theta'][i])
-#             k2=k2+1
-#         Mrelhum[k1,:]=np.nanmean(RH, axis=0)
-#         Mdthetav[k1,:]=np.nanmean(dthetav, axis=0)
-#         Mtheta[k1,:]=np.nanmean(theta, axis=0)
-#         #print j, k2
-#     k1=k1+1
-#     k2=0
-
-
-# #Flip West-East
-# Mrelhum=Mrelhum[::-1]
-# Mdthetav=Mdthetav[::-1]
-# Mtheta=Mtheta[::-1]
-# #*****************************************************************************\
-# #Rescale
-# nlev=27
-# height_new=np.arange(0,5001,200) #(22,)
-# height_new[0]=10
-# hlev=hlev_yotc[0:nlev]
-
-# Mrelhum=Mrelhum[:,0:nlev]
-# n1,n2=Mrelhum.shape
-# Mdthetav=Mdthetav[:,0:nlev]
-# Mtheta=Mtheta[:,0:nlev]
-
-
-# #Interpolation
-# Mrh_yotc=np.empty([n1,len(height_new)])*np.nan
-# Mdthetav_yotc=np.empty([n1,len(height_new)])*np.nan
-# Mtheta_yotc=np.empty([n1,len(height_new)])*np.nan
-
-# x=hlev
-# new_x=height_new
-
-# for i in range(0,n1):
-#     y=Mrelhum[i,:]
-#     Mrh_yotc[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-#     del y
-#     y=Mdthetav[i,:]
-#     Mdthetav_yotc[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-#     del y
-#     y=Mtheta[i,:]
-#     Mtheta_yotc[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-# #*****************************************************************************\
-# #Setup
-# #*****************************************************************************\
-# xtick=[0, height_new[0],height_new[5],height_new[10],height_new[15],height_new[20],height_new[25]]
-# #*****************************************************************************\
-# #Relative Humidity
-# #*****************************************************************************\
-# vmin=30
-# vmax=100
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mrh_yotc.T,cmap='jet',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(%)', size=12)
-
-# ax.set_title('Relative humidity', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-
-# plt.savefig(path_data_save + 'prof_RH_yotc.eps', format='eps', dpi=1200)
-# #*****************************************************************************\
-# #Strenght (Virtual Potential Temperature)
-# #*****************************************************************************\
-# vmin=0
-# vmax=0.01
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mdthetav_yotc.T,cmap='jet',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.3f")
-# cbar.ax.set_title('(K m$^{-1}$)', size=12)
-
-# ax.set_title(r'Strength of the inversion ($d\theta_v/dz$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_strenght_yotc.eps', format='eps', dpi=1200)
-# #*****************************************************************************\
-# #Potential Temperature
-# #*****************************************************************************\
-# vmin=270
-# vmax=300
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mtheta_yotc.T,cmap='jet',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(K)', size=12)
-
-# ax.set_title(r'Potential temperature ($\theta$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_ptemp_yotc.eps', format='eps', dpi=1200)
-
-# #*****************************************************************************\
-# #*****************************************************************************\
-# #Diferences
-# #*****************************************************************************\
-# #*****************************************************************************\
-
-
-# Mrh_dif=Mrh_yotc-Mrh_my
-# Mdthetav_dif=Mdthetav_yotc-Mdthetav_my
-# Mtheta_dif=Mtheta_yotc-Mtheta_my
-
-# #*****************************************************************************\
-# #Relative Humidity
-# #*****************************************************************************\
-# vmin=-25
-# vmax=25
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mrh_dif.T,cmap='seismic',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(%)', size=12)
-
-# ax.set_title('YOTC minus MAC$_{AVE}$ - relative humidity', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_RH_dif.eps', format='eps', dpi=1200)
-
-# #*****************************************************************************\
-# #Strenght (Virtual Potential Temperature)
-# #*****************************************************************************\
-# vmin=-0.007
-# vmax=0.007
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mdthetav_dif.T,cmap='seismic',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.3f")
-# cbar.ax.set_title('(K m$^{-1}$)', size=12)
-
-# ax.set_title(r'YOTC minus MAC$_{AVE}$ - strength of the inversion ($d\theta_v/dz$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_strenght_dif.eps', format='eps', dpi=1200)
-# #*****************************************************************************\
-# #Potential Temperature
-# #*****************************************************************************\
-# vmin=-5
-# vmax=5
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mtheta_dif.T,cmap='seismic',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(K)', size=12)
-
-# ax.set_title(r'YOTC minus MAC$_{AVE}$ - potential temperature ($\theta$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_ptemp_dif.eps', format='eps', dpi=1200)
+#Minimum
+
+minrh1=np.empty([91,20])*np.nan
+min_meanRH_my=np.empty([20])*np.nan
+min_stdRH_my=np.empty([20])*np.nan
+dwpo1=np.empty([91,20])*np.nan
+min_meanDP_my=np.empty([20])*np.nan
+min_stdDP_my=np.empty([20])*np.nan
+
+for j in range(-10,10):
+    for i in range(0, 91):
+        minrh1[i,j]=np.nanmin(RHmy[:,i,j])
+        dwpo1[i,j]=np.nanmin(DPmy[:,i,j])
+
+
+    min_meanRH_my[j]=np.mean(minrh1[0:19,j])
+    min_stdRH_my[j]=np.std(minrh1[0:19,j])
+    min_meanDP_my[j]=np.mean(dwpo1[0:19,j])
+    min_stdDP_my[j]=np.std(dwpo1[0:19,j])
+
+
+#*****************************************************************************\
+#YOTC
+#*****************************************************************************\
+#Crea un arreglo 3D con los valores de cada pixel para cada distancia
+ncount=ncount_yotc
+RHyotc=np.empty([max(ncount),91,len(ncount)])*np.nan
+DPyotc=np.empty([max(ncount),91,len(ncount)])*np.nan
+
+k1=0
+df=dfy2
+for j in range(-10,10):
+    for i in range(0, len(df)):
+        if df['catdist_fron'][i]==j:
+            RHyotc[k1,:,j]=np.array(df['RH'][i])
+            DPyotc[k1,:,j]=np.array(df['dwpo'][i])
+            k1=k1+1
+    k1=0
+#*****************************************************************************\
+#Minimum
+
+minrh1=np.empty([91,20])*np.nan
+min_meanRH_yotc=np.empty([20])*np.nan
+min_stdRH_yotc=np.empty([20])*np.nan
+dwpo1=np.empty([91,20])*np.nan
+min_meanDP_yotc=np.empty([20])*np.nan
+min_stdDP_yotc=np.empty([20])*np.nan
+
+for j in range(-10,10):
+    for i in range(0, 91):
+        minrh1[i,j]=np.nanmin(RHyotc[:,i,j])
+        dwpo1[i,j]=np.nanmin(DPyotc[:,i,j])
+
+    min_meanRH_yotc[j]=np.mean(minrh1[0:19,j])
+    min_stdRH_yotc[j]=np.std(minrh1[0:19,j])
+    min_meanDP_yotc[j]=np.mean(dwpo1[0:19,j])
+    min_stdDP_yotc[j]=np.std(dwpo1[0:19,j])
+
+
+
+
+
+#*****************************************************************************\
+# #Select random sample
+# elec=np.empty([3,5,len(ncount)])*np.nan
+
+# #5 es el numero de valores a sacar por pixel para calcular
+
+# for dis in range(-10,10):
+#     for i in range(0,3):#Number of Random Means
+#         elec[i,:,dis]=rd.sample(RH[~np.isnan(RH[:,0,dis]),0,dis], 5)
+
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#                                   Graphs
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#Mean Minimu RH
+#*****************************************************************************\
+error1=min_stdRH_yotc
+x=np.arange(-9.5,10,1)
+y1=min_meanRH_yotc
+
+error2=min_stdRH_my
+y2=min_meanRH_my
+
+
+#fig, (ax0, ax1) = plt.subplots(nrows=2, sharex=True)
+fig, ax0 = plt.subplots(sharex=True, facecolor='w', figsize=(10,6))
+ax0.errorbar(x, y1, yerr=error1, fmt='-o',label='YOTC')
+ax0.errorbar(x, y2, yerr=error2, fmt='-o',color='red',label='MAC$_{AVE}$')
+ax0.set_ylabel('Mean minimun (%)', size=18)
+ax0.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
+ax0.set_ylim(0,100)
+ax0.set_xlim(-10,10)
+ax0.set_xticks(np.arange(-10,11,1))
+#ax0.set_xticklabels(
+ax0.set_title('Relative humidity')
+ax0.legend(loc='upper left',fontsize = 12,ncol=2)
+#plt.axhline(0)
+plt.axvline(0, color='black')
+
+plt.grid()
+
+#*****************************************************************************\
+#Mean Minimu Dew Point
+#*****************************************************************************\
+error1=min_stdDP_yotc
+x=np.arange(-9.5,10,1)
+y1=min_meanDP_yotc
+
+error2=min_stdDP_my
+y2=min_meanDP_my
+
+
+#fig, (ax0, ax1) = plt.subplots(nrows=2, sharex=True)
+fig, ax0 = plt.subplots(sharex=True, facecolor='w', figsize=(10,6))
+ax0.errorbar(x, y1, yerr=error1, fmt='-o',label='YOTC')
+ax0.errorbar(x, y2, yerr=error2, fmt='-o',color='red',label='MAC$_{AVE}$')
+ax0.set_ylabel('Mean minimun ($^o$C)', size=18)
+ax0.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
+#ax0.set_ylim(0,100)
+ax0.set_xlim(-10,10)
+ax0.set_xticks(np.arange(-10,11,1))
+#ax0.set_xticklabels(
+ax0.set_title('Dew point')
+ax0.legend(loc='upper left',fontsize = 12,ncol=2)
+#plt.axhline(0)
+plt.axvline(0, color='black')
+
+plt.grid()
+plt.show()
+
+
 

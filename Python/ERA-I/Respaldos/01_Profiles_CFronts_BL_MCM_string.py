@@ -12,10 +12,15 @@ from scipy.interpolate import UnivariateSpline
 import scipy.interpolate as si
 from scipy.interpolate import interp1d
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from pylab import plot,show, grid
+import random as rd
+import scipy.stats as st
+import numpy as np
+import scipy as sp
+import scipy.stats
+
 
 base_dir = os.path.expanduser('~')
-path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/YOTC/mat/'
+Yfin=1997
 
 #*****************************************************************************\
 #Default Info
@@ -25,119 +30,146 @@ lon_mac = mac['lon']
 
 ptemp_thold_main=0.010           # K/m
 ptemp_thold_sec=0.005            # K/m
-shear_thold=0.015               # 1/s
+shear_thold=0.015
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#                            ERA-I Data
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+path_data_erai=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/ERAI/'
+matb1= sio.loadmat(path_data_erai+'ERAImac_1995.mat')
+temp_erai=matb1['temp'][:]
+rh_erai=matb1['rh'][:]
+q_erai=matb1['q'][:]
+u_erai=matb1['u'][:]
+v_erai=matb1['v'][:]
+time_erai= matb1['time2'][:]
 
-#*****************************************************************************\
-#*****************************************************************************\
-#                            YOTC Data
-#*****************************************************************************\
-#*****************************************************************************\
-mat= sio.loadmat(path_data+'yotc_data.mat')
-#*****************************************************************************\
-#Crear fecha de inicio leyendo time
-time= mat['time'][0]
-date_ini=datetime(1900, 1, 1) + timedelta(hours=int(time[0])) #hours since
-#Arreglo de fechas
-date_yotc = pd.date_range(date_ini, periods=len(time), freq='12H')
-#*****************************************************************************\
-#Reading variables
-t_ori= mat['temp'][:] #K
-u_ori= mat['u'][:]
-v_ori= mat['v'][:]
-q_ori= mat['q'][:]
-
-#rotate from surface to free atmosphere
-temp=t_ori[:,::-1]
-u=u_ori[:,::-1]
-v=v_ori[:,::-1]
-q=q_ori[:,::-1] #kg/kg
-mixr= q*1000 #g/kg
+#Pressure Levels
+pres_erai=matb1['levels'][:] #hPa
+pres_ei=pres_erai[0,::-1]
 
 
-#*****************************************************************************\
-#Leyendo Alturas y press
-file_levels = np.genfromtxt('./../Read_Files/YOTC/levels.csv', delimiter=',')
-hlev_yotc=file_levels[:,6]
-#plev_yotc=file_levels[:,3]
-plev_yotc=file_levels[:,4] #value 10 is 925
+for y in range(1996,Yfin):
+    matb= sio.loadmat(path_data_erai+'ERAImac_'+str(y)+'.mat')
+    temp_r=matb['temp'][:]
+    rh_r=matb['rh'][:]
+    q_r=matb['q'][:]
+    u_r=matb['u'][:]
+    v_r=matb['v'][:]
+    time_r= matb['time2'][:]
+
+    if y==2010:
+        rh_r=0.263*pres_ei*q_r*np.exp((17.67*(temp_r-273.16))/(temp_r-29.65))**(-1)*100
+        rh_r[rh_r>100]=100
+        rh_r[rh_r<0]=0
+
+    temp_erai=np.concatenate((temp_erai,temp_r), axis=0)
+    rh_erai=np.concatenate((rh_erai,rh_r), axis=0)
+    q_erai=np.concatenate((q_erai,q_r), axis=0)
+    v_erai=np.concatenate((v_erai,v_r), axis=0)
+    u_erai=np.concatenate((u_erai,u_r), axis=0)
+    time_erai=np.concatenate((time_erai,time_r), axis=1)
+
+
+
+
 
 #*****************************************************************************\
-g=9.8 #m seg^-2
 
-
+#*****************************************************************************\
+#Height Levels
+file_levels = np.genfromtxt('./levels.csv', delimiter=',')
+hght_ei=file_levels[:,2]*1000 #meters
+#*****************************************************************************\
+#Building dates from 1800-01-01-00:00
+time=time_erai[0,:]
+date_ini=datetime(1800, 1, 1) + timedelta(hours=int(time[0])) #hours since
+#Date Array
+date_erai = pd.date_range(date_ini, periods=len(time), freq='6H')
+#*****************************************************************************\
+#Rotate from surface to free atmosphere
+temp_ei=temp_erai[:,::-1]
+u_ei=u_erai[:,::-1]
+v_ei=v_erai[:,::-1]
+q_ei=q_erai[:,::-1] #kg/kg
+mixr_ei= q_ei*1000 #g/kg
+rh_ei=rh_erai[:,::-1]
+#*****************************************************************************\
+#Variables
+#*****************************************************************************\
 #Calculate Potential Temperature
-pot_temp=(temp)*(1000./plev_yotc)**0.287;
+theta_ei=(temp_ei)*(1000./pres_ei)**0.287;
 
 #Calculate Virtual Potential Temperature
-pot_temp_v=(1+0.61*(mixr/1000.))*pot_temp;
-temp_v=(1+0.61*(mixr/1000.))*temp;
+thetav_ei=(1+0.61*(mixr_ei/1000.))*theta_ei;
+tempv_ei=(1+0.61*(mixr_ei/1000.))*temp_ei;
 
-pot_temp_grad=np.zeros(pot_temp.shape)
-yvert_shear=np.empty(pot_temp.shape)*np.nan
-brn_yotca=np.empty(pot_temp.shape)*np.nan
 #Calculate Wind Shear and Gradiente Potential Temp
-for j in range(0,len(time)):
-    for i in range(1,len(hlev_yotc)-1):
-        pot_temp_grad[j,i]=(pot_temp_v[j,i+1]-pot_temp_v[j,i])/float(hlev_yotc[i+1]-hlev_yotc[i])
-        yvert_shear[j,i]=np.sqrt(float((u[j,i]-u[j,i-1])**2+(v[j,i]-v[j,i-1])**2))/float(hlev_yotc[i]-hlev_yotc[i-1])
+dthetav_ei=np.zeros(theta_ei.shape)
+vshear_ei=np.empty(theta_ei.shape)*np.nan
 
 for j in range(0,len(time)):
-    for i in range(1,len(hlev_yotc)):
-        brn_yotca[j,i]=(g/float(pot_temp_v[j,0]))*((hlev_yotc[i]-hlev_yotc[0])*(pot_temp_v[j,i]-pot_temp_v[j,0]))/float((u[j,i]-u[j,0])**2+(v[j,i]-v[j,0])**2)
+    for i in range(1,len(pres_ei)-1):
+        dthetav_ei[j,i]=(thetav_ei[j,i+1]-thetav_ei[j,i])/float(hght_ei[i+1]-hght_ei[i])
+        vshear_ei[j,i]=np.sqrt(float((u_ei[j,i]-u_ei[j,i-1])**2+(v_ei[j,i]-v_ei[j,i-1])**2))/float(hght_ei[i]-hght_ei[i-1])
 
-#Calculate Relative Humidity
-relhum=0.263*plev_yotc*q*np.exp((17.67*(temp-273.16))/(temp-29.65))**(-1)*100
-relhum[relhum>100]=100
-relhum[relhum<0]=0
+#Relative Humidity
+rh_erai[rh_erai>100]=100
+rh_erai[rh_erai<0]=0
 
+# plot(thetav_ei[:,1],'b',temp_ei[:,1],'r')
+# show()
 #******************************************************************************
 #Boundary Layer Height Inversion 1 and 2
 #Variables Initialization
-sec_ind=np.empty(len(time))
-#main_inv=np.empty(len(time),'float')
-sec_inv=np.empty(len(time))
-main_inversion=np.empty(len(time))
-sec_inversion=np.empty(len(time))
-main_inv_hght=np.empty(len(time))
-sec_inv_hght=np.empty(len(time))
-yotc_clas=np.empty(len(time))
-yotc_depth=np.empty(len(time))
-yotc_hght_1invBL=np.empty(len(time))
-yotc_hght_2invBL=np.empty(len(time))
-yotc_hght_1invDL=np.empty(len(time))
-yotc_hght_2invDL=np.empty(len(time))
-yotc_hght_1inv=np.empty(len(time))
-yotc_hght_2inv=np.empty(len(time))
-yotc_strg_1inv=np.empty(len(time))
-yotc_strg_2inv=np.empty(len(time))
+sec_ind=np.empty(len(time))*np.nan
+main_inv=np.empty(len(time),'float')*np.nan
+sec_inv=np.empty(len(time))*np.nan
+main_inversion=np.empty(len(time))*np.nan
+sec_inversion=np.empty(len(time))*np.nan
+main_inv_hght=np.empty(len(time))*np.nan
+sec_inv_hght=np.empty(len(time))*np.nan
 
-relhum_yotc=np.empty(relhum.shape)*np.nan
-temp_yotc=np.empty(relhum.shape)*np.nan
-u_yotc=np.empty(relhum.shape)*np.nan
-v_yotc=np.empty(relhum.shape)*np.nan
-mixr_yotc=np.empty(relhum.shape)*np.nan
-pot_temp_v_yotc=np.empty(relhum.shape)*np.nan
+ei_hght_1inv=np.empty(len(time))*np.nan
+ei_hght_2inv=np.empty(len(time))*np.nan
+ei_strg_1inv=np.empty(len(time))*np.nan
+ei_strg_2inv=np.empty(len(time))*np.nan
+
+yotc_clas=np.empty(len(time))*np.nan
+yotc_depth=np.empty(len(time))*np.nan
+yotc_hght_1invBL=np.empty(len(time))*np.nan
+yotc_hght_2invBL=np.empty(len(time))*np.nan
+yotc_hght_1invDL=np.empty(len(time))*np.nan
+yotc_hght_2invDL=np.empty(len(time))*np.nan
+yotc_hght_1inv=np.empty(len(time))*np.nan
+yotc_hght_2inv=np.empty(len(time))*np.nan
+yotc_strg_1inv=np.empty(len(time))*np.nan
+yotc_strg_2inv=np.empty(len(time))*np.nan
+
 
 #******************************************************************************
 #Main Inversion Position
-for ind,line in enumerate(hlev_yotc):
+for ind,line in enumerate(hght_ei):
     if line>=float(100.):
         twenty_y_index=ind
         break
-for ind,line in enumerate(hlev_yotc):
+for ind,line in enumerate(hght_ei):
     if line>=2500:
         twoky=ind
         break
 
-main_inv=pot_temp_grad[:,twenty_y_index:twoky].argmax(axis=1)
-[i for i, j in enumerate(pot_temp_grad[:,twenty_y_index:twoky]) if j == main_inv]
+main_inv=dthetav_ei[:,twenty_y_index:twoky].argmax(axis=1)
+[i for i, j in enumerate(dthetav_ei[:,twenty_y_index:twoky]) if j == main_inv]
 main_inv+=twenty_y_index #posicion main inv mas indice de sobre 100 m (3)
 
 # Second Inversion Position
 for i in range(0,len(time)):
     for ind in range(twenty_y_index,main_inv[i]):
     #height 2da inv 80% main inv
-        if hlev_yotc[ind]>=(0.8)*hlev_yotc[main_inv[i]]:
+        if hght_ei[ind]>=(0.8)*hght_ei[main_inv[i]]:
             sec_ind[i]=ind
             break
         else:
@@ -146,14 +178,15 @@ for i in range(0,len(time)):
         sec_ind[i]=np.nan
     #calcula la posicion de la sec inv (trata si se puede, si no asigna nan)
     try:
-        sec_inv[i]=pot_temp_grad[i,twenty_y_index:sec_ind[i]].argmax(0)
-        [z for z, j in enumerate(pot_temp_grad[i,twenty_y_index:sec_ind[i]]) if j == sec_inv[i]]
+        sec_inv[i]=dthetav_ei[i,twenty_y_index:sec_ind[i]].argmax(0)
+        [z for z, j in enumerate(dthetav_ei[i,twenty_y_index:sec_ind[i]]) if j == sec_inv[i]]
         sec_inv[i]+=twenty_y_index
     except:
         sec_inv[i]=np.nan
 
 # main inversion must be > theta_v threshold
-ptemp_comp1=pot_temp_grad[:,main_inv[:]].diagonal() #extrae diagonal de pot temp
+ptemp_comp1=dthetav_ei[:,main_inv[:]].diagonal() #extrae diagonal de pot temp
+
 for i in range(0,len(time)):
     if ptemp_comp1[i]<ptemp_thold_main:
         #main_inv[i]=np.nan
@@ -161,7 +194,8 @@ for i in range(0,len(time)):
         main_inversion[i]=False
         sec_inv[i]=np.nan
     else:
-        main_inv_hght[i]=hlev_yotc[main_inv[i]]
+        main_inv_hght[i]=hght_ei[main_inv[i]]
+        ei_strg_1inv[i]=dthetav_ei[i,main_inv[i]]
         main_inversion[i]=True
 
     if main_inv_hght[i]<=1:
@@ -169,12 +203,15 @@ for i in range(0,len(time)):
 
     # secondary inversion must be > theta_v threshold
 
-    if np.isnan(sec_inv[i])==False and pot_temp_grad[i,sec_inv[i]]>=ptemp_thold_sec:
+    if np.isnan(sec_inv[i])==False and dthetav_ei[i,sec_inv[i]]>=ptemp_thold_sec:
         sec_inversion[i]=True
-        sec_inv_hght[i]=hlev_yotc[sec_inv[i]]
+        sec_inv_hght[i]=hght_ei[sec_inv[i]]
+        ei_strg_2inv[i]=dthetav_ei[i,sec_inv[i]]
     else:
         sec_inversion[i]=False
         sec_inv_hght[i]=np.nan
+
+    hlev_yotc=hght_ei
 
     #Clasification
     if sec_inversion[i]==False and main_inversion[i]==True:
@@ -186,7 +223,7 @@ for i in range(0,len(time)):
         yotc_hght_2invDL[i]=np.nan
         yotc_hght_1inv[i]=hlev_yotc[main_inv[i]]
         yotc_hght_2inv[i]=np.nan
-        yotc_strg_1inv[i]=pot_temp_grad[i,main_inv[i]]
+        yotc_strg_1inv[i]=dthetav_ei[i,main_inv[i]]
         yotc_strg_2inv[i]=np.nan
 
     elif sec_inversion[i]==False and main_inversion[i]==False:
@@ -201,7 +238,7 @@ for i in range(0,len(time)):
         yotc_strg_1inv[i]=np.nan
         yotc_strg_2inv[i]=np.nan
 
-    elif main_inversion[i]==True and sec_inversion[i]==True and yvert_shear[i,sec_inv[i]]>=shear_thold:
+    elif main_inversion[i]==True and sec_inversion[i]==True and vshear_ei[i,sec_inv[i]]>=shear_thold:
         yotc_clas[i]=4
         yotc_depth[i]=(hlev_yotc[main_inv[i]]-hlev_yotc[sec_inv[i]])
         yotc_hght_1invBL[i]=hlev_yotc[main_inv[i]]
@@ -210,8 +247,8 @@ for i in range(0,len(time)):
         yotc_hght_2invDL[i]=np.nan
         yotc_hght_1inv[i]=hlev_yotc[main_inv[i]]
         yotc_hght_2inv[i]=hlev_yotc[sec_inv[i]]
-        yotc_strg_1inv[i]=pot_temp_grad[i,main_inv[i]]
-        yotc_strg_2inv[i]=pot_temp_grad[i,sec_inv[i]]
+        yotc_strg_1inv[i]=dthetav_ei[i,main_inv[i]]
+        yotc_strg_2inv[i]=dthetav_ei[i,sec_inv[i]]
 
     else:
         yotc_clas[i]=3
@@ -222,22 +259,21 @@ for i in range(0,len(time)):
         yotc_hght_2invBL[i]=np.nan
         yotc_hght_1inv[i]=hlev_yotc[main_inv[i]]
         yotc_hght_2inv[i]=hlev_yotc[sec_inv[i]]
-        yotc_strg_1inv[i]=pot_temp_grad[i,main_inv[i]]
-        yotc_strg_2inv[i]=pot_temp_grad[i,sec_inv[i]]
+        yotc_strg_1inv[i]=dthetav_ei[i,main_inv[i]]
+        yotc_strg_2inv[i]=dthetav_ei[i,sec_inv[i]]
+    #Height of Inversions
+    ei_hght_1inv=main_inv_hght
+    ei_hght_2inv=sec_inv_hght
 
-relhum_yotc=relhum
-temp_yotc=temp
-u_yotc=u
-v_yotc=v
-mixr_yotc=mixr
-pot_temp_v_yotc=pot_temp_v
-dthetav_yotc=pot_temp_grad
-vertshear_yotc=yvert_shear
-pot_temp_yotc=pot_temp
+
+# ****************************************************************************\
+# ****************************************************************************\
 # ****************************************************************************\
 # ****************************************************************************\
 #                            MAC Data Original Levels
 #*****************************************************************************\
+# ****************************************************************************\
+# ****************************************************************************\
 # ****************************************************************************\
 path_databom=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/MatFiles/files_bom/'
 matb1= sio.loadmat(path_databom+'BOM_1995.mat')
@@ -245,7 +281,7 @@ bom_in=matb1['BOM_S'][:]
 timesd= matb1['time'][:]
 bom=bom_in
 
-for y in range(1996,2011):
+for y in range(1996,Yfin):
     matb= sio.loadmat(path_databom+'BOM_'+str(y)+'.mat')
     bom_r=matb['BOM_S'][:]
     timesd_r= matb['time'][:]
@@ -305,21 +341,21 @@ v=wspd*(np.sin(np.radians(270-wdir_initial)))
 
 #*****************************************************************************\
 #*****************************************************************************\
-#                            MAC Data YOTC Levels
+#                            MAC Data ERA-I Levels
 #*****************************************************************************\
 #*****************************************************************************\
 #Interpolation to YOTC Levels
-prutemp=np.empty((len(hlev_yotc),0))
-prumixr=np.empty((len(hlev_yotc),0))
-pruu=np.empty((len(hlev_yotc),0))
-pruv=np.empty((len(hlev_yotc),0))
-prurelh=np.empty((len(hlev_yotc),0))
+prutemp=np.empty((len(hght_ei),0))*np.nan
+prumixr=np.empty((len(hght_ei),0))*np.nan
+pruu=np.empty((len(hght_ei),0))*np.nan
+pruv=np.empty((len(hght_ei),0))*np.nan
+prurelh=np.empty((len(hght_ei),0))*np.nan
 
 for j in range(0,ni[2]):
 #height initialization
     x=hght[:,j]
     x[-1]=np.nan
-    new_x=hlev_yotc
+    new_x=hght_ei
 #Interpolation YOTC levels
     yt=temp[:,j]
     rest=interp1d(x,yt)(new_x)
@@ -341,11 +377,11 @@ for j in range(0,ni[2]):
     resr=interp1d(x,yr)(new_x)
     prurelh=np.append(prurelh,resr)
 
-tempmac_ylev=prutemp.reshape(-1,len(hlev_yotc)).transpose()
-umac_ylev=pruu.reshape(-1,len(hlev_yotc)).transpose()
-vmac_ylev=pruv.reshape(-1,len(hlev_yotc)).transpose()
-mixrmac_ylev=prumixr.reshape(-1,len(hlev_yotc)).transpose()
-relhmac_ylev=prurelh.reshape(-1,len(hlev_yotc)).transpose()
+tempmac_ylev=prutemp.reshape(-1,len(hght_ei)).transpose()
+umac_ylev=pruu.reshape(-1,len(hght_ei)).transpose()
+vmac_ylev=pruv.reshape(-1,len(hght_ei)).transpose()
+mixrmac_ylev=prumixr.reshape(-1,len(hght_ei)).transpose()
+relhmac_ylev=prurelh.reshape(-1,len(hght_ei)).transpose()
 
 wspdmac_ylev=np.sqrt(umac_ylev**2 + vmac_ylev**2)
 wdirmac_ylev=np.arctan2(-umac_ylev, -vmac_ylev)*(180/np.pi)
@@ -380,6 +416,7 @@ main_my_inv_hght=np.empty(ni[2])*np.nan
 main_my_inversion=np.empty(ni[2])*np.nan
 sec_my_inv_hght=np.empty(ni[2])*np.nan
 sec_my_inversion=np.empty(ni[2])*np.nan
+
 mac_y_clas=np.empty(ni[2])*np.nan
 mac_y_hght_1invDL=np.empty(ni[2])*np.nan
 mac_y_hght_2invDL=np.empty(ni[2])*np.nan
@@ -391,7 +428,6 @@ mac_y_hght_2inv=np.empty(ni[2])*np.nan
 mac_y_strg_1inv=np.empty(ni[2])*np.nan
 mac_y_strg_2inv=np.empty(ni[2])*np.nan
 
-
 relhum_my=np.empty(ni[2])*np.nan
 temp_my=np.empty(ni[2])*np.nan
 u_my=np.empty(ni[2])*np.nan
@@ -399,12 +435,11 @@ v_my=np.empty(ni[2])*np.nan
 mixr_my=np.empty(ni[2])*np.nan
 pot_temp_my=np.empty(ni[2])*np.nan
 pot_temp_v_my=np.empty(ni[2])*np.nan
-brn_my=np.empty(ni[2])*np.nan
 
 #*****************************************************************************\
 for j in range(0,ni[2]):
 #Calculate new variables
-    for i in range(0,len(hlev_yotc)):
+    for i in range(0,len(hght_ei)):
         if 0.<=wdirmac_ylev[i,j]<=90.:
             wdir_my[i,j]=wdirmac_ylev[i,j]+270.
         elif 90.<=wdirmac_ylev[i,j]<=360.:
@@ -414,22 +449,23 @@ for j in range(0,ni[2]):
 
         tempv_my[i,j]=tempmac_ylev[i,j]*float(1+0.61*spec_hum_my[i,j])
 
-        ptemp_my[i,j]=(tempmac_ylev[i,j]+273.16)*((1000./plev_yotc[i])**0.286)
+        ptemp_my[i,j]=(tempmac_ylev[i,j]+273.16)*((1000./pres_ei[i])**0.286)
 
-        ptemp_v_my[i,j]=(tempv_my[i,j]+273.16)*((1000./plev_yotc[i])**0.286)
+        ptemp_v_my[i,j]=(tempv_my[i,j]+273.16)*((1000./pres_ei[i])**0.286)
 
-        brn_mya[i,j]=(g/float(ptemp_v_my[0,j]))*((hlev_yotc[i]-hlev_yotc[0])*(ptemp_v_my[i,j]-ptemp_v_my[0,j]))/float((umac_ylev[i,j]-umac_ylev[0,j])**2+(vmac_ylev[i,j]-vmac_ylev[0,j])**2)
 
-    for i in range(0,len(hlev_yotc)-1):
-        vert_shear_my[i,j]=np.sqrt(float((umac_ylev[i,j]-umac_ylev[i-1,j])**2+(vmac_ylev[i,j]-vmac_ylev[i-1,j])**2))/float(hlev_yotc[i+1]-hlev_yotc[i])
+    for i in range(0,len(hght_ei)-1):
+        vert_shear_my[i,j]=np.sqrt(float((umac_ylev[i,j]-umac_ylev[i-1,j])**2+(vmac_ylev[i,j]-vmac_ylev[i-1,j])**2))/float(hght_ei[i+1]-hght_ei[i])
 
-        ptemp_v_gmy[i,j]=(ptemp_v_my[i+1,j]-ptemp_v_my[i,j])/float(hlev_yotc[i+1]-hlev_yotc[i])
+        ptemp_v_gmy[i,j]=(ptemp_v_my[i+1,j]-ptemp_v_my[i,j])/float(hght_ei[i+1]-hght_ei[i])
 
     vert_shear_my[-1,j]=np.nan
     ptemp_v_gmy[-1,j]=np.nan
 
 
 #*****************************************************************************\
+hlev_yotc=hght_ei
+
 # #Main Inversion Position
 for ind,line in enumerate(hlev_yotc):
     if line>=float(100.):
@@ -440,7 +476,7 @@ for ind,line in enumerate(hlev_yotc):
         twokmy=ind
         break
 
-main_my_inv=ptemp_gmy[twenty_my_index:twokmy,:].argmax(axis=0)
+main_my_inv=ptemp_v_gmy[twenty_my_index:twokmy,:].argmax(axis=0)
 main_my_inv+=twenty_my_index #posicion main inv mas indice de sobre 100 m (3)
 
 # # Second Inversion Position
@@ -535,6 +571,8 @@ for j in range(0,ni[2]):
         mac_y_strg_2inv[j]=ptemp_v_gmy[sec_my_inv[j],j]
 
 
+
+
 relhum_my=relhmac_ylev.T
 temp_my=tempmac_ylev.T+273.16
 u_my=umac_ylev.T
@@ -544,6 +582,7 @@ pot_temp_v_my=ptemp_v_my.T
 pot_temp_my=ptemp_my.T
 dthetav_my=ptemp_v_gmy.T
 vertshear_my=vert_shear_my.T
+q_my=spec_hum_my.T
 
 #*****************************************************************************\
 #Cambiar fechas
@@ -636,35 +675,37 @@ for i in range(0,ni[2]):
     else:
         time_my[i]=time_my[i]
 
+
 #*****************************************************************************\
 #*****************************************************************************\
-#                          Dataframes 2006-2010                               \
+#*****************************************************************************\
+#*****************************************************************************\
+#                          Dataframes 1995-2010                               \
+#*****************************************************************************\
+#*****************************************************************************\
 #*****************************************************************************\
 #*****************************************************************************\
 #Date index del periodo 2006-2010
-date_index_all = pd.date_range('1995-01-01 00:00', periods=11688, freq='12H')
+date_index_12h = pd.date_range('1995-01-01 00:00', periods=11688, freq='12H')
+#date_index_12h = pd.date_range('1995-01-01 00:00', periods=1462, freq='12H')
 # #*****************************************************************************\
-#Dataframe YOTC 2008-2010
-t_list=temp_yotc.tolist()
-u_list=u_yotc.tolist()
-v_list=v_yotc.tolist()
-rh_list=relhum_yotc.tolist()
-mr_list=mixr_yotc.tolist()
-thetav_list=pot_temp_v_yotc.tolist()
-theta_list=pot_temp_yotc.tolist()
-dthetav_list=dthetav_yotc.tolist()
-vertshear_list=vertshear_yotc.tolist()
+#Dataframe ERA-Interim
+t_list=temp_ei.tolist()
+u_list=u_ei.tolist()
+v_list=v_ei.tolist()
+rh_list=rh_ei.tolist()
+q_list=q_ei.tolist()
+mr_list=mixr_ei.tolist()
+thetav_list=thetav_ei.tolist()
+theta_list=theta_ei.tolist()
+dthetav_list=dthetav_ei.tolist()
+vertshear_list=vshear_ei.tolist()
 
 dy={'Clas':yotc_clas,
-'Depth':yotc_depth,
-'1 Inv BL': yotc_hght_1invBL,
-'2 Inv BL': yotc_hght_2invBL,
-'1 Inv DL': yotc_hght_1invDL,
-'2 Inv DL': yotc_hght_2invDL,
-'1ra Inv': yotc_hght_1inv,
-'2da Inv': yotc_hght_2inv,
-'Strg 1inv': yotc_strg_1inv,
-'Strg 2inv': yotc_strg_2inv,
+'1ra Inv': ei_hght_1inv,
+'2da Inv': ei_hght_2inv,
+'Strg 1inv': ei_strg_1inv,
+'Strg 2inv': ei_strg_2inv,
 'temp':t_list,
 'thetav':thetav_list,
 'theta':theta_list,
@@ -672,35 +713,53 @@ dy={'Clas':yotc_clas,
 'vertshear':vertshear_list,
 'u':u_list,
 'v':u_list,
-'RH':rh_list,
+'rh':rh_list,
+'q':q_list,
 'mixr':mr_list}
 
-df_yotc = pd.DataFrame(data=dy,index=date_yotc)
-df_yotc.index.name = 'Date'
+df_ei = pd.DataFrame(data=dy,index=date_erai)
+df_ei.index.name = 'Date'
 #*****************************************************************************\
-#Dataframe YOTC All
-df_yotc_all=df_yotc.reindex(date_index_all)
-df_yotc_all.index.name = 'Date'
+#Dataframe ei All
+df_erai=df_ei.reindex(date_index_12h)
+df_erai.index.name = 'Date'
+
+
 #*****************************************************************************\
-#Dataframe MAC YOTC levels
+dyc={'Clas ERA':yotc_clas,
+'temp ERA':t_list,
+'thetav ERA':thetav_list,
+'theta ERA':theta_list,
+'dthetav ERA':dthetav_list,
+'vertshear ERA':vertshear_list,
+'u ERA':u_list,
+'v ERA':u_list,
+'rh ERA':rh_list,
+'q ERA':q_list,
+'mixr ERA':mr_list}
+
+dfc_ei = pd.DataFrame(data=dyc,index=date_erai)
+dfc_ei.index.name = 'Date'
+
+dfc_era=dfc_ei.reindex(date_index_12h)
+dfc_era.index.name = 'Date'
+
+#*****************************************************************************\
+#*****************************************************************************\#*****************************************************************************\
+#*****************************************************************************\
+#Dataframe MAC ERA-I levels
 t_list=temp_my.tolist()
 u_list=u_my.tolist()
 v_list=v_my.tolist()
 rh_list=relhum_my.tolist()
 mr_list=mixr_my.tolist()
+q_list=q_my.tolist()
 theta_list=pot_temp_my.tolist()
 thetav_list=pot_temp_v_my.tolist()
 dthetav_list=dthetav_my.tolist()
 vertshear_list=vertshear_my.tolist()
 
-
-
 dmy={'Clas':mac_y_clas,
-'Depth':mac_y_depth,
-'1 Inv BL': mac_y_hght_1invBL,
-'2 Inv BL': mac_y_hght_2invBL,
-'1 Inv DL': mac_y_hght_1invDL,
-'2 Inv DL': mac_y_hght_2invDL,
 '1ra Inv': mac_y_hght_1inv,
 '2da Inv': mac_y_hght_2inv,
 'Strg 1inv': mac_y_strg_1inv,
@@ -712,22 +771,47 @@ dmy={'Clas':mac_y_clas,
 'vertshear':vertshear_list,
 'u':u_list,
 'v':u_list,
-'RH':rh_list,
+'rh':rh_list,
+'q':q_list,
 'mixr':mr_list}
 
 df_mac_y = pd.DataFrame(data=dmy,index=time_my)
 # Eliminate Duplicate Soundings
 dfmy=df_mac_y.reset_index().drop_duplicates(cols='index',take_last=True).set_index('index')
 
-df_macyotc_final=dfmy.reindex(date_index_all)
-df_macyotc_final.index.name = 'Date'
+df_macei=dfmy.reindex(date_index_12h)
+df_macei.index.name = 'Date'
 
 #*****************************************************************************\
-#Saving CSV
 
-#df_yotc.to_csv('./df_yotc.csv', sep=',', encoding='utf-8')
+dmc={'Clas MAC':mac_y_clas,
+'temp MAC':t_list,
+'thetav MAC':thetav_list,
+'theta MAC':theta_list,
+'dthetav MAC':dthetav_list,
+'vertshear MAC':vertshear_list,
+'u MAC':u_list,
+'v MAC':u_list,
+'rh MAC':rh_list,
+'q MAC':q_list,
+'mixr MAC':mr_list}
 
 
+dfc_m = pd.DataFrame(data=dmc,index=time_my)
+# Eliminate Duplicate Soundings
+dfc_m=dfc_m.reset_index().drop_duplicates(cols='index',take_last=True).set_index('index')
+
+dfc_mac=dfc_m.reindex(date_index_12h)
+dfc_mac.index.name = 'Date'
+
+
+#*****************************************************************************\
+#*****************************************************************************\
+#Combination ERA-I and MAC (Esta es para tomar solo casos donde hay mediciones de ambos el mismo dia y hora)
+
+dfc_macera=pd.concat([dfc_mac,dfc_era],axis=1)
+
+print np.count_nonzero(~np.isnan(dfc_macera['Clas ERA'])),  np.count_nonzero(~np.isnan(dfc_macera['Clas MAC']))
 #*****************************************************************************\
 #*****************************************************************************\
 #*****************************************************************************\
@@ -740,403 +824,78 @@ df_front= pd.read_csv(path_data_csv + 'df_cfront_19952010.csv', sep='\t', parse_
 df_front= df_front.set_index('Date')
 
 #Merge datraframe mac with
-df_yotcfro=pd.concat([df_yotc_all, df_front],axis=1)
-df_myfro=pd.concat([df_macyotc_final, df_front],axis=1)
+df_eraifro=pd.concat([df_erai, df_front],axis=1)
+df_meifro=pd.concat([df_macei, df_front],axis=1)
+
+df_macerafro=pd.concat([dfc_macera, df_front],axis=1)
 
 
 #*****************************************************************************\
 #*****************************************************************************\
 #*****************************************************************************\
-#                                   Profiles
+#                                   Profiles and Fronts
 #*****************************************************************************\
 #*****************************************************************************\
-path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/fronts_ok/profiles/'
+path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/ERAI/'
+
+
+
 #*****************************************************************************\
-#MAC Ave
+name_var=['q']
+name_var_all=['Specific Humidity']
+units_var=['g/g']
+z_min=np.array([0,0])
+z_max=np.array([0.005,100])
+formati=['%.4f']
 #*****************************************************************************\
-df=df_myfro
-bins=np.arange(-10,11,1)
-
-df['catdist_fron'] = pd.cut(df['Dist CFront'], bins, labels=bins[0:-1])
-ncount=pd.value_counts(df['catdist_fron'])
+# Means Complete Period MAC
+#*****************************************************************************\
 
 
-Mrelhum=np.empty([20,91])*np.nan
-RH=np.empty([max(ncount),91])*np.nan
+for m in range(0,1):
+    df=df_meifro
+    bins=np.arange(-10,11,1)
 
-Mdthetav=np.empty([20,91])*np.nan
-dthetav=np.empty([max(ncount),91])*np.nan
+    df['catdist_fron'] = pd.cut(df['Dist CFront'], bins, labels=bins[0:-1])
+    ncount=pd.value_counts(df['catdist_fron'])
 
-Mtheta=np.empty([20,91])*np.nan
-theta=np.empty([max(ncount),91])*np.nan
+    Mrelhum_mac=np.empty([len(ncount),len(pres_ei)])*np.nan
+    RH=np.empty([max(ncount),len(pres_ei)])*np.nan
 
-k1=0
-k2=0
-
-for j in range(-10,10):
-
-    for i in range(0, len(df)):
-        if df['catdist_fron'][i]==j:
-            RH[k2,:]=np.array(df['RH'][i])
-            dthetav[k2,:]=np.array(df['dthetav'][i])
-            theta[k2,:]=np.array(df['theta'][i])
-            k2=k2+1
-        Mrelhum[k1,:]=np.nanmean(RH, axis=0)
-        Mdthetav[k1,:]=np.nanmean(dthetav, axis=0)
-        Mtheta[k1,:]=np.nanmean(theta, axis=0)
-        #print j, k2
-    k1=k1+1
+    k1=0
     k2=0
 
+    for j in range(-10,10):
 
-#Flip West-East (Negative Postfront condition)
-Mrelhum=Mrelhum[::-1]
-Mdthetav=Mdthetav[::-1]
-Mtheta=Mtheta[::-1]
-#*****************************************************************************\
-# #Rescale
-# nlev=27
-# height_new=np.arange(0,5001,200) #(22,)
-# height_new[0]=10
-# hlev=hlev_yotc[0:nlev]
+        for i in range(0, len(df)):
+            if df['catdist_fron'][i]==j:
+                RH[k2,:]=np.array(df[name_var[m]][i])
+                k2=k2+1
+            Mrelhum_mac[k1,:]=np.nanmean(RH, axis=0)
+        k1=k1+1
+        k2=0
 
-# Mrelhum=Mrelhum[:,0:nlev]
-# n1,n2=Mrelhum.shape
-# Mdthetav=Mdthetav[:,0:nlev]
-# Mtheta=Mtheta[:,0:nlev]
 
 
-# #Interpolation
-# Mrh_my=np.empty([n1,len(height_new)])*np.nan
-# Mdthetav_my=np.empty([n1,len(height_new)])*np.nan
-# Mtheta_my=np.empty([n1,len(height_new)])*np.nan
+    #*****************************************************************************\
 
-# x=hlev
-# new_x=height_new
 
-# for i in range(0,n1):
-#     y=Mrelhum[i,:]
-#     Mrh_my[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-#     del y
-#     y=Mdthetav[i,:]
-#     Mdthetav_my[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-#     del y
-#     y=Mtheta[i,:]
-#     Mtheta_my[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-# #*****************************************************************************\
-# #Setup
-# #*****************************************************************************\
-# xtick=[0, height_new[0],height_new[5],height_new[10],height_new[15],height_new[20],height_new[25]]
-# #*****************************************************************************\
-# #Relative Humidity
-# #*****************************************************************************\
-# vmin=30
-# vmax=100
+    #z_min=np.nanmin(Mrelhum_mac)
+    #z_max=np.nanmax(Mrelhum_mac)
+    fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
+    img = ax.pcolor(Mrelhum_mac.T,cmap='jet', vmin=z_min[m], vmax=z_max[m])
 
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mrh_my.T,cmap='jet',vmin=vmin, vmax=vmax)
+    div = make_axes_locatable(ax)
+    cax = div.append_axes("right", size="6%", pad=0.05)
+    cbar = plt.colorbar(img, cax=cax, format=formati[m])
+    cbar.ax.set_title('   '+units_var[m], size=12)
+    ax.set_title(name_var_all[m]+' (MAC)', size=18)
+    ax.set_xticklabels(np.arange(-15,15,5))
+    ax.set_ylabel('Altitude (m)', size=18)
+    ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
+    ax.margins(0.05)
+    plt.tight_layout()
 
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(%)', size=12)
 
-# ax.set_title('Relative humidity', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_RH_my.eps', format='eps', dpi=1200)
-
-# #*****************************************************************************\
-# #Strenght (Virtual Potential Temperature)
-# #*****************************************************************************\
-# vmin=0
-# vmax=0.01
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mdthetav_my.T,cmap='jet',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.3f")
-# cbar.ax.set_title('(K m$^{-1}$)', size=12)
-
-# ax.set_title(r'Strength of the inversion ($d\theta_v/dz$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_strenght_my.eps', format='eps', dpi=1200)
-# #*****************************************************************************\
-# #Potential Temperature
-# #*****************************************************************************\
-# vmin=270
-# vmax=300
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mtheta_my.T,cmap='jet',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(K)', size=12)
-
-# ax.set_title(r'Potential temperature ($\theta$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_ptemp_my.eps', format='eps', dpi=1200)
-
-
-
-# #*****************************************************************************\
-# #*****************************************************************************\
-# #YOTC
-# #*****************************************************************************\
-# #*****************************************************************************\
-# df=df_yotcfro
-# bins=np.arange(-10,11,1)
-
-# df['catdist_fron'] = pd.cut(df['Dist Front'], bins, labels=bins[0:-1])
-# ncount=pd.value_counts(df['catdist_fron'])
-
-
-# Mrelhum=np.empty([20,91])*np.nan
-# RH=np.empty([max(ncount),91])*np.nan
-
-# Mdthetav=np.empty([20,91])*np.nan
-# dthetav=np.empty([max(ncount),91])*np.nan
-
-# Mtheta=np.empty([20,91])*np.nan
-# theta=np.empty([max(ncount),91])*np.nan
-
-# k1=0
-# k2=0
-
-# for j in range(-10,10):
-
-#     for i in range(0, len(df)):
-#         if df['catdist_fron'][i]==j:
-#             RH[k2,:]=np.array(df['RH'][i])
-#             dthetav[k2,:]=np.array(df['dthetav'][i])
-#             theta[k2,:]=np.array(df['theta'][i])
-#             k2=k2+1
-#         Mrelhum[k1,:]=np.nanmean(RH, axis=0)
-#         Mdthetav[k1,:]=np.nanmean(dthetav, axis=0)
-#         Mtheta[k1,:]=np.nanmean(theta, axis=0)
-#         #print j, k2
-#     k1=k1+1
-#     k2=0
-
-
-# #Flip West-East
-# Mrelhum=Mrelhum[::-1]
-# Mdthetav=Mdthetav[::-1]
-# Mtheta=Mtheta[::-1]
-# #*****************************************************************************\
-# #Rescale
-# nlev=27
-# height_new=np.arange(0,5001,200) #(22,)
-# height_new[0]=10
-# hlev=hlev_yotc[0:nlev]
-
-# Mrelhum=Mrelhum[:,0:nlev]
-# n1,n2=Mrelhum.shape
-# Mdthetav=Mdthetav[:,0:nlev]
-# Mtheta=Mtheta[:,0:nlev]
-
-
-# #Interpolation
-# Mrh_yotc=np.empty([n1,len(height_new)])*np.nan
-# Mdthetav_yotc=np.empty([n1,len(height_new)])*np.nan
-# Mtheta_yotc=np.empty([n1,len(height_new)])*np.nan
-
-# x=hlev
-# new_x=height_new
-
-# for i in range(0,n1):
-#     y=Mrelhum[i,:]
-#     Mrh_yotc[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-#     del y
-#     y=Mdthetav[i,:]
-#     Mdthetav_yotc[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-#     del y
-#     y=Mtheta[i,:]
-#     Mtheta_yotc[i,:]= sp.interpolate.interp1d(x, y,kind='cubic')(new_x)
-# #*****************************************************************************\
-# #Setup
-# #*****************************************************************************\
-# xtick=[0, height_new[0],height_new[5],height_new[10],height_new[15],height_new[20],height_new[25]]
-# #*****************************************************************************\
-# #Relative Humidity
-# #*****************************************************************************\
-# vmin=30
-# vmax=100
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mrh_yotc.T,cmap='jet',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(%)', size=12)
-
-# ax.set_title('Relative humidity', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-
-# plt.savefig(path_data_save + 'prof_RH_yotc.eps', format='eps', dpi=1200)
-# #*****************************************************************************\
-# #Strenght (Virtual Potential Temperature)
-# #*****************************************************************************\
-# vmin=0
-# vmax=0.01
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mdthetav_yotc.T,cmap='jet',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.3f")
-# cbar.ax.set_title('(K m$^{-1}$)', size=12)
-
-# ax.set_title(r'Strength of the inversion ($d\theta_v/dz$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_strenght_yotc.eps', format='eps', dpi=1200)
-# #*****************************************************************************\
-# #Potential Temperature
-# #*****************************************************************************\
-# vmin=270
-# vmax=300
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mtheta_yotc.T,cmap='jet',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(K)', size=12)
-
-# ax.set_title(r'Potential temperature ($\theta$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_ptemp_yotc.eps', format='eps', dpi=1200)
-
-# #*****************************************************************************\
-# #*****************************************************************************\
-# #Diferences
-# #*****************************************************************************\
-# #*****************************************************************************\
-
-
-# Mrh_dif=Mrh_yotc-Mrh_my
-# Mdthetav_dif=Mdthetav_yotc-Mdthetav_my
-# Mtheta_dif=Mtheta_yotc-Mtheta_my
-
-# #*****************************************************************************\
-# #Relative Humidity
-# #*****************************************************************************\
-# vmin=-25
-# vmax=25
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mrh_dif.T,cmap='seismic',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(%)', size=12)
-
-# ax.set_title('YOTC minus MAC$_{AVE}$ - relative humidity', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_RH_dif.eps', format='eps', dpi=1200)
-
-# #*****************************************************************************\
-# #Strenght (Virtual Potential Temperature)
-# #*****************************************************************************\
-# vmin=-0.007
-# vmax=0.007
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mdthetav_dif.T,cmap='seismic',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.3f")
-# cbar.ax.set_title('(K m$^{-1}$)', size=12)
-
-# ax.set_title(r'YOTC minus MAC$_{AVE}$ - strength of the inversion ($d\theta_v/dz$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_strenght_dif.eps', format='eps', dpi=1200)
-# #*****************************************************************************\
-# #Potential Temperature
-# #*****************************************************************************\
-# vmin=-5
-# vmax=5
-
-# fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-# img = ax.pcolor(Mtheta_dif.T,cmap='seismic',vmin=vmin, vmax=vmax)
-
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", size="6%", pad=0.05)
-# cbar = plt.colorbar(img, cax=cax, format="%.0f")
-# cbar.ax.set_title('(K)', size=12)
-
-# ax.set_title(r'YOTC minus MAC$_{AVE}$ - potential temperature ($\theta$)', size=18)
-# ax.set_xticklabels(np.arange(-15,15,5))
-# ax.set_yticklabels(xtick)
-
-# ax.set_ylabel('Altitude (m)', size=18)
-# ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-# ax.margins(0.05)
-# plt.tight_layout()
-# plt.savefig(path_data_save + 'prof_ptemp_dif.eps', format='eps', dpi=1200)
-
+    plt.savefig(path_data_save + name_var[m] +'_MAC.eps', format='eps', dpi=1200)
+    plt.show()

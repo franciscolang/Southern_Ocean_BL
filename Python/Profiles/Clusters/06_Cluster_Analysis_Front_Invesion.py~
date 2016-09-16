@@ -1,0 +1,110 @@
+import numpy as np
+import scipy.io as sio
+from datetime import datetime, timedelta
+import pandas as pd
+import os
+import csv
+import matplotlib.pyplot as plt
+from matplotlib.ticker import ScalarFormatter, MultipleLocator
+import matplotlib.mlab as mlab
+import scipy as sp
+from scipy.interpolate import UnivariateSpline
+import scipy.interpolate as si
+from scipy.interpolate import interp1d
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from pylab import plot,show, grid, legend
+from skewt import SkewT
+from matplotlib.pyplot import rcParams,figure,show,draw
+
+base_dir = os.path.expanduser('~')
+path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/003 Cluster/'
+#*****************************************************************************\
+#*****************************************************************************\
+#Reading CSV Cluster
+#*****************************************************************************\
+#*****************************************************************************\
+#925-850-700
+df_cluster= pd.read_csv(path_data + 'All_ClusterAnalysis.csv', sep=',', parse_dates=['Date'])
+#Reescribe columnas para no cambiar los outputs
+CL3=np.array(df_cluster['QCL_6'])
+# CL5=np.array(df_cluster['QCL_8'])
+# CL6=np.array(df_cluster['QCL_9'])
+# CL7=np.array(df_cluster['QCL_10'])
+CL4=np.array(df_cluster['Cluster'])
+dist_clu=np.array(df_cluster['Distance'])
+
+path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/003 Cluster/Profiles/Fronts'
+path_data_csv=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+#*****************************************************************************\
+# ****************************************************************************\
+# ****************************************************************************\
+# Reading MAC
+#*****************************************************************************\
+# ****************************************************************************\
+
+df_mac= pd.read_csv(path_data_csv + 'df_mac_19952010.csv', sep='\t', parse_dates=['Date'])
+df_mac= df_cfront.set_index('Date')
+
+
+
+
+#*****************************************************************************\
+#Reading FRONTS
+#*****************************************************************************\
+
+df_cfront= pd.read_csv(path_data_csv + 'df_cfront_19952010.csv', sep='\t', parse_dates=['Date'])
+df_cfront= df_cfront.set_index('Date')
+
+
+df_wfront= pd.read_csv(path_data_csv + 'df_wfront_19952010.csv', sep='\t', parse_dates=['Date'])
+df_wfront= df_wfront.set_index('Date')
+
+#*****************************************************************************\
+#Concadanate dataframes
+df_my_wfro=pd.concat([df_clumac, df_wfront],axis=1)
+df_my_cfro=pd.concat([df_clumac, df_cfront],axis=1)
+#Only Fronts
+dfmycfro=df_my_cfro[np.isfinite(df_my_cfro['Dist CFront'])]
+dfmywfro=df_my_wfro[np.isfinite(df_my_wfro['Dist WFront'])]
+#Both
+df_fronts=pd.concat([df_cfront, df_wfront],axis=1)
+dfmy_fronts=pd.concat([df_clumac, df_fronts],axis=1)
+
+#*****************************************************************************\
+#Reading Cyclones
+df_mac_cyc= pd.read_csv(path_data_csv + 'df_maccyc.csv', sep='\t', parse_dates=['Date'])
+df_mac_cyc= df_mac_cyc.set_index('Date')
+
+
+date_index_cyc = pd.date_range('2006-01-01 00:00', periods=3652, freq='12H')
+dfmy_froreindex=dfmy_fronts.reindex(date_index_cyc)
+
+df_frontcyc=pd.concat([df_mac_cyc, dfmy_froreindex],axis=1)
+
+
+#*****************************************************************************\
+
+
+
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#                              North-South Cyclones
+#*****************************************************************************\
+#*****************************************************************************\
+df_G3= df_frontcyc[df_frontcyc['CL_4']==3]
+df_G4 = df_frontcyc[df_frontcyc['CL_4']==4]
+
+
+df_G3_N=df_G3[df_G3['dx']>=0]
+perc_G3_N=len(df_G3_N)/float(len(df_G3))*100
+
+df_G3_S=df_G3[df_G3['dx']<0]
+perc_G3_S=len(df_G3_S)/float(len(df_G3))*100
+
+
+df_G4_N=df_G4[df_G4['dx']>=0]
+perc_G4_N=len(df_G4_N)/float(len(df_G4))*100
+
+df_G4_S=df_G4[df_G4['dx']<0]
+perc_G4_S=len(df_G4_S)/float(len(df_G4))*100

@@ -15,7 +15,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pylab import plot,show, grid
 
 base_dir = os.path.expanduser('~')
-path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/YOTC/mat/'
+path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/ERA-I/'
 
 #*****************************************************************************\
 #Default Info
@@ -245,7 +245,7 @@ bom_in=matb1['BOM_S'][:]
 timesd= matb1['time'][:]
 bom=bom_in
 
-for y in range(1996,2011):
+for y in range(1996,2011):	
     matb= sio.loadmat(path_databom+'BOM_'+str(y)+'.mat')
     bom_r=matb['BOM_S'][:]
     timesd_r= matb['time'][:]
@@ -736,7 +736,7 @@ df_macyotc_final.index.name = 'Date'
 #*****************************************************************************\
 #*****************************************************************************\
 path_data_csv=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
-df_front= pd.read_csv(path_data_csv + 'df_cfront_19952010.csv', sep='\t', parse_dates=['Date'])
+df_front= pd.read_csv(path_data_csv + 'df_front.csv', sep='\t', parse_dates=['Date'])
 df_front= df_front.set_index('Date')
 
 #Merge datraframe mac with
@@ -757,7 +757,7 @@ path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/fronts_ok/profiles/'
 df=df_myfro
 bins=np.arange(-10,11,1)
 
-df['catdist_fron'] = pd.cut(df['Dist CFront'], bins, labels=bins[0:-1])
+df['catdist_fron'] = pd.cut(df['Dist Front'], bins, labels=bins[0:-1])
 ncount=pd.value_counts(df['catdist_fron'])
 
 
