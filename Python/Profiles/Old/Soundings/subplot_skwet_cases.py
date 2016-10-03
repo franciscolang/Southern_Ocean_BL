@@ -84,8 +84,8 @@ from matplotlib import gridspec
 
 
 fig=plt.figure(figsize=(8, 6))
-gs = gridspec.GridSpec(1, 2, width_ratios=[2, 1])
-
+#gs = gridspec.GridSpec(1, 2, width_ratios=[2, 1]) #fila, col
+gs = gridspec.GridSpec(2, 1, height_ratios=[2,1])
 ax0=fig.add_subplot(gs[0], projection='skewx')
 plt.grid(True)
 

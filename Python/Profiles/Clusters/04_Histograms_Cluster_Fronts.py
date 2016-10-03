@@ -25,11 +25,17 @@ path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/003 Cluster/fronts/'
 #*****************************************************************************\
 #*****************************************************************************\
 #925-850-700
-df_cluster= pd.read_csv(path_data + 'All_ClusterAnalysis.csv', sep=',', parse_dates=['Date'])
+#df_cluster= pd.read_csv(path_data + 'All_ClusterAnalysis.csv', sep=',', parse_dates=['Date'])
+
+df_cluster= pd.read_csv(path_data + 'Soundings_MAC.csv', sep=',', parse_dates=['Date'])
+
 #Reescribe columnas para no cambiar los outputs
 #CL4=np.array(df_cluster['QCL_7'])
-CL4=np.array(df_cluster['Cluster'])
-dist_clu=np.array(df_cluster['Distance'])
+# CL4=np.array(df_cluster['Cluster'])
+# dist_clu=np.array(df_cluster['Distance'])
+
+CL4=np.array(df_cluster['QCL_3'])
+dist_clu=np.array(df_cluster['QCL_4'])
 
 #*****************************************************************************\
 # ****************************************************************************\
@@ -112,65 +118,71 @@ file_levels = np.genfromtxt('./../../Read_Files/YOTC/levels.csv', delimiter=',')
 hlev_yotc=file_levels[:,6]
 plev_yotc=file_levels[:,4] #value 10 is 925
 #*****************************************************************************\
+plev_std=plev_yotc
+
 #Interpolation to YOTC Levels
-prutemp=np.empty((len(hlev_yotc),0))
-prumixr=np.empty((len(hlev_yotc),0))
-pruu=np.empty((len(hlev_yotc),0))
-pruv=np.empty((len(hlev_yotc),0))
-prurelh=np.empty((len(hlev_yotc),0))
-prudwpo=np.empty((len(hlev_yotc),0))
+temp_pres=np.zeros((len(plev_std),ni[2]),'float')
+mixr_pres=np.zeros((len(plev_std),ni[2]),'float')
+u_pres=np.zeros((len(plev_std),ni[2]),'float')
+v_pres=np.zeros((len(plev_std),ni[2]),'float')
+relh_pres=np.zeros((len(plev_std),ni[2]),'float')
+dwpo_pres=np.zeros((len(plev_std),ni[2]),'float')
 
 for j in range(0,ni[2]):
-#height initialization
-    x=hght[:,j]
-    x[-1]=np.nan
-    new_x=hlev_yotc
-#Interpolation YOTC levels
-    yt=temp[:,j]
-    rest=interp1d(x,yt)(new_x)
-    prutemp=np.append(prutemp,rest)
 
-    ym=mixr[:,j]
-    resm=interp1d(x,ym)(new_x)
-    prumixr=np.append(prumixr,resm)
+    yt=temp[~np.isnan(temp[:,j]),j]
+    ym=mixr[~np.isnan(mixr[:,j]),j]
+    yw=u[~np.isnan(u[:,j]),j]
+    yd=v[~np.isnan(v[:,j]),j]
+    yr=relh[~np.isnan(relh[:,j]),j]
+    yp=dwpo[~np.isnan(dwpo[:,j]),j]
+    xp=pres[~np.isnan(temp[:,j]),j]
 
-    yw=u[:,j]
-    resw=interp1d(x,yw)(new_x)
-    pruu=np.append(pruu,resw)
+    temp_interp_pres=si.UnivariateSpline(xp[::-1],yt[::-1],k=5)
+    mixr_interp_pres=si.UnivariateSpline(xp[::-1],ym[::-1],k=5)
+    u_interp_pres=si.UnivariateSpline(xp[::-1],yw[::-1],k=5)
+    v_interp_pres=si.UnivariateSpline(xp[::-1],yd[::-1],k=5)
+    relh_interp_pres=si.UnivariateSpline(xp[::-1],yr[::-1],k=5)
+    dwpo_interp_pres=si.UnivariateSpline(xp[::-1],yp[::-1],k=5)
 
-    yd=v[:,j]
-    resd=interp1d(x,yd)(new_x)
-    pruv=np.append(pruv,resd)
-
-    yr=relh[:,j]
-    resr=interp1d(x,yr)(new_x)
-    prurelh=np.append(prurelh,resr)
-
-    ydp=dwpo[:,j]
-    resr=interp1d(x,ydp)(new_x)
-    prudwpo=np.append(prudwpo,resr)
-
-tempmac_ylev=prutemp.reshape(-1,len(hlev_yotc)).transpose()
-umac_ylev=pruu.reshape(-1,len(hlev_yotc)).transpose()
-vmac_ylev=pruv.reshape(-1,len(hlev_yotc)).transpose()
-mixrmac_ylev=prumixr.reshape(-1,len(hlev_yotc)).transpose()
-relhmac_ylev=prurelh.reshape(-1,len(hlev_yotc)).transpose()
-dwpomac_ylev=prudwpo.reshape(-1,len(hlev_yotc)).transpose()
-
-wspdmac_ylev=np.sqrt(umac_ylev**2 + vmac_ylev**2)
-wdirmac_ylev=np.arctan2(-umac_ylev, -vmac_ylev)*(180/np.pi)
-wdirmac_ylev[(umac_ylev == 0) & (vmac_ylev == 0)]=0
+    for ind in range(0,len(plev_std)):
+        temp_pres[ind,j]=temp_interp_pres(plev_std[ind])
+        mixr_pres[ind,j]=mixr_interp_pres(plev_std[ind])
+        u_pres[ind,j]=u_interp_pres(plev_std[ind])
+        v_pres[ind,j]=v_interp_pres(plev_std[ind])
+        relh_pres[ind,j]=relh_interp_pres(plev_std[ind])
+        dwpo_pres[ind,j]=dwpo_interp_pres(plev_std[ind])
 
 
-relhum_my=relhmac_ylev.T
-temp_my=tempmac_ylev.T
-u_my=umac_ylev.T
-v_my=vmac_ylev.T
-mixr_my=mixrmac_ylev.T
-dwpo_my=dwpomac_ylev.T
+    relh_pres[relh_pres[:,j]>np.nanmax(yr),j]=np.nan
+    relh_pres[relh_pres[:,j]<np.nanmin(yr),j]=np.nan
 
-wsp_my=wspdmac_ylev.T
-wdir_my=wdirmac_ylev.T
+    temp_pres[temp_pres[:,j]>np.nanmax(yt),j]=np.nan
+    temp_pres[temp_pres[:,j]<np.nanmin(yt),j]=np.nan
+
+    u_pres[u_pres[:,j]>np.nanmax(yw),j]=np.nan
+    u_pres[u_pres[:,j]<np.nanmin(yw),j]=np.nan
+    v_pres[v_pres[:,j]>np.nanmax(yd),j]=np.nan
+    v_pres[v_pres[:,j]<np.nanmin(yd),j]=np.nan
+
+    mixr_pres[mixr_pres[:,j]>np.nanmax(ym),j]=np.nan
+    mixr_pres[mixr_pres[:,j]<np.nanmin(ym),j]=np.nan
+
+    dwpo_pres[dwpo_pres[:,j]>np.nanmax(yp),j]=np.nan
+    dwpo_pres[dwpo_pres[:,j]<np.nanmin(yp),j]=np.nan
+
+    del xp, yt, ym, yw, yd, yr, yp
+
+temp_my=temp_pres.T
+u_my=u_pres.T
+v_my=v_pres.T
+mixr_my=mixr_pres.T
+relhum_my=relh_pres.T
+dwpo_my=dwpo_pres.T
+
+wsp_my=np.sqrt(u_my**2 + v_my**2)
+wdir_my=np.arctan2(-u_my, -v_my)*(180/np.pi)
+wdir_my[(u_my == 0) & (v_my == 0)]=0
 #*****************************************************************************\
 #Cambiar fechas
 timestamp = [datenum_to_datetime(t) for t in timesd]
@@ -355,7 +367,10 @@ by=np.arange(yy1,yy2+0.02,0.02)
 #*****************************************************************************\
 #*****************************************************************************\
 #Cambios: df_myclu_solocfro10, creado bins=20, bx,xx1, xx2, df1=15, df2=30
-
+df_1 = df_myclu_cfro[df_myclu_cfro['CL_4']=='1']
+df_2 = df_myclu_cfro[df_myclu_cfro['CL_4']=='2']
+df_3 = df_myclu_cfro[df_myclu_cfro['CL_4']=='3']
+df_4 = df_myclu_cfro[df_myclu_cfro['CL_4']=='4']
 
 
 row = 2
@@ -366,8 +381,8 @@ ax1, ax2, ax3,ax4= axes.flat
 #*****************************************************************************\
 #C1
 #*****************************************************************************\
-dfc = df_myclu_cfro[df_myclu_cfro['CL_4']==1]
-df = df_myclu_solocfro[df_myclu_solocfro['CL_4']==1]
+dfc = df_myclu_cfro[df_myclu_cfro['CL_4']=='1']
+df = df_myclu_solocfro[df_myclu_solocfro['CL_4']=='1']
 
 pe1=len(dfc)/float(len(wsp_my))
 pe1=round(pe1,2)
@@ -401,8 +416,8 @@ ax1.set_title('Cluster 1 (P$_t$=' + str(pe1)+', P$_f$='+str(pe2) +')' ,fontsize 
 #*****************************************************************************\
 #C2
 #*****************************************************************************\
-dfc = df_myclu_cfro[df_myclu_cfro['CL_4']==2]
-df = df_myclu_solocfro[df_myclu_solocfro['CL_4']==2]
+dfc = df_myclu_cfro[df_myclu_cfro['CL_4']=='2']
+df = df_myclu_solocfro[df_myclu_solocfro['CL_4']=='2']
 
 pe1=len(dfc)/float(len(wsp_my))
 pe1=round(pe1,2)
@@ -433,8 +448,8 @@ ax2.set_title('Cluster 2 (P$_t$=' + str(pe1)+', P$_f$='+str(pe2) +')' ,fontsize 
 #*****************************************************************************\
 #C3
 #*****************************************************************************\
-dfc = df_myclu_cfro[df_myclu_cfro['CL_4']==3]
-df = df_myclu_solocfro[df_myclu_solocfro['CL_4']==3]
+dfc = df_myclu_cfro[df_myclu_cfro['CL_4']=='3']
+df = df_myclu_solocfro[df_myclu_solocfro['CL_4']=='3']
 
 pe1=len(dfc)/float(len(wsp_my))
 pe1=round(pe1,2)
@@ -465,8 +480,8 @@ ax3.set_title('Cluster 3 (P$_t$=' + str(pe1)+', P$_f$='+str(pe2) +')' ,fontsize 
 #*****************************************************************************\
 #C4
 #*****************************************************************************\
-dfc = df_myclu_cfro[df_myclu_cfro['CL_4']==4]
-df = df_myclu_solocfro[df_myclu_solocfro['CL_4']==4]
+dfc = df_myclu_cfro[df_myclu_cfro['CL_4']=='4']
+df = df_myclu_solocfro[df_myclu_solocfro['CL_4']=='4']
 
 pe1=len(dfc)/float(len(wsp_my))
 pe1=round(pe1,2)
@@ -541,8 +556,8 @@ ax1, ax2, ax3,ax4= axes.flat
 #*****************************************************************************\
 #C1
 #*****************************************************************************\
-dfc = df_myclu_wfro[df_myclu_wfro['CL_4']==1]
-df = df_myclu_solowfro[df_myclu_solowfro['CL_4']==1]
+dfc = df_myclu_wfro[df_myclu_wfro['CL_4']=='1']
+df = df_myclu_solowfro[df_myclu_solowfro['CL_4']=='1']
 
 pe1=len(dfc)/float(len(wsp_my))
 pe1=round(pe1,2)
@@ -575,8 +590,8 @@ ax1.set_title('Cluster 1 (P$_t$=' + str(pe1)+', P$_f$='+str(pe2) +')' ,fontsize 
 #*****************************************************************************\
 #C2
 #*****************************************************************************\
-dfc = df_myclu_wfro[df_myclu_wfro['CL_4']==2]
-df = df_myclu_solowfro[df_myclu_solowfro['CL_4']==2]
+dfc = df_myclu_wfro[df_myclu_wfro['CL_4']=='2']
+df = df_myclu_solowfro[df_myclu_solowfro['CL_4']=='2']
 
 pe1=len(dfc)/float(len(wsp_my))
 pe1=round(pe1,2)
@@ -607,8 +622,8 @@ ax2.set_title('Cluster 2 (P$_t$=' + str(pe1)+', P$_f$='+str(pe2) +')' ,fontsize 
 #*****************************************************************************\
 #C3
 #*****************************************************************************\
-dfc = df_myclu_wfro[df_myclu_wfro['CL_4']==3]
-df = df_myclu_solowfro[df_myclu_solowfro['CL_4']==3]
+dfc = df_myclu_wfro[df_myclu_wfro['CL_4']=='3']
+df = df_myclu_solowfro[df_myclu_solowfro['CL_4']=='3']
 
 pe1=len(dfc)/float(len(wsp_my))
 pe1=round(pe1,2)
@@ -640,8 +655,8 @@ ax3.set_title('Cluster 3 (P$_t$=' + str(pe1)+', P$_f$='+str(pe2) +')' ,fontsize 
 #*****************************************************************************\
 #C4
 #*****************************************************************************\
-dfc = df_myclu_wfro[df_myclu_wfro['CL_4']==4]
-df = df_myclu_solowfro[df_myclu_solowfro['CL_4']==4]
+dfc = df_myclu_wfro[df_myclu_wfro['CL_4']=='4']
+df = df_myclu_solowfro[df_myclu_solowfro['CL_4']=='4']
 
 pe1=len(dfc)/float(len(wsp_my))
 pe1=round(pe1,2)

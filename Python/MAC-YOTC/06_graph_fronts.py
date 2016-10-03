@@ -12,6 +12,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 base_dir = os.path.expanduser('~')
 path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/fronts_ok/MCR/'
+
 #*****************************************************************************\
 #Default Info
 latMac=-54.50;
@@ -313,7 +315,7 @@ ax4.set_title('Buffer layer ('+ str(np.around(per_macfro_BL*100,decimals=1))+'%)
 ax4.grid()
 
 plt.suptitle('MAC ('+ str(np.around(per_macfro,decimals=1))+'%)',fontsize = 14 ,fontweight='bold')
-fig.savefig(path_data + 'histclas_macfronts.eps', format='eps', dpi=1200)
+fig.savefig(path_data_save + 'histclas_macfronts.eps', format='eps', dpi=1200)
 
 #*****************************************************************************\
 #*****************************************************************************\
@@ -409,7 +411,7 @@ ax4.grid()
 
 plt.suptitle('YOTC ('+ str(np.around(per_yotcfro,decimals=1))+'%)',fontsize = 14 ,fontweight='bold')
 
-fig.savefig(path_data + 'histclas_yotcfronts.eps', format='eps', dpi=1200)
+fig.savefig(path_data_save + 'histclas_yotcfronts.eps', format='eps', dpi=1200)
 #*****************************************************************************\
 #*****************************************************************************\
 #Histogram by type MAC-YOTC
@@ -504,7 +506,7 @@ ax4.grid()
 
 plt.suptitle('MAC$_{AVE}$ ('+ str(np.around(per_myfro,decimals=1))+'%)',fontsize = 14 ,fontweight='bold')
 
-fig.savefig(path_data + 'histclas_myfronts.eps', format='eps', dpi=1200)
+fig.savefig(path_data_save + 'histclas_myfronts.eps', format='eps', dpi=1200)
 #plt.show()
 
 
@@ -682,7 +684,7 @@ ax6.set_title('MAC$_{AVE}$ (sec. inversion)',fontsize = 14 ,fontweight='bold')
 ax6.grid()
 #*****************************************************************************\
 fig.tight_layout()
-fig.savefig(path_data + 'heights_fronts.eps', format='eps', dpi=1200)
+fig.savefig(path_data_save + 'heights_fronts.eps', format='eps', dpi=1200)
 
 
 
@@ -893,7 +895,7 @@ ax6.set_title('MAC$_{AVE}$ (sec. inversion)',fontsize = 14 ,fontweight='bold')
 ax6.grid()
 
 fig.tight_layout()
-fig.savefig(path_data + 'relatheights_fronts.eps', format='eps', dpi=1200)
+fig.savefig(path_data_save + 'relatheights_fronts.eps', format='eps', dpi=1200)
 #*****************************************************************************\
 #*****************************************************************************\
 #*****************************************************************************\
@@ -1100,7 +1102,7 @@ ax6.set_title('MAC$_{AVE}$ (sec. inversion)',fontsize = 14 ,fontweight='bold')
 ax6.grid()
 
 fig.tight_layout()
-fig.savefig(path_data + 'relatheights_NI_fronts.eps', format='eps', dpi=1200)
+fig.savefig(path_data_save + 'relatheights_NI_fronts.eps', format='eps', dpi=1200)
 
 
 #*****************************************************************************\
@@ -1285,7 +1287,7 @@ ax6.set_title('MAC$_{AVE}$ (sec inversion)',fontsize = 14 ,fontweight='bold')
 ax6.grid()
 
 fig.tight_layout()
-fig.savefig(path_data + 'strength_fronts.eps', format='eps', dpi=1200)
+fig.savefig(path_data_save + 'strength_fronts.eps', format='eps', dpi=1200)
 
 
 
@@ -1473,7 +1475,7 @@ fsize0=12
 fsize1=14
 fsize2=16
 
-path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/fronts/DL_BL/'
+
 
 #*****************************************************************************\
 x1=-15
@@ -1582,7 +1584,7 @@ ax3.grid()
 # ax4.grid()
 
 plt.suptitle('MAC ('+ str(np.around(per_macfro,decimals=1))+'%)',fontsize = 14 ,fontweight='bold')
-fig.savefig(path_data + 'histclasDL_macfronts.eps', format='eps', dpi=1200)
+fig.savefig(path_data_save + 'histclasDL_macfronts.eps', format='eps', dpi=1200)
 
 #*****************************************************************************\
 #*****************************************************************************\
@@ -1678,7 +1680,7 @@ ax3.grid()
 
 plt.suptitle('YOTC ('+ str(np.around(per_yotcfro,decimals=1))+'%)',fontsize = 14 ,fontweight='bold')
 
-fig.savefig(path_data + 'histclasDL_yotcfronts.eps', format='eps', dpi=1200)
+fig.savefig(path_data_save + 'histclasDL_yotcfronts.eps', format='eps', dpi=1200)
 #*****************************************************************************\
 #*****************************************************************************\
 #Histogram by type MAC-YOTC
@@ -1773,5 +1775,6 @@ ax3.grid()
 
 plt.suptitle('MAC$_{AVE}$ ('+ str(np.around(per_myfro,decimals=1))+'%)',fontsize = 14 ,fontweight='bold')
 
-fig.savefig(path_data + 'histclasDL_myfronts.eps', format='eps', dpi=1200)
+fig.savefig(path_data_save + 'histclasDL_myfronts.eps', format='eps', dpi=1200)
 
+#plt.show()

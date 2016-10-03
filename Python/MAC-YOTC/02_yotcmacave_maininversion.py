@@ -227,12 +227,12 @@ for i in range(0,len(time)):
 # timesd= matb['timesd'][:]
 Yfin=2011
 path_databom=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/MatFiles/files_bom/'
-matb1= sio.loadmat(path_databom+'BOM_2006.mat')
+matb1= sio.loadmat(path_databom+'BOM_1995.mat')
 bom_in=matb1['BOM_S'][:]
 timesd= matb1['time'][:]
 bom=bom_in
 
-for y in range(2007,Yfin):
+for y in range(1996,Yfin):
     matb= sio.loadmat(path_databom+'BOM_'+str(y)+'.mat')
     bom_r=matb['BOM_S'][:]
     timesd_r= matb['time'][:]
@@ -536,90 +536,90 @@ for j in range(0,ni[2]):
 # plt.plot(hght[0:200,1], 'ro')
 # plt.show()
 
-# prutemp=np.empty((len(hlev_yotc),0))
-# pruwspd=np.empty((len(hlev_yotc),0))
-# pruwdir=np.empty((len(hlev_yotc),0))
-# prumixr=np.empty((len(hlev_yotc),0))
-
-
-# for j in range(0,ni[2]):
-# #for j in range(0,100):
-# #height initialization
-#     x=hght[:,j]
-#     x[-1]=np.nan
-#     new_x=hlev_yotc
-# #Interpolation YOTC levels
-#     yt=temp[:,j]
-#     rest=interp1d(x,yt)(new_x)
-#     prutemp=np.append(prutemp,rest)
-
-#     yw=wspd[:,j]
-#     resw=interp1d(x,yw)(new_x)
-#     pruwspd=np.append(pruwspd,resw)
-
-#     yd=wdir_initial[:,j]
-#     resd=interp1d(x,yd)(new_x)
-#     pruwdir=np.append(pruwdir,resd)
-
-#     ym=mixr[:,j]
-#     resm=interp1d(x,ym)(new_x)
-#     prumixr=np.append(prumixr,resm)
-
-# tempmac_ylev=prutemp.reshape(-1,len(hlev_yotc)).transpose()
-# wspdmac_ylev=pruwspd.reshape(-1,len(hlev_yotc)).transpose()
-# wdirmac_ylev=pruwdir.reshape(-1,len(hlev_yotc)).transpose()
-# mixrmac_ylev=prumixr.reshape(-1,len(hlev_yotc)).transpose()
-
-#*****************************************************************************\
-
-temp_pres=np.zeros((len(plev_yotc),ni[2]),'float')
-mixr_pres=np.zeros((len(plev_yotc),ni[2]),'float')
-u_pres=np.zeros((len(plev_yotc),ni[2]),'float')
-v_pres=np.zeros((len(plev_yotc),ni[2]),'float')
+prutemp=np.empty((len(hlev_yotc),0))
+pruwspd=np.empty((len(hlev_yotc),0))
+pruwdir=np.empty((len(hlev_yotc),0))
+prumixr=np.empty((len(hlev_yotc),0))
 
 
 for j in range(0,ni[2]):
+#for j in range(0,100):
+#height initialization
+    x=hght[:,j]
+    x[-1]=np.nan
+    new_x=hlev_yotc
+#Interpolation YOTC levels
+    yt=temp[:,j]
+    rest=interp1d(x,yt)(new_x)
+    prutemp=np.append(prutemp,rest)
 
-    yt=temp[~np.isnan(temp[:,j]),j]
-    ym=mixr[~np.isnan(mixr[:,j]),j]
-    yw=u[~np.isnan(u[:,j]),j]
-    yd=v[~np.isnan(v[:,j]),j]
+    yw=wspd[:,j]
+    resw=interp1d(x,yw)(new_x)
+    pruwspd=np.append(pruwspd,resw)
 
-    xp=pres[~np.isnan(temp[:,j]),j]
+    yd=wdir_initial[:,j]
+    resd=interp1d(x,yd)(new_x)
+    pruwdir=np.append(pruwdir,resd)
 
-    temp_interp_pres=si.UnivariateSpline(xp[::-1],yt[::-1],k=5)
-    mixr_interp_pres=si.UnivariateSpline(xp[::-1],ym[::-1],k=5)
-    u_interp_pres=si.UnivariateSpline(xp[::-1],yw[::-1],k=5)
-    v_interp_pres=si.UnivariateSpline(xp[::-1],yd[::-1],k=5)
+    ym=mixr[:,j]
+    resm=interp1d(x,ym)(new_x)
+    prumixr=np.append(prumixr,resm)
 
-    for ind in range(0,len(plev_yotc)):
-        temp_pres[ind,j]=temp_interp_pres(plev_yotc[ind])
-        mixr_pres[ind,j]=mixr_interp_pres(plev_yotc[ind])
-        u_pres[ind,j]=u_interp_pres(plev_yotc[ind])
-        v_pres[ind,j]=v_interp_pres(plev_yotc[ind])
+tempmac_ylev=prutemp.reshape(-1,len(hlev_yotc)).transpose()
+wspdmac_ylev=pruwspd.reshape(-1,len(hlev_yotc)).transpose()
+wdirmac_ylev=pruwdir.reshape(-1,len(hlev_yotc)).transpose()
+mixrmac_ylev=prumixr.reshape(-1,len(hlev_yotc)).transpose()
 
-    temp_pres[temp_pres[:,j]>np.nanmax(yt),j]=np.nan
-    temp_pres[temp_pres[:,j]<np.nanmin(yt),j]=np.nan
+#*****************************************************************************\
 
-    u_pres[u_pres[:,j]>np.nanmax(yw),j]=np.nan
-    u_pres[u_pres[:,j]<np.nanmin(yw),j]=np.nan
-    v_pres[v_pres[:,j]>np.nanmax(yd),j]=np.nan
-    v_pres[v_pres[:,j]<np.nanmin(yd),j]=np.nan
-
-    mixr_pres[mixr_pres[:,j]>np.nanmax(ym),j]=np.nan
-    mixr_pres[mixr_pres[:,j]<np.nanmin(ym),j]=np.nan
-
-    del xp, yt, ym, yw, yd
-
-tempmac_ylev=temp_pres
-umac_ylev=u_pres
-vmac_ylev=v_pres
-mixrmac_ylev=mixr_pres
+# temp_pres=np.zeros((len(plev_yotc),ni[2]),'float')
+# mixr_pres=np.zeros((len(plev_yotc),ni[2]),'float')
+# u_pres=np.zeros((len(plev_yotc),ni[2]),'float')
+# v_pres=np.zeros((len(plev_yotc),ni[2]),'float')
 
 
-wspdmac_ylev=np.sqrt(umac_ylev**2 + vmac_ylev**2)
-wdirmac_ylev=np.arctan2(-umac_ylev, -vmac_ylev)*(180/np.pi)
-wdirmac_ylev[(umac_ylev == 0) & (vmac_ylev == 0)]=0
+# for j in range(0,ni[2]):
+
+#     yt=temp[~np.isnan(temp[:,j]),j]
+#     ym=mixr[~np.isnan(mixr[:,j]),j]
+#     yw=u[~np.isnan(u[:,j]),j]
+#     yd=v[~np.isnan(v[:,j]),j]
+
+#     xp=pres[~np.isnan(temp[:,j]),j]
+
+#     temp_interp_pres=si.UnivariateSpline(xp[::-1],yt[::-1],k=5)
+#     mixr_interp_pres=si.UnivariateSpline(xp[::-1],ym[::-1],k=5)
+#     u_interp_pres=si.UnivariateSpline(xp[::-1],yw[::-1],k=5)
+#     v_interp_pres=si.UnivariateSpline(xp[::-1],yd[::-1],k=5)
+
+#     for ind in range(0,len(plev_yotc)):
+#         temp_pres[ind,j]=temp_interp_pres(plev_yotc[ind])
+#         mixr_pres[ind,j]=mixr_interp_pres(plev_yotc[ind])
+#         u_pres[ind,j]=u_interp_pres(plev_yotc[ind])
+#         v_pres[ind,j]=v_interp_pres(plev_yotc[ind])
+
+#     temp_pres[temp_pres[:,j]>np.nanmax(yt),j]=np.nan
+#     temp_pres[temp_pres[:,j]<np.nanmin(yt),j]=np.nan
+
+#     u_pres[u_pres[:,j]>np.nanmax(yw),j]=np.nan
+#     u_pres[u_pres[:,j]<np.nanmin(yw),j]=np.nan
+#     v_pres[v_pres[:,j]>np.nanmax(yd),j]=np.nan
+#     v_pres[v_pres[:,j]<np.nanmin(yd),j]=np.nan
+
+#     mixr_pres[mixr_pres[:,j]>np.nanmax(ym),j]=np.nan
+#     mixr_pres[mixr_pres[:,j]<np.nanmin(ym),j]=np.nan
+
+#     del xp, yt, ym, yw, yd
+
+# tempmac_ylev=temp_pres
+# umac_ylev=u_pres
+# vmac_ylev=v_pres
+# mixrmac_ylev=mixr_pres
+
+
+# wspdmac_ylev=np.sqrt(umac_ylev**2 + vmac_ylev**2)
+# wdirmac_ylev=np.arctan2(-umac_ylev, -vmac_ylev)*(180/np.pi)
+# wdirmac_ylev[(umac_ylev == 0) & (vmac_ylev == 0)]=0
 
 #*****************************************************************************\
 #Initialization Variables
@@ -656,6 +656,20 @@ mac_y_hght_2inv=np.empty(ni[2])
 mac_y_strg_1inv=np.empty(ni[2])
 mac_y_strg_2inv=np.empty(ni[2])
 
+
+mac_y_hght_1inv=np.empty(ni[2])*np.nan
+mac_y_hght_2inv=np.empty(ni[2])*np.nan
+mac_y_strg_1inv=np.empty(ni[2])*np.nan
+mac_y_strg_2inv=np.empty(ni[2])*np.nan
+
+
+main_my_inv=np.empty(ni[2])*np.nan
+main_my_inversion=np.empty(ni[2])*np.nan
+main_my_inv_hght=np.empty(ni[2])*np.nan
+
+
+
+
 #*****************************************************************************\
 for j in range(0,ni[2]):
 #for j in range(0,100):
@@ -682,7 +696,7 @@ for j in range(0,ni[2]):
         ucomp_initial_my[i,j]=-wspdmac_ylev[i,j]*(np.sin(np.radians(wdirmac_ylev[i,j])))
 
     for i in range(0,len(hlev_yotc)-1):
-        vert_shear_my[i,j]=np.sqrt(float((umac_ylev[i,j]-umac_ylev[i-1,j])**2+(vmac_ylev[i,j]-vmac_ylev[i-1,j])**2))/float(hlev_yotc[i+1]-hlev_yotc[i])
+        vert_shear_my[i,j]=np.sqrt(float((ucomp_initial_my[i,j]-ucomp_initial_my[i-1,j])**2+(vcomp_initial_my[i,j]-vcomp_initial_my[i-1,j])**2))/float(hlev_yotc[i+1]-hlev_yotc[i])
 
         ptemp_v_gmy[i,j]=(ptemp_v_my[i+1,j]-ptemp_v_my[i,j])/float(hlev_yotc[i+1]-hlev_yotc[i])
 
@@ -705,99 +719,18 @@ for ind,line in enumerate(hlev_yotc):
 main_my_inv=ptemp_gmy[twenty_my_index:twokmy,:].argmax(axis=0)
 main_my_inv+=twenty_my_index #posicion main inv mas indice de sobre 100 m (3)
 
-# # Second Inversion Position
-for j in range(0,ni[2]):
-#for j in range(0,100):
-    for ind in range(twenty_my_index,main_my_inv[j]):
-    #height 2da inv 80% main inv
-        if hlev_yotc[ind]>=(0.8)*hlev_yotc[main_my_inv[j]]:
-            sec_my_ind[j]=ind
-            break
-        else:
-            sec_my_ind[j]=np.nan
-    if main_my_inv[j]==twenty_my_index:
-        sec_my_ind[j]=np.nan
-    #calcula la posicion de la sec inv (trata si se puede, si no asigna nan)
-    try:
-        sec_my_inv[j]=ptemp_gmy[twenty_my_index:sec_my_ind[j],j].argmax(0)
-        sec_my_inv[j]+=twenty_my_index
-    except:
-        sec_my_inv[j]=np.nan
-
 # main inversion must be > theta_v threshold
 for j in range(0,ni[2]):
-#for j in range(0,100):
-    ptemp_comp2[j]=ptemp_gmy[main_my_inv[j],j]#.diagonal() #extrae diagonal de pot temp
-    print j, ptemp_comp2[j]
-    if ptemp_comp2[j]<ptemp_thold_main:
-        #main_inv[i]=np.nan
-        main_my_inv[j]=-9999 # Cannot convert float NaN to integer
-        main_my_inversion[j]=False
-        sec_my_inv[j]=np.nan
-    else:
+    ptemp_comp2[j]=ptemp_gmy[main_my_inv[j],j]
+
+    if ptemp_comp2[j]>ptemp_thold_main:
         main_my_inv_hght[j]=hlev_yotc[main_my_inv[j]]
+        mac_y_strg_1inv[j]=ptemp_comp2[j]
         main_my_inversion[j]=True
-
-    if main_my_inv_hght[j]<=1:
-        main_my_inv_hght[j]=np.nan #Corrige el -9999 para calcular alt
-
-# secondary inversion must be > theta_v threshold
-
-    if np.isnan(sec_my_inv[j])==False and ptemp_gmy[sec_my_inv[j],j]>=ptemp_thold_sec:
-        sec_my_inversion[j]=True
-        sec_my_inv_hght[j]=hlev_yotc[sec_my_inv[j]]
     else:
-        sec_my_inversion[j]=False
-        sec_my_inv_hght[j]=np.nan
-
-
-# #Clasification
-    if sec_my_inversion[j]==False and main_my_inversion[j]==True:
-        mac_y_clas[j]=2
-        mac_y_depth[j]=np.nan
-        mac_y_hght_1invBL[j]=np.nan
-        mac_y_hght_2invBL[j]=np.nan
-        mac_y_hght_1invDL[j]=np.nan
-        mac_y_hght_2invDL[j]=np.nan
-        mac_y_hght_1inv[j]=hlev_yotc[main_my_inv[j]]
-        mac_y_hght_2inv[j]=np.nan
-        mac_y_strg_1inv[j]=ptemp_gmy[main_my_inv[j],j]
-        mac_y_strg_2inv[j]=np.nan
-    elif sec_my_inversion[j]==False and main_my_inversion[j]==False:
-        mac_y_clas[j]=1
-        mac_y_depth[j]=np.nan
-        mac_y_hght_1invBL[j]=np.nan
-        mac_y_hght_2invBL[j]=np.nan
-        mac_y_hght_1invDL[j]=np.nan
-        mac_y_hght_2invDL[j]=np.nan
-        mac_y_hght_1inv[j]=np.nan
-        mac_y_hght_2inv[j]=np.nan
+        main_my_inversion[j]=False
         mac_y_strg_1inv[j]=np.nan
-        mac_y_strg_2inv[j]=np.nan
-    elif main_my_inversion[j]==True and sec_my_inversion[j]==True and vert_shear_my[sec_my_inv[j],j]>=shear_thold:
-        mac_y_clas[j]=4
-        mac_y_depth[j]=(hlev_yotc[main_my_inv[j]]-hlev_yotc[sec_my_inv[j]])
-        mac_y_hght_1invBL[j]=hlev_yotc[main_my_inv[j]]
-        mac_y_hght_2invBL[j]=hlev_yotc[sec_my_inv[j]]
-        mac_y_hght_1invDL[j]=np.nan
-        mac_y_hght_2invDL[j]=np.nan
-        mac_y_hght_1inv[j]=hlev_yotc[main_my_inv[j]]
-        mac_y_hght_2inv[j]=hlev_yotc[sec_my_inv[j]]
-        mac_y_strg_1inv[j]=ptemp_gmy[main_my_inv[j],j]
-        mac_y_strg_2inv[j]=ptemp_gmy[sec_my_inv[j],j]
-    else:
-        mac_y_clas[j]=3
-        mac_y_hght_1invDL[j]=hlev_yotc[main_my_inv[j]]
-        mac_y_hght_2invDL[j]=hlev_yotc[sec_my_inv[j]]
-        mac_y_depth[j]=(hlev_yotc[main_my_inv[j]]-hlev_yotc[sec_my_inv[j]])
-        mac_y_hght_1invBL[j]=np.nan
-        mac_y_hght_2invBL[j]=np.nan
-        mac_y_hght_1inv[j]=hlev_yotc[main_my_inv[j]]
-        mac_y_hght_2inv[j]=hlev_yotc[sec_my_inv[j]]
-        mac_y_strg_1inv[j]=ptemp_gmy[main_my_inv[j],j]
-        mac_y_strg_2inv[j]=ptemp_gmy[sec_my_inv[j],j]
 
-    print j, mac_y_clas[j],mac_y_hght_1invDL[j], main_my_inv[j]
 #*****************************************************************************\
 # #Histogram
 # n, bin_edges =np.histogram(mac_y_clas, bins=[1, 2, 3, 4,5],normed=1)
@@ -824,73 +757,85 @@ time_my_ori = np.array(timestamp)
 
 for i in range(0,ni[2]):
     #Cuando cae 23 horas del 31 de diciembre agrega un anio
-    if time_my[i].hour==23 and time_my[i].day==31 and time_my[i].month==12:
+    if (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==12:
         y1=time_my[i].year
         time_my[i]=time_my[i].replace(year=y1+1,hour=0, month=1,day=1)
 
-    if  time_my[i].hour==23 and time_my[i].day==31 and time_my[i].month==1:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==1:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
-    if  time_my[i].hour==23 and time_my[i].day==31 and time_my[i].month==3:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==3:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
-    if  time_my[i].hour==23 and time_my[i].day==31 and time_my[i].month==5:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==5:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
-    if  time_my[i].hour==23 and time_my[i].day==31 and time_my[i].month==7:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==7:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
-    if  time_my[i].hour==23 and time_my[i].day==31 and time_my[i].month==8:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==8:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
-    if  time_my[i].hour==23 and time_my[i].day==31 and time_my[i].month==10:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==10:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
-    if  time_my[i].hour==23 and time_my[i].day==30 and time_my[i].month==4:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==4:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
-    if  time_my[i].hour==23 and time_my[i].day==30 and time_my[i].month==6:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==6:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
-    if  time_my[i].hour==23 and time_my[i].day==30 and time_my[i].month==9:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==9:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
-    if  time_my[i].hour==23 and time_my[i].day==30 and time_my[i].month==11:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==11:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
-    if  time_my[i].hour==23 and time_my[i].day==28 and time_my[i].month==2:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==28 and time_my[i].month==2:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
     #Bisiesto 2008
-    if  time_my[i].hour==23 and time_my[i].day==29 and time_my[i].month==4 and time_my[i].year==2008:
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2008:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2004:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2000:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==1996:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==1992:
         m1=time_my[i].month
         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
 
     #Cuando cae 23 horas, mueve hora a las 00 del dia siguiente
-    if time_my[i].hour==23:
+    if time_my[i].hour==23 or time_my[i].hour==22:
         d1=time_my[i].day
         time_my[i]=time_my[i].replace(hour=0,day=d1+1)
     else:
         time_my[i]=time_my[i]
     #Cuando cae 11 horas, mueve hora a las 12 del mismo dia
-    if time_my[i].hour==11:
+    if time_my[i].hour==11 or time_my[i].hour==10 or time_my[i].hour==13 or time_my[i].hour==14:
         time_my[i]=time_my[i].replace(hour=12)
     else:
         time_my[i]=time_my[i]
 
     #Cuando cae 1 horas, mueve hora a las 0 del mismo dia
-    if time_my[i].hour==1:
+    if time_my[i].hour==1 or time_my[i].hour==2:
         time_my[i]=time_my[i].replace(hour=0)
     else:
         time_my[i]=time_my[i]
@@ -901,15 +846,14 @@ for i in range(0,ni[2]):
 #*****************************************************************************\
 #*****************************************************************************\
 #Date index del periodo 2006-2010
-date_index_all = pd.date_range('2006-01-01 00:00', periods=3652, freq='12H')
-# #*****************************************************************************\
+#date_index_all = pd.date_range('2006-01-01 00:00', periods=3652, freq='12H')
+
+date_index_all = pd.date_range('1995-01-01 00:00', periods=11688, freq='12H')
+#*****************************************************************************\
 #Dataframe YOTC 2008-2010
 dy={'Clas':yotc_clas,
-'Depth':yotc_depth,
 '1ra Inv': yotc_hght_1inv,
-'2da Inv': yotc_hght_2inv,
-'Strg 1inv': yotc_strg_1inv,
-'Strg 2inv': yotc_strg_2inv}
+'Strg 1inv': yotc_strg_1inv}
 
 df_yotc = pd.DataFrame(data=dy,index=date_yotc)
 df_yotc.index.name = 'Date'
@@ -920,11 +864,8 @@ df_yotc_all.index.name = 'Date'
 #*****************************************************************************\
 #Dataframe MAC
 dm={'Clas':mac_clas,
-'Depth':mac_depth,
 '1ra Inv': mac_hght_1inv,
-'2da Inv': mac_hght_2inv,
-'Strg 1inv': mac_strg_1inv,
-'Strg 2inv': mac_strg_2inv}
+'Strg 1inv': mac_strg_1inv}
 
 df_mac = pd.DataFrame(data=dm,index=time_my)
 # Eliminate Duplicate Soundings
@@ -937,12 +878,9 @@ df_mac_final.index.name = 'Date'
 
 #*****************************************************************************\
 #Dataframe MAC YOTC levels
-dmy={'Clas':mac_y_clas,
-'Depth':mac_y_depth,
-'1ra Inv': mac_y_hght_1inv,
-'2da Inv': mac_y_hght_2inv,
-'Strg 1inv': mac_y_strg_1inv,
-'Strg 2inv': mac_y_strg_2inv}
+dmy={'Clas':mac_clas,
+'1ra Inv': main_my_inv_hght,
+'Strg 1inv': mac_y_strg_1inv}
 
 df_mac_y = pd.DataFrame(data=dmy,index=time_my)
 # Eliminate Duplicate Soundings
@@ -951,30 +889,21 @@ dfmy=df_mac_y.reset_index().drop_duplicates(cols='index',take_last=True).set_ind
 df_macyotc_final=dfmy.reindex(date_index_all)
 df_macyotc_final.index.name = 'Date'
 #*****************************************************************************\
-#Saving CSV
-path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+# #Saving CSV
+# path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/MCR/'
 
-# df_yotc.to_csv(path_data_save + 'df_yotc_20082010_5km.csv', sep='\t', encoding='utf-8')
-# df_yotc_all.to_csv(path_data_save + 'df_yotc_20062010_5km.csv', sep='\t', encoding='utf-8')
-# df_mac_final.to_csv(path_data_save + 'df_mac_20062010_5km.csv', sep='\t', encoding='utf-8')
-# df_macyotc_final.to_csv(path_data_save + 'df_macyotc_20062010_5km.csv', sep='\t', encoding='utf-8')
+# df_yotc.to_csv(path_data_save + 'df_yotc_20082010.csv', sep='\t', encoding='utf-8')
+# df_yotc_all.to_csv(path_data_save + 'df_yotc_20062010.csv', sep='\t', encoding='utf-8')
+# df_mac_final.to_csv(path_data_save + 'df_mac_20062010.csv', sep='\t', encoding='utf-8')
+# df_macyotc_final.to_csv(path_data_save + 'df_macyotc_20062010.csv', sep='\t', encoding='utf-8')
 
 #*****************************************************************************\
+#*****************************************************************************\
+#Saving CSV
+path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/MCR/'
 
-#T1 = pd.read_csv(path_data_save + 'df_macyotc_final.csv', sep='\t')
-
-
-
-
-
-#Dataframe datos per level
-#nlevel=range(1,31)
-#Crear listas con variables y unirlas a dataframe 3D
-#t_list=temp.tolist()
-#u_list=u.tolist()
-#v_list=v.tolist()
-#q_list=q.tolist()
-
-#data={'temp':t_list, 'q':q_list,'u':u_list, 'v':v_list}
-#df=pd.DataFrame(data=data, index=date_range)
+df_yotc.to_csv(path_data_save + 'df_yotc_20082010_5k.csv', sep='\t', encoding='utf-8')
+df_yotc_all.to_csv(path_data_save + 'df_yotc_19952010_5k.csv', sep='\t', encoding='utf-8')
+df_mac_final.to_csv(path_data_save + 'df_mac_19952010_5k.csv', sep='\t', encoding='utf-8')
+df_macyotc_final.to_csv(path_data_save + 'df_macyotc_19952010_5k.csv', sep='\t', encoding='utf-8')
 

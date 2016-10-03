@@ -31,7 +31,7 @@ path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/003 Cluster/'
 
 #*****************************************************************************\
 df_cluster= pd.read_csv(path_data + 'Soundings_MAC_right.csv', sep=',', parse_dates=['Date'])
-
+df_cluster.convert_objects(convert_numeric=True).dtypes
 # CL4=np.array(df_cluster['QCL_3'])
 # dist_clu=np.array(df_cluster['QCL_4'])
 CL4=np.array(df_cluster['Cluster'])
@@ -46,7 +46,7 @@ path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/clusters/Soundings/'
 #*****************************************************************************\
 # ****************************************************************************\
 
-Yfin=1996
+Yfin=2011
 path_databom=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/MatFiles/files_bom/'
 matb1= sio.loadmat(path_databom+'BOM_1995.mat')
 bom_in=matb1['BOM_S'][:]
@@ -123,131 +123,131 @@ hlev_yotc=file_levels[:,6]
 plev_yotc=file_levels[:,4] #value 10 is 925
 #*****************************************************************************\
 #Interpolation to YOTC Levels
-# prutemp=np.empty((len(hlev_yotc),0))
-# prumixr=np.empty((len(hlev_yotc),0))
-# pruu=np.empty((len(hlev_yotc),0))
-# pruv=np.empty((len(hlev_yotc),0))
-# prurelh=np.empty((len(hlev_yotc),0))
-# prudwpo=np.empty((len(hlev_yotc),0))
+prutemp=np.empty((len(hlev_yotc),0))
+prumixr=np.empty((len(hlev_yotc),0))
+pruu=np.empty((len(hlev_yotc),0))
+pruv=np.empty((len(hlev_yotc),0))
+prurelh=np.empty((len(hlev_yotc),0))
+prudwpo=np.empty((len(hlev_yotc),0))
 
-# for j in range(0,ni[2]):
-# #height initialization
-#     x=hght[:,j]
-#     x[-1]=np.nan
-#     new_x=hlev_yotc
-# #Interpolation YOTC levels
-#     yt=temp[:,j]
-#     rest=interp1d(x,yt)(new_x)
-#     prutemp=np.append(prutemp,rest)
+for j in range(0,ni[2]):
+#height initialization
+    x=hght[:,j]
+    x[-1]=np.nan
+    new_x=hlev_yotc
+#Interpolation YOTC levels
+    yt=temp[:,j]
+    rest=interp1d(x,yt)(new_x)
+    prutemp=np.append(prutemp,rest)
 
-#     ym=mixr[:,j]
-#     resm=interp1d(x,ym)(new_x)
-#     prumixr=np.append(prumixr,resm)
+    ym=mixr[:,j]
+    resm=interp1d(x,ym)(new_x)
+    prumixr=np.append(prumixr,resm)
 
-#     yw=u[:,j]
-#     resw=interp1d(x,yw)(new_x)
-#     pruu=np.append(pruu,resw)
+    yw=u[:,j]
+    resw=interp1d(x,yw)(new_x)
+    pruu=np.append(pruu,resw)
 
-#     yd=v[:,j]
-#     resd=interp1d(x,yd)(new_x)
-#     pruv=np.append(pruv,resd)
+    yd=v[:,j]
+    resd=interp1d(x,yd)(new_x)
+    pruv=np.append(pruv,resd)
 
-#     yr=relh[:,j]
-#     resr=interp1d(x,yr)(new_x)
-#     prurelh=np.append(prurelh,resr)
+    yr=relh[:,j]
+    resr=interp1d(x,yr)(new_x)
+    prurelh=np.append(prurelh,resr)
 
-#     ydp=dwpo[:,j]
-#     resr=interp1d(x,ydp)(new_x)
-#     prudwpo=np.append(prudwpo,resr)
+    ydp=dwpo[:,j]
+    resr=interp1d(x,ydp)(new_x)
+    prudwpo=np.append(prudwpo,resr)
 
-# tempmac_ylev=prutemp.reshape(-1,len(hlev_yotc)).transpose()
-# umac_ylev=pruu.reshape(-1,len(hlev_yotc)).transpose()
-# vmac_ylev=pruv.reshape(-1,len(hlev_yotc)).transpose()
-# mixrmac_ylev=prumixr.reshape(-1,len(hlev_yotc)).transpose()
-# relhmac_ylev=prurelh.reshape(-1,len(hlev_yotc)).transpose()
-# dwpomac_ylev=prudwpo.reshape(-1,len(hlev_yotc)).transpose()
+tempmac_ylev=prutemp.reshape(-1,len(hlev_yotc)).transpose()
+umac_ylev=pruu.reshape(-1,len(hlev_yotc)).transpose()
+vmac_ylev=pruv.reshape(-1,len(hlev_yotc)).transpose()
+mixrmac_ylev=prumixr.reshape(-1,len(hlev_yotc)).transpose()
+relhmac_ylev=prurelh.reshape(-1,len(hlev_yotc)).transpose()
+dwpomac_ylev=prudwpo.reshape(-1,len(hlev_yotc)).transpose()
 
-# wspdmac_ylev=np.sqrt(umac_ylev**2 + vmac_ylev**2)
-# wdirmac_ylev=np.arctan2(-umac_ylev, -vmac_ylev)*(180/np.pi)
-# wdirmac_ylev[(umac_ylev == 0) & (vmac_ylev == 0)]=0
+wspdmac_ylev=np.sqrt(umac_ylev**2 + vmac_ylev**2)
+wdirmac_ylev=np.arctan2(-umac_ylev, -vmac_ylev)*(180/np.pi)
+wdirmac_ylev[(umac_ylev == 0) & (vmac_ylev == 0)]=0
 
 
-# relhum_my=relhmac_ylev.T
-# temp_my=tempmac_ylev.T
-# u_my=umac_ylev.T
-# v_my=vmac_ylev.T
-# mixr_my=mixrmac_ylev.T
-# dwpo_my=dwpomac_ylev.T
+relhum_my=relhmac_ylev.T
+temp_my=tempmac_ylev.T
+u_my=umac_ylev.T
+v_my=vmac_ylev.T
+mixr_my=mixrmac_ylev.T
+dwpo_my=dwpomac_ylev.T
 
-# wsp_my=wspdmac_ylev.T
-# wdir_my=wdirmac_ylev.T
+wsp_my=wspdmac_ylev.T
+wdir_my=wdirmac_ylev.T
 
 
 #*****************************************************************************\
-plev_std=plev_yotc
+# plev_std=plev_yotc
 
-temp_pres=np.zeros((len(plev_std),ni[2]),'float')
-mixr_pres=np.zeros((len(plev_std),ni[2]),'float')
-u_pres=np.zeros((len(plev_std),ni[2]),'float')
-v_pres=np.zeros((len(plev_std),ni[2]),'float')
-relh_pres=np.zeros((len(plev_std),ni[2]),'float')
-dwpo_pres=np.zeros((len(plev_std),ni[2]),'float')
+# temp_pres=np.zeros((len(plev_std),ni[2]),'float')
+# mixr_pres=np.zeros((len(plev_std),ni[2]),'float')
+# u_pres=np.zeros((len(plev_std),ni[2]),'float')
+# v_pres=np.zeros((len(plev_std),ni[2]),'float')
+# relh_pres=np.zeros((len(plev_std),ni[2]),'float')
+# dwpo_pres=np.zeros((len(plev_std),ni[2]),'float')
 
-for j in range(0,ni[2]):
+# for j in range(0,ni[2]):
 
-    yt=temp[~np.isnan(temp[:,j]),j]
-    ym=mixr[~np.isnan(mixr[:,j]),j]
-    yw=u[~np.isnan(u[:,j]),j]
-    yd=v[~np.isnan(v[:,j]),j]
-    yr=relh[~np.isnan(relh[:,j]),j]
-    yp=dwpo[~np.isnan(dwpo[:,j]),j]
-    xp=pres[~np.isnan(temp[:,j]),j]
+#     yt=temp[~np.isnan(temp[:,j]),j]
+#     ym=mixr[~np.isnan(mixr[:,j]),j]
+#     yw=u[~np.isnan(u[:,j]),j]
+#     yd=v[~np.isnan(v[:,j]),j]
+#     yr=relh[~np.isnan(relh[:,j]),j]
+#     yp=dwpo[~np.isnan(dwpo[:,j]),j]
+#     xp=pres[~np.isnan(temp[:,j]),j]
 
-    temp_interp_pres=si.UnivariateSpline(xp[::-1],yt[::-1],k=5)
-    mixr_interp_pres=si.UnivariateSpline(xp[::-1],ym[::-1],k=5)
-    u_interp_pres=si.UnivariateSpline(xp[::-1],yw[::-1],k=5)
-    v_interp_pres=si.UnivariateSpline(xp[::-1],yd[::-1],k=5)
-    relh_interp_pres=si.UnivariateSpline(xp[::-1],yr[::-1],k=5)
-    dwpo_interp_pres=si.UnivariateSpline(xp[::-1],yp[::-1],k=5)
+#     temp_interp_pres=si.UnivariateSpline(xp[::-1],yt[::-1],k=5)
+#     mixr_interp_pres=si.UnivariateSpline(xp[::-1],ym[::-1],k=5)
+#     u_interp_pres=si.UnivariateSpline(xp[::-1],yw[::-1],k=5)
+#     v_interp_pres=si.UnivariateSpline(xp[::-1],yd[::-1],k=5)
+#     relh_interp_pres=si.UnivariateSpline(xp[::-1],yr[::-1],k=5)
+#     dwpo_interp_pres=si.UnivariateSpline(xp[::-1],yp[::-1],k=5)
 
-    for ind in range(0,len(plev_std)):
-        temp_pres[ind,j]=temp_interp_pres(plev_std[ind])
-        mixr_pres[ind,j]=mixr_interp_pres(plev_std[ind])
-        u_pres[ind,j]=u_interp_pres(plev_std[ind])
-        v_pres[ind,j]=v_interp_pres(plev_std[ind])
-        relh_pres[ind,j]=relh_interp_pres(plev_std[ind])
-        dwpo_pres[ind,j]=dwpo_interp_pres(plev_std[ind])
+#     for ind in range(0,len(plev_std)):
+#         temp_pres[ind,j]=temp_interp_pres(plev_std[ind])
+#         mixr_pres[ind,j]=mixr_interp_pres(plev_std[ind])
+#         u_pres[ind,j]=u_interp_pres(plev_std[ind])
+#         v_pres[ind,j]=v_interp_pres(plev_std[ind])
+#         relh_pres[ind,j]=relh_interp_pres(plev_std[ind])
+#         dwpo_pres[ind,j]=dwpo_interp_pres(plev_std[ind])
 
 
-    relh_pres[relh_pres[:,j]>np.nanmax(yr),j]=np.nan
-    relh_pres[relh_pres[:,j]<np.nanmin(yr),j]=np.nan
+#     relh_pres[relh_pres[:,j]>np.nanmax(yr),j]=np.nan
+#     relh_pres[relh_pres[:,j]<np.nanmin(yr),j]=np.nan
 
-    temp_pres[temp_pres[:,j]>np.nanmax(yt),j]=np.nan
-    temp_pres[temp_pres[:,j]<np.nanmin(yt),j]=np.nan
+#     temp_pres[temp_pres[:,j]>np.nanmax(yt),j]=np.nan
+#     temp_pres[temp_pres[:,j]<np.nanmin(yt),j]=np.nan
 
-    u_pres[u_pres[:,j]>np.nanmax(yw),j]=np.nan
-    u_pres[u_pres[:,j]<np.nanmin(yw),j]=np.nan
-    v_pres[v_pres[:,j]>np.nanmax(yd),j]=np.nan
-    v_pres[v_pres[:,j]<np.nanmin(yd),j]=np.nan
+#     u_pres[u_pres[:,j]>np.nanmax(yw),j]=np.nan
+#     u_pres[u_pres[:,j]<np.nanmin(yw),j]=np.nan
+#     v_pres[v_pres[:,j]>np.nanmax(yd),j]=np.nan
+#     v_pres[v_pres[:,j]<np.nanmin(yd),j]=np.nan
 
-    mixr_pres[mixr_pres[:,j]>np.nanmax(ym),j]=np.nan
-    mixr_pres[mixr_pres[:,j]<np.nanmin(ym),j]=np.nan
+#     mixr_pres[mixr_pres[:,j]>np.nanmax(ym),j]=np.nan
+#     mixr_pres[mixr_pres[:,j]<np.nanmin(ym),j]=np.nan
 
-    dwpo_pres[dwpo_pres[:,j]>np.nanmax(yp),j]=np.nan
-    dwpo_pres[dwpo_pres[:,j]<np.nanmin(yp),j]=np.nan
+#     dwpo_pres[dwpo_pres[:,j]>np.nanmax(yp),j]=np.nan
+#     dwpo_pres[dwpo_pres[:,j]<np.nanmin(yp),j]=np.nan
 
-    del xp, yt, ym, yw, yd, yr, yp
+#     del xp, yt, ym, yw, yd, yr, yp
 
-temp_my=temp_pres.T
-u_my=u_pres.T
-v_my=v_pres.T
-mixr_my=mixr_pres.T
-relhum_my=relh_pres.T
-dwpo_my=dwpo_pres.T
+# temp_my=temp_pres.T
+# u_my=u_pres.T
+# v_my=v_pres.T
+# mixr_my=mixr_pres.T
+# relhum_my=relh_pres.T
+# dwpo_my=dwpo_pres.T
 
-wsp_my=np.sqrt(u_my**2 + v_my**2)
-wdir_my=np.arctan2(-u_my, -v_my)*(180/np.pi)
-wdir_my[(u_my == 0) & (v_my == 0)]=0
+# wsp_my=np.sqrt(u_my**2 + v_my**2)
+# wdir_my=np.arctan2(-u_my, -v_my)*(180/np.pi)
+# wdir_my[(u_my == 0) & (v_my == 0)]=0
 
 #*****************************************************************************\
 #*****************************************************************************\
@@ -269,6 +269,8 @@ mr_list=mixr_my.tolist()
 dwpo_list=dwpo_my.tolist()
 wsp_list=wsp_my.tolist()
 wdir_list=wdir_my.tolist()
+
+
 
 dmy={'temp':t_list,
 'u':u_list,
@@ -429,7 +431,7 @@ dewpoint_c=dewp_CL4_G1
 wsp=wsp_CL4_G1*1.943844
 wdir=wdir_CL4_G1
 
-mydataG1=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,'4K','Cluster 1')))
+mydataG1=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,' ','Cluster 1')))
 
 #C2
 temperature_c=temp_CL4_G2
@@ -437,7 +439,7 @@ dewpoint_c=dewp_CL4_G2
 wsp=wsp_CL4_G2*1.943844
 wdir=wdir_CL4_G2
 
-mydataG2=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,'4K','Cluster 2')))
+mydataG2=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,' ','Cluster 2')))
 
 #C3
 temperature_c=temp_CL4_G3
@@ -445,30 +447,30 @@ dewpoint_c=dewp_CL4_G3
 wsp=wsp_CL4_G3*1.943844
 wdir=wdir_CL4_G3
 
-mydataG3=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,'4K','Cluster 3')))
+mydataG3=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,' ','Cluster 3')))
 #C4
 temperature_c=temp_CL4_G4
 dewpoint_c=dewp_CL4_G4
 wsp=wsp_CL4_G4*1.943844
 wdir=wdir_CL4_G4
 
-mydataG4=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,'4K','Cluster 4')))
+mydataG4=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,' ','Cluster 4')))
 
 
 
 #Individuals
 S1=SkewT.Sounding(soundingdata=mydataG1)
 S1.plot_skewt(color='r')
-plt.savefig(path_data_save + '4K_C1.png', format='png', dpi=300)
+plt.savefig(path_data_save + '4K_C1.eps', format='eps', dpi=1200)
 S2=SkewT.Sounding(soundingdata=mydataG2)
 S2.plot_skewt(color='r')
-plt.savefig(path_data_save + '4K_C2.png', format='png', dpi=300)
+plt.savefig(path_data_save + '4K_C2.eps', format='eps', dpi=1200)
 S3=SkewT.Sounding(soundingdata=mydataG3)
 S3.plot_skewt(color='r')
-plt.savefig(path_data_save + '4K_C3.png', format='png', dpi=300)
+plt.savefig(path_data_save + '4K_C3.eps', format='eps', dpi=1200)
 S4=SkewT.Sounding(soundingdata=mydataG4)
 S4.plot_skewt(color='r')
-plt.savefig(path_data_save + '4K_C4.png', format='png', dpi=300)
+plt.savefig(path_data_save + '4K_C4.eps', format='eps', dpi=1200)
 
 S=SkewT.Sounding(soundingdata=mydataG1)
 S.make_skewt_axes()
@@ -479,7 +481,7 @@ S.soundingdata=S3.soundingdata
 S.add_profile(color='g',bloc=1)
 S.soundingdata=S4.soundingdata
 S.add_profile(color='k',bloc=1)
-plt.savefig(path_data_save + '4K.png', format='png', dpi=300)
+plt.savefig(path_data_save + '4K.eps', format='eps', dpi=1200)
 
 
 
@@ -493,12 +495,18 @@ plt.savefig(path_data_save + '4K.png', format='png', dpi=300)
 height_m=hlev_yotc
 pressure_pa=plev_yotc
 #n_cases=3
+
+perc=0.25
 #*****************************************************************************\
 #C1
 #*****************************************************************************\
 
 df=df_CL4_G1.sort('dist_clu', ascending=True)
-n_cases=int(round(len(df)*0.1))
+n_cases=int(round(len(df)*perc))
+
+print df['dist_clu']
+print n_cases, len(df)
+
 RH=np.empty([n_cases,91])*np.nan
 WSP=np.empty([n_cases,91])*np.nan
 DIR=np.empty([n_cases,91])*np.nan
@@ -540,19 +548,19 @@ dewpoint_c=dewp_CL4_G1
 wsp=wsp_CL4_G1*1.943844
 wdir=wdir_CL4_G1
 
-mydataG1=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,'4K','C1 - (10 Perc.)')))
+mydataG1=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,' ','Cluster 1')))
 
 
 S=SkewT.Sounding(soundingdata=mydataG1)
 S.plot_skewt(color='r')
-plt.savefig(path_data_save + '4K_C1_10per.png', format='png', dpi=1200)
+plt.savefig(path_data_save + '4K_C1_per.eps', format='eps', dpi=1200)
 
 #*****************************************************************************\
 #C2
 #*****************************************************************************\
 
 df=df_CL4_G2.sort('dist_clu', ascending=True)
-n_cases=int(round(len(df)*0.1))
+n_cases=int(round(len(df)*perc))
 RH=np.empty([n_cases,91])*np.nan
 WSP=np.empty([n_cases,91])*np.nan
 DIR=np.empty([n_cases,91])*np.nan
@@ -594,19 +602,19 @@ dewpoint_c=dewp_CL4_G2
 wsp=wsp_CL4_G2*1.943844
 wdir=wdir_CL4_G2
 
-mydataG2=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,'4K','C2 - (10 Perc.)')))
+mydataG2=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,' ','Cluster 2')))
 
 
 S=SkewT.Sounding(soundingdata=mydataG2)
 S.plot_skewt(color='r')
-plt.savefig(path_data_save + '4K_C2_10per.png', format='png', dpi=1200)
+plt.savefig(path_data_save + '4K_C2_per.eps', format='eps', dpi=1200)
 
 #*****************************************************************************\
 #C3
 #*****************************************************************************\
 
 df=df_CL4_G3.sort('dist_clu', ascending=True)
-n_cases=int(round(len(df)*0.1))
+n_cases=int(round(len(df)*perc))
 RH=np.empty([n_cases,91])*np.nan
 WSP=np.empty([n_cases,91])*np.nan
 DIR=np.empty([n_cases,91])*np.nan
@@ -648,19 +656,19 @@ dewpoint_c=dewp_CL4_G3
 wsp=wsp_CL4_G3*1.943844
 wdir=wdir_CL4_G3
 
-mydataG3=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,'4K','C3 - (10 Perc.)')))
+mydataG3=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,' ','Cluster 3')))
 
 
 S=SkewT.Sounding(soundingdata=mydataG3)
 S.plot_skewt(color='r')
-plt.savefig(path_data_save + '4K_C3_10per.png', format='png', dpi=1200)
+plt.savefig(path_data_save + '4K_C3_per.eps', format='eps', dpi=1200)
 
 #*****************************************************************************\
 #C4
 #*****************************************************************************\
 
 df=df_CL4_G4.sort('dist_clu', ascending=True)
-n_cases=int(round(len(df)*0.1))
+n_cases=int(round(len(df)*perc))
 RH=np.empty([n_cases,91])*np.nan
 WSP=np.empty([n_cases,91])*np.nan
 DIR=np.empty([n_cases,91])*np.nan
@@ -702,9 +710,9 @@ dewpoint_c=dewp_CL4_G4
 wsp=wsp_CL4_G4*1.943844
 wdir=wdir_CL4_G4
 
-mydataG4=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,'4K','C4 - (10 Perc.)')))
+mydataG4=dict(zip(('hght','pres','temp','dwpt','drct','sknt','StationNumber','SoundingDate'),(height_m,pressure_pa,temperature_c,dewpoint_c,wdir,wsp,' ','Cluster 4')))
 
 
 S=SkewT.Sounding(soundingdata=mydataG4)
 S.plot_skewt(color='r')
-plt.savefig(path_data_save + '4K_C4_10per.png', format='png', dpi=1200)
+plt.savefig(path_data_save + '4K_C4_per.eps', format='eps', dpi=1200)

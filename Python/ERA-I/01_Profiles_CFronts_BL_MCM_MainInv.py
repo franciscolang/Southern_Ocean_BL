@@ -17,17 +17,18 @@ import scipy.stats as st
 import numpy as np
 import scipy as sp
 import scipy.stats
+#from scipy import stats
 from pylab import plot,show, grid, xlabel, ylabel, xlim, ylim, yticks, legend
 
 base_dir = os.path.expanduser('~')
+path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/ERAI/Main_Inv/'
+
+
 Yfin=2011
-n_rd=2 #Number of cases to take 65
+n_rd=30 #Number of cases to take 65
 n_rdyi=70 #Number of cases to take Yi 70
 #*****************************************************************************\
-#Default Info
-mac = {'name': 'Macquarie Island, Australia', 'lat': -54.62, 'lon': 158.85}
-lat_mac = mac['lat']
-lon_mac = mac['lon']
+#Default Infouarie Island, Australia', 'lat': -54.62, 'lon': 158.85}
 
 ptemp_thold_main=0.010           # K/m
 ptemp_thold_sec=0.005            # K/m
@@ -157,71 +158,24 @@ main_inv=dthetav_ei[:,twenty_y_index:twoky].argmax(axis=1)
 [i for i, j in enumerate(dthetav_ei[:,twenty_y_index:twoky]) if j == main_inv]
 main_inv+=twenty_y_index #posicion main inv mas indice de sobre 100 m (3)
 
-# Second Inversion Position
-for i in range(0,len(time)):
-    for ind in range(twenty_y_index,main_inv[i]):
-    #height 2da inv 80% main inv
-        if hght_ei[ind]>=(0.8)*hght_ei[main_inv[i]]:
-            sec_ind[i]=ind
-            break
-        else:
-            sec_ind[i]=np.nan
-    if main_inv[i]==twenty_y_index:
-        sec_ind[i]=np.nan
-    #calcula la posicion de la sec inv (trata si se puede, si no asigna nan)
-    try:
-        sec_inv[i]=dthetav_ei[i,twenty_y_index:sec_ind[i]].argmax(0)
-        [z for z, j in enumerate(dthetav_ei[i,twenty_y_index:sec_ind[i]]) if j == sec_inv[i]]
-        sec_inv[i]+=twenty_y_index
-    except:
-        sec_inv[i]=np.nan
-
 # main inversion must be > theta_v threshold
 ptemp_comp1=dthetav_ei[:,main_inv[:]].diagonal() #extrae diagonal de pot temp
 
 for i in range(0,len(time)):
-    if ptemp_comp1[i]<ptemp_thold_main:
-        #main_inv[i]=np.nan
-        main_inv[i]=-9999 # Cannot convert float NaN to integer
-        main_inversion[i]=False
-        sec_inv[i]=np.nan
+    if ptemp_comp1[i]>ptemp_thold_main:
+        main_inv_hght[i]=hght_ei[main_inv[i]]
+        main_inversion[i]=True
+        ei_strg_1inv[i]=dthetav_ei[i,main_inv[i]]
     else:
         main_inv_hght[i]=hght_ei[main_inv[i]]
-        ei_strg_1inv[i]=dthetav_ei[i,main_inv[i]]
-        main_inversion[i]=True
+        ei_strg_1inv[i]=np.nan
 
-    if main_inv_hght[i]<=1:
-        main_inv_hght[i]=np.nan #Corrige el -9999 para calcular alt
+    #print main_inv_hght[i], ei_strg_1inv[i]
 
-    # secondary inversion must be > theta_v threshold
 
-    if np.isnan(sec_inv[i])==False and dthetav_ei[i,sec_inv[i]]>=ptemp_thold_sec:
-        sec_inversion[i]=True
-        sec_inv_hght[i]=hght_ei[sec_inv[i]]
-        ei_strg_2inv[i]=dthetav_ei[i,sec_inv[i]]
-    else:
-        sec_inversion[i]=False
-        sec_inv_hght[i]=np.nan
-
-    hlev_yotc=hght_ei
-
-    #Clasification
-    if sec_inversion[i]==False and main_inversion[i]==True:
-        yotc_clas[i]=2
-
-    elif sec_inversion[i]==False and main_inversion[i]==False:
-        yotc_clas[i]=1
-
-    elif main_inversion[i]==True and sec_inversion[i]==True and vshear_ei[i,sec_inv[i]]>=shear_thold:
-        yotc_clas[i]=4
-
-    else:
-        yotc_clas[i]=3
-
-    #Height of Inversions
-    ei_hght_1inv=main_inv_hght
-    ei_hght_2inv=sec_inv_hght
-
+ei_inv_hght=main_inv_hght
+ei_inv_strg=ei_strg_1inv
+ei_clas=np.array([1]*len(ei_inv_hght))
 
 # ****************************************************************************\
 # ****************************************************************************\
@@ -301,8 +255,36 @@ v=wspd*(np.sin(np.radians(270-wdir_initial)))
 #                            MAC Data ERA-i Levels
 #*****************************************************************************\
 #*****************************************************************************\
-#Interpolation to YOTC Levels
 
+# hlev_yotc=hght_ei
+
+# prutemp=np.empty((len(hlev_yotc),0))
+# pruwspd=np.empty((len(hlev_yotc),0))
+# pruwdir=np.empty((len(hlev_yotc),0))
+# prumixr=np.empty((len(hlev_yotc),0))
+
+
+# for j in range(0,ni[2]):
+# #for j in range(0,100):
+# #height initialization
+#     x=hght[:,j]
+#     x[-1]=np.nan
+#     new_x=hlev_yotc
+# #Interpolation YOTC levels
+#     yt=temp[:,j]
+#     rest=interp1d(x,yt)(new_x)
+#     prutemp=np.append(prutemp,rest)
+
+#     ym=mixr[:,j]
+#     resm=interp1d(x,ym)(new_x)
+#     prumixr=np.append(prumixr,resm)
+
+# tempmac_ylev_2=prutemp.reshape(-1,len(hlev_yotc)).transpose()
+# mixrmac_ylev_2=prumixr.reshape(-1,len(hlev_yotc)).transpose()
+
+#*****************************************************************************\
+
+# #Interpolation to YOTC Levels
 temp_pres=np.zeros((len(pres_ei),ni[2]),'float')
 mixr_pres=np.zeros((len(pres_ei),ni[2]),'float')
 u_pres=np.zeros((len(pres_ei),ni[2]),'float')
@@ -383,31 +365,32 @@ ptemp_v_gmy=np.empty(tempmac_ylev.shape)*np.nan
 main_my_inv=np.empty(ni[2])*np.nan
 twenty_my_index=[]
 twokmy=[]
-sec_my_ind=np.empty(ni[2])*np.nan
-sec_my_inv=np.empty(ni[2])*np.nan
+
 ptemp_comp2=np.empty(ni[2])*np.nan
 main_my_inv_hght=np.empty(ni[2])*np.nan
 main_my_inversion=np.empty(ni[2])*np.nan
-sec_my_inv_hght=np.empty(ni[2])*np.nan
-sec_my_inversion=np.empty(ni[2])*np.nan
 
 mac_y_clas=np.empty(ni[2])*np.nan
 
+mac_y_strg_1inv=np.empty(ni[2])*np.nan
+main_my_inv=np.empty(ni[2])*np.nan
+main_my_inversion=np.empty(ni[2])*np.nan
+main_my_inv_hght=np.empty(ni[2])*np.nan
 
 #*****************************************************************************\
+
+
+mixrmac_ylev_2=mixrmac_ylev
+tempmac_ylev_2=tempmac_ylev
+
 for j in range(0,ni[2]):
 #Calculate new variables
     for i in range(0,len(hght_ei)):
-        # if 0.<=wdirmac_ylev[i,j]<=90.:
-        #     wdir_my[i,j]=wdirmac_ylev[i,j]+270.
-        # elif 90.<=wdirmac_ylev[i,j]<=360.:
-        #     wdir_my[i,j]=wdirmac_ylev[i,j]-90.
+        spec_hum_my[i,j]=(float(mixrmac_ylev_2[i,j])/1000.)/(1+(float(mixrmac_ylev_2[i,j])/1000.))
 
-        spec_hum_my[i,j]=(float(mixrmac_ylev[i,j])/1000.)/(1+(float(mixrmac_ylev[i,j])/1000.))
+        tempv_my[i,j]=tempmac_ylev_2[i,j]*float(1+0.61*spec_hum_my[i,j])
 
-        tempv_my[i,j]=tempmac_ylev[i,j]*float(1+0.61*spec_hum_my[i,j])
-
-        ptemp_my[i,j]=(tempmac_ylev[i,j]+273.16)*((1000./pres_ei[i])**0.286)
+        ptemp_my[i,j]=(tempmac_ylev_2[i,j]+273.16)*((1000./pres_ei[i])**0.286)
 
         ptemp_v_my[i,j]=(tempv_my[i,j]+273.16)*((1000./pres_ei[i])**0.286)
 
@@ -419,8 +402,9 @@ for j in range(0,ni[2]):
 
     vert_shear_my[-1,j]=np.nan
     ptemp_v_gmy[-1,j]=np.nan
+    ptemp_v_gmy[0,:]=np.nan #Hace cero el valor de superficie
 
-
+    #print ptemp_v_gmy[i,j]
 #*****************************************************************************\
 hlev_yotc=hght_ei
 
@@ -434,69 +418,36 @@ for ind,line in enumerate(hlev_yotc):
         twokmy=ind
         break
 
-main_my_inv=ptemp_v_gmy[twenty_my_index:twokmy,:].argmax(axis=0)
-main_my_inv+=twenty_my_index #posicion main inv mas indice de sobre 100 m (3)
-
-# # Second Inversion Position
 for j in range(0,ni[2]):
-#for j in range(0,100):
-    for ind in range(twenty_my_index,main_my_inv[j]):
-    #height 2da inv 80% main inv
-        if hlev_yotc[ind]>=(0.8)*hlev_yotc[main_my_inv[j]]:
-            sec_my_ind[j]=ind
-            break
-        else:
-            sec_my_ind[j]=np.nan
-    if main_my_inv[j]==twenty_my_index:
-        sec_my_ind[j]=np.nan
-    #calcula la posicion de la sec inv (trata si se puede, si no asigna nan)
-    try:
-        sec_my_inv[j]=ptemp_v_gmy[twenty_my_index:sec_my_ind[j],j].argmax(0)
-        sec_my_inv[j]+=twenty_my_index
-    except:
-        sec_my_inv[j]=np.nan
+    if np.all(np.isnan(ptemp_v_gmy[twenty_my_index:twokmy,j])):
+        main_my_inv[j]=0
+    else:
+        main_my_inv[j]=np.nanargmax(ptemp_v_gmy[twenty_my_index:twokmy,j],axis=0)
+
+
+
+main_my_inv+=twenty_my_index #posicion main inv mas indice de sobre 100 m (3)
 
 # main inversion must be > theta_v threshold
 for j in range(0,ni[2]):
-#for j in range(0,100):
-    ptemp_comp2[j]=ptemp_v_gmy[main_my_inv[j],j]#.diagonal() #extrae diagonal de pot temp
-    if ptemp_comp2[j]<ptemp_thold_main:
-        #main_inv[i]=np.nan
-        main_my_inv[j]=-9999 # Cannot convert float NaN to integer
-        main_my_inversion[j]=False
-        sec_my_inv[j]=np.nan
-    else:
+    ptemp_comp2[j]=ptemp_v_gmy[main_my_inv[j],j]
+
+    if ptemp_comp2[j]>ptemp_thold_main:
         main_my_inv_hght[j]=hlev_yotc[main_my_inv[j]]
+        mac_y_strg_1inv[j]=ptemp_comp2[j]
         main_my_inversion[j]=True
-
-    if main_my_inv_hght[j]<=1:
-        main_my_inv_hght[j]=np.nan #Corrige el -9999 para calcular alt
-
-# secondary inversion must be > theta_v threshold
-
-    if np.isnan(sec_my_inv[j])==False and ptemp_v_gmy[sec_my_inv[j],j]>=ptemp_thold_sec:
-        sec_my_inversion[j]=True
-        sec_my_inv_hght[j]=hlev_yotc[sec_my_inv[j]]
     else:
-        sec_my_inversion[j]=False
-        sec_my_inv_hght[j]=np.nan
+        main_my_inversion[j]=False
+        mac_y_strg_1inv[j]=np.nan
 
 
-# #Clasification
-    if sec_my_inversion[j]==False and main_my_inversion[j]==True:
-        mac_y_clas[j]=2
-
-    elif sec_my_inversion[j]==False and main_my_inversion[j]==False:
-        mac_y_clas[j]=1
-
-    elif main_my_inversion[j]==True and sec_my_inversion[j]==True and vert_shear_my[sec_my_inv[j],j]>=shear_thold:
-        mac_y_clas[j]=4
-
-    else:
-        mac_y_clas[j]=3
+    #print  mac_y_strg_1inv[j],  main_my_inv_hght[j], ptemp_comp2[j]
 
 
 
+mac_inv_hght=main_my_inv_hght
+mac_inv_strg=mac_y_strg_1inv
+mac_clas=np.array([1]*len(mac_inv_hght))
 
 relhum_my=relhmac_ylev.T
 temp_my=tempmac_ylev.T+273.16
@@ -511,7 +462,151 @@ q_my=spec_hum_my.T*1000
 #tempv_my=tempv_my.T+273.16
 
 #*****************************************************************************\
-#Cambiar fechas
+#*****************************************************************************\
+#*****************************************************************************\
+#                               Reading Height
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+path_data_csv=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+
+
+
+#*****************************************************************************\
+#Reading CSV
+#*****************************************************************************\
+df_front= pd.read_csv(path_data_csv + 'df_cfront_19952010.csv', sep='\t', parse_dates=['Date'])
+df_front= df_front.set_index('Date')
+#*****************************************************************************\
+df_yotc= pd.read_csv(path_data_csv + 'MCR/df_era_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+df_my= pd.read_csv(path_data_csv + 'MCR/df_macera_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+
+df_yotc= df_yotc.set_index('Date')
+df_my= df_my.set_index('Date')
+#*****************************************************************************\
+#Merge datraframe mac with
+df_yotcfro=pd.concat([df_yotc, df_front],axis=1)
+df_myfro=pd.concat([df_my, df_front],axis=1)
+
+df_yotcfro['Dist Front']=df_yotcfro['Dist CFront']*-1
+df_myfro['Dist Front']=df_myfro['Dist CFront']*-1
+
+df_yotcfro[(df_yotcfro['Dist Front']>10)]=np.nan
+df_yotcfro[(df_yotcfro['Dist Front']<-10)]=np.nan
+df_myfro[(df_myfro['Dist Front']>10)]=np.nan
+df_myfro[(df_myfro['Dist Front']<-10)]=np.nan
+
+
+#*****************************************************************************\
+#Clasification by type
+#*****************************************************************************\
+
+df_1i= df_yotcfro[np.isfinite(df_yotcfro['1ra Inv'])]
+df_yotc_1inv = df_1i[np.isfinite(df_1i['Dist Front'])]
+
+
+df_1s= df_yotcfro[np.isfinite(df_yotcfro['Strg 1inv'])]
+df_yotc_1str = df_1s[np.isfinite(df_1s['Dist Front'])]
+
+
+#*****************************************************************************\
+df_1i= df_myfro[np.isfinite(df_myfro['1ra Inv'])]
+df_my_1inv = df_1i[np.isfinite(df_1i['Dist Front'])]
+
+df_1s= df_myfro[np.isfinite(df_myfro['Strg 1inv'])]
+df_my_1str = df_1s[np.isfinite(df_1s['Dist Front'])]
+
+
+#*****************************************************************************\
+#Percentages
+#*****************************************************************************\
+#Total Number Sounding at YOTC of 1460
+n_yotcsound=len(df_yotcfro[np.isfinite(df_yotcfro['Clas'])])
+#Total Number Sounding at MAC of 3652
+n_mysound=len(df_myfro[np.isfinite(df_myfro['Clas'])])
+
+#Sounding YOTC
+df_yotcsound=df_yotcfro[np.isfinite(df_yotcfro['Clas'])]
+#Sounding MAC-YOTC
+df_mysound=df_myfro[np.isfinite(df_myfro['Clas'])]
+
+
+#Total Number Sounding at YOTC with front
+n_yotcfronts=len(df_yotcsound[np.isfinite(df_yotcsound['Dist Front'])])
+#Total Number Sounding at MAC-YOTC with front
+n_myfronts=len(df_mysound[np.isfinite(df_mysound['Dist Front'])])
+
+#*****************************************************************************\
+#Plot
+#*****************************************************************************\
+
+
+x1=np.array(df_yotc_1inv['Dist Front'])
+y=np.array(df_yotc_1inv['1ra Inv'])
+
+bin_means_era, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_era, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+
+
+x1=np.array(df_my_1inv['Dist Front'])
+y=np.array(df_my_1inv['1ra Inv'])
+bin_means_mac, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_mac, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+
+bin_edges=np.arange(-9.5, 10.5, 1)
+
+
+fig=plt.figure(figsize=(10, 6))
+ax0=fig.add_subplot(111)
+ax0.plot(bin_edges,bin_means_mac,'-o', label='MAC')
+ax0.plot(bin_edges,bin_means_era,'-or', label='ERA-i')
+
+ax0.errorbar(bin_edges, bin_means_mac, yerr=bin_std_mac, fmt='-ob',label='MAC')
+ax0.errorbar(bin_edges, bin_means_era, yerr=bin_std_era, fmt='-or',label='ERA-i')
+
+ax0.legend(loc=3,fontsize = 10, numpoints=1)
+ax0.grid()
+plt.savefig(path_data_save + 'heights.eps', format='eps', dpi=1200)
+
+#*****************************************************************************\
+# Rescale
+#*****************************************************************************\
+OldMax=0
+OldMin=5000
+NewMax=0
+NewMin=20
+
+
+OldValue_era=bin_means_era
+OldValue_mac=bin_means_mac
+
+OldValue_era_std=bin_std_era
+OldValue_mac_std=bin_std_mac
+
+
+OldRange = (OldMax - OldMin)
+NewRange = (NewMax - NewMin)
+
+NewValue_era = (((OldValue_era - OldMin) * NewRange) / OldRange) + NewMin
+NewValue_mac = (((OldValue_mac - OldMin) * NewRange) / OldRange) + NewMin
+
+NewValue_era_std = (((OldValue_era_std - OldMin) * NewRange) / OldRange) + NewMin
+NewValue_mac_std = (((OldValue_mac_std - OldMin) * NewRange) / OldRange) + NewMin
+
+fig=plt.figure(figsize=(8, 6))
+ax0=fig.add_subplot(111)
+ax0.plot(bin_edges,NewValue_era,'-o', label='MAC')
+#ax0.plot(bin_edges,bin_means_era,'-or', label='ERA-i')
+ax0.legend(loc=3,fontsize = 10)
+ax0.grid()
+#plt.show()
+
+#*****************************************************************************\
+#*****************************************************************************\
+#                                   Cambiar fechas #*****************************************************************************\
+#*****************************************************************************\
 timestamp = [datenum_to_datetime(t) for t in timesd]
 time_my = np.array(timestamp)
 time_my_ori = np.array(timestamp)
@@ -627,7 +722,9 @@ theta_list=theta_ei.tolist()
 dthetav_list=dthetav_ei.tolist()
 vertshear_list=vshear_ei.tolist()
 
-dy={'Clas':yotc_clas,
+dy={'Clas':ei_clas,
+# 'MI Hght':ei_inv_hght,
+# 'MI Strg':ei_inv_strg,
 'temp':t_list,
 'thetav':thetav_list,
 'theta':theta_list,
@@ -638,6 +735,8 @@ dy={'Clas':yotc_clas,
 'rh':rh_list,
 'q':q_list,
 'mixr':mr_list}
+# 'Hght': ei_inv_hght,
+# 'Strg': ei_inv_strg}
 
 df_ei = pd.DataFrame(data=dy,index=date_erai)
 df_ei.index.name = 'Date'
@@ -648,7 +747,9 @@ df_erai.index.name = 'Date'
 
 
 #*****************************************************************************\
-dyc={'Clas ERA':yotc_clas,
+dyc={'Clas ERA':ei_clas,
+# 'MI Hght ERA':ei_inv_hght,
+# 'MI Strg ERA':ei_inv_strg,
 'temp ERA':t_list,
 'thetav ERA':thetav_list,
 'theta ERA':theta_list,
@@ -659,6 +760,8 @@ dyc={'Clas ERA':yotc_clas,
 'rh ERA':rh_list,
 'q ERA':q_list,
 'mixr ERA':mr_list}
+# 'Hght ERA': ei_inv_hght,
+# 'Strg ERA': ei_inv_strg}
 
 dfc_ei = pd.DataFrame(data=dyc,index=date_erai)
 dfc_ei.index.name = 'Date'
@@ -681,7 +784,9 @@ thetav_list=pot_temp_v_my.tolist()
 dthetav_list=dthetav_my.tolist()
 vertshear_list=vertshear_my.tolist()
 
-dmy={'Clas':mac_y_clas,
+dmy={'Clas':mac_clas,
+# 'MI Hght':mac_inv_hght,
+# 'MI Strg':mac_inv_strg,
 'temp':t_list,
 'thetav':thetav_list,
 'theta':theta_list,
@@ -692,6 +797,8 @@ dmy={'Clas':mac_y_clas,
 'rh':rh_list,
 'q':q_list,
 'mixr':mr_list}
+# 'Hght': mac_inv_hght,
+# 'Strg': mac_inv_strg}
 
 df_mac_y = pd.DataFrame(data=dmy,index=time_my)
 # Eliminate Duplicate Soundings
@@ -702,7 +809,9 @@ df_macei.index.name = 'Date'
 
 #*****************************************************************************\
 
-dmc={'Clas MAC':mac_y_clas,
+dmc={'Clas MAC':mac_clas,
+# 'MI Hght MAC':mac_inv_hght,
+# 'MI Strg MAC':mac_inv_strg,
 'temp MAC':t_list,
 'thetav MAC':thetav_list,
 'theta MAC':theta_list,
@@ -713,6 +822,8 @@ dmc={'Clas MAC':mac_y_clas,
 'rh MAC':rh_list,
 'q MAC':q_list,
 'mixr MAC':mr_list}
+# 'Hght': mac_inv_hght,
+# 'Strg': mac_inv_strg}
 
 
 dfc_m = pd.DataFrame(data=dmc,index=time_my)
@@ -756,7 +867,7 @@ print np.count_nonzero(~np.isnan(dfc_macera['Clas ERA'])),  np.count_nonzero(~np
 #*****************************************************************************\
 #*****************************************************************************\
 #*****************************************************************************\
-path_data_csv=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+
 df_front= pd.read_csv(path_data_csv + 'df_cfront_19952010.csv', sep='\t', parse_dates=['Date'])
 df_front= df_front.set_index('Date')
 
@@ -775,9 +886,9 @@ df_macni_fro=pd.concat([dfc_macnint, df_front],axis=1)
 #*****************************************************************************\
 #*****************************************************************************\
 #*****************************************************************************\
-from matplotlib.projections import register_projection
-from skewx_projection_matplotlib_lt_1d4 import SkewXAxes
-register_projection(SkewXAxes)
+# from matplotlib.projections import register_projection
+# from skewx_projection_matplotlib_lt_1d4 import SkewXAxes
+# register_projection(SkewXAxes)
 
 # nc=700
 # Tmacni=np.array(df_macni_fro['temp'][nc])
@@ -820,7 +931,7 @@ register_projection(SkewXAxes)
 #                                   Profiles and Fronts
 #*****************************************************************************\
 #*****************************************************************************\
-path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/ERAI/'
+
 
 #*****************************************************************************\
 #Definition Variables for Loop
@@ -860,6 +971,8 @@ for m in range(0,len(name_var)):
 
     MG_mac=np.empty([len(ncount),len(pres_ei)])*np.nan
     RH=np.empty([max(ncount),len(pres_ei)])*np.nan
+    #MIH=np.empty([max(ncount),len(ncount)])*np.nan
+    #MIH_mac=np.empty([len(ncount)])*np.nan
 
     k1=0
     k2=0
@@ -869,12 +982,15 @@ for m in range(0,len(name_var)):
         for i in range(0, len(df)):
             if df['catdist_fron'][i]==j:
                 RH[k2,:]=np.array(df_meifro[name_var[m]][i])
+                #MIH[k2,j]=np.array(df_meifro['MI Hght'][i])
                 k2=k2+1
             MG_mac[k1,:]=np.nanmean(RH, axis=0)
+
         k1=k1+1
         k2=0
 
-
+    # MIH_mac=np.nanmean(MIH, axis=0)
+    # MIH_mac=MIH_mac[::-1]
 #*****************************************************************************\
 # Means Complete Period ERA-i
 #*****************************************************************************\
@@ -886,6 +1002,7 @@ for m in range(0,len(name_var)):
 
     MG_era=np.empty([len(ncount),len(pres_ei)])*np.nan
     RH=np.empty([max(ncount),len(pres_ei)])*np.nan
+    #MIH=np.empty([max(ncount),len(ncount)])*np.nan
 
     k1=0
     k2=0
@@ -895,20 +1012,24 @@ for m in range(0,len(name_var)):
         for i in range(0, len(df)):
             if df['catdist_fron'][i]==j:
                 RH[k2,:]=np.array(df_eraifro[name_var[m]][i])
+                #MIH[k2,j]=np.array(df_eraifro['MI Hght'][i])
                 k2=k2+1
             MG_era[k1,:]=np.nanmean(RH, axis=0)
         k1=k1+1
         k2=0
+    #MIH_era=np.nanmean(MIH, axis=0)
+    #MIH_era=MIH_era[::-1]
 #*****************************************************************************\
 # Plot
 #************************#****************************************************\
+
     fig=plt.figure(figsize=(8, 6))
     ax0=fig.add_subplot(111)
 
     ax0.plot(MG_mac[5,:],pres_ei,'-o', label='MAC')
     ax0.plot(MG_era[5,:],pres_ei,'-or', label='ERA-i')
-    ax0.set_ylim(1050,10)
-    ax0.set_yticks(np.linspace(100, 1000, 10))
+    ax0.set_ylim(1050,600)
+    ax0.set_yticks(np.linspace(600, 1000, 10))
     ax0.set_xlim(z_min2[m],z_max2[m])
     ax0.set_ylabel('Pressure (hPa)',fontsize = 10)
     ax0.set_xlabel(name_var_all[m] + ' ('+ units_var[m] +')',fontsize = 10)
@@ -925,8 +1046,8 @@ for m in range(0,len(name_var)):
 
     ax1.plot(MG_mac[15,:],pres_ei,'-o', label='MAC')
     ax1.plot(MG_era[15,:],pres_ei,'-or', label='ERA-i')
-    ax1.set_ylim(1050,10)
-    ax1.set_yticks(np.linspace(100, 1000, 10))
+    ax1.set_ylim(1050,600)
+    ax1.set_yticks(np.linspace(600, 1000, 10))
     ax1.set_xlim(z_min2[m],z_max2[m])
     ax1.set_ylabel('Pressure (hPa)',fontsize = 10)
     ax1.set_xlabel(name_var_all[m] + ' ('+ units_var[m] +')',fontsize = 10)
@@ -1371,6 +1492,10 @@ for m in range(0,len(name_var)):
     ax.margins(0.05)
     plt.tight_layout()
 
+    #ax.plot(np.arange(0.5,20,1), NewValue_mac,'-ow', label='MAC')
+    ax.errorbar(np.arange(0.5,20,1), NewValue_mac, yerr=NewValue_mac_std, fmt='-ow',label='Main Inv.')
+    ax.legend(loc=1, numpoints=1)
+
 
     plt.savefig(path_data_save + name_var[m]+'_MAC.eps', format='eps', dpi=1200)
 
@@ -1394,6 +1519,12 @@ for m in range(0,len(name_var)):
     ax.set_xlabel('Distance to front: cold to warm sector (deg)', size=12)
     ax.axvline(10,color='white')
     ax.margins(0.05)
+
+    NewValue_era_std
+
+    #ax.plot(np.arange(0.5,20,1), NewValue_era,'-ow', label='ERA-i')
+    ax.errorbar(np.arange(0.5,20,1), NewValue_era, yerr=NewValue_era_std, fmt='-ow',label='Main Inv.')
+    ax.legend(loc=1, numpoints=1)
 
     plt.tight_layout()
     plt.savefig(path_data_save + name_var[m]+'_ERA.eps', format='eps', dpi=1200)

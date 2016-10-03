@@ -25,11 +25,23 @@ path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/003 Cluster/'
 #*****************************************************************************\
 #*****************************************************************************\
 #925-850-700
-df_cluster= pd.read_csv(path_data + 'All_ClusterAnalysis.csv', sep=',', parse_dates=['Date'])
+# df_cluster= pd.read_csv(path_data + 'All_ClusterAnalysis.csv', sep=',', parse_dates=['Date'])
+# CL4=np.array(df_cluster['Cluster'])
+# dist_clu=np.array(df_cluster['Distance'])
+
+# path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/003 Cluster/Case Studies/'
+
+
+
+df_cluster= pd.read_csv(path_data + 'Soundings_MAC_right.csv', sep=',', parse_dates=['Date'])
+df_cluster.convert_objects(convert_numeric=True).dtypes
+# CL4=np.array(df_cluster['QCL_3'])
+# dist_clu=np.array(df_cluster['QCL_4'])
 CL4=np.array(df_cluster['Cluster'])
 dist_clu=np.array(df_cluster['Distance'])
 
-path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/003 Cluster/Case Studies/'
+#path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/003 Cluster/Profiles/4K/'
+path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/clusters/Soundings/'
 
 #*****************************************************************************\
 # ****************************************************************************\
@@ -350,115 +362,115 @@ df_C4 = dfmy_fronts[dfmy_fronts['CL_4']==4]
 #*****************************************************************************\
 #*****************************************************************************\
 
-row = 2
-column = 2
-fig, axes = plt.subplots(nrows=row, ncols=column, facecolor='w', figsize=(14,10))
-lim=[0,0.16]
+# row = 2
+# column = 2
+# fig, axes = plt.subplots(nrows=row, ncols=column, facecolor='w', figsize=(14,10))
+# lim=[0,0.16]
 
-#*****************************************************************************\
-df=df_C1
-a=df['CL_4'].groupby(df.index.month).count()/len(df)
+# #*****************************************************************************\
+# df=df_C1
+# a=df['CL_4'].groupby(df.index.month).count()/len(df)
 
-ax = a.plot(kind='bar',colormap='jet',alpha=0.75, rot=0, ax=axes[0,0])
-ax.set_ylabel('Frequency')
-ax.set_xlabel('Month')
-ax.set_title('Cluster 1')
-ax.set_ylim(lim)
+# ax = a.plot(kind='bar',colormap='jet',alpha=0.75, rot=0, ax=axes[0,0])
+# ax.set_ylabel('Frequency')
+# ax.set_xlabel('Month')
+# ax.set_title('Cluster 1')
+# ax.set_ylim(lim)
 
-del a, df
-#*****************************************************************************\
-df=df_C2
-a=df['CL_4'].groupby(df.index.month).count()/len(df)
+# del a, df
+# #*****************************************************************************\
+# df=df_C2
+# a=df['CL_4'].groupby(df.index.month).count()/len(df)
 
-ax = a.plot(kind='bar',colormap='jet',alpha=0.75, rot=0,ax=axes[0,1])
-ax.set_ylabel('Frequency')
-ax.set_xlabel('Month')
-ax.set_title('Cluster 2')
-ax.set_ylim(lim)
-del a, df
-#*****************************************************************************\
-df=df_C3
-a=df['CL_4'].groupby(df.index.month).count()/len(df)
+# ax = a.plot(kind='bar',colormap='jet',alpha=0.75, rot=0,ax=axes[0,1])
+# ax.set_ylabel('Frequency')
+# ax.set_xlabel('Month')
+# ax.set_title('Cluster 2')
+# ax.set_ylim(lim)
+# del a, df
+# #*****************************************************************************\
+# df=df_C3
+# a=df['CL_4'].groupby(df.index.month).count()/len(df)
 
-ax = a.plot(kind='bar',colormap='jet',alpha=0.75, rot=0,ax=axes[1,0])
-ax.set_ylabel('Frequency')
-ax.set_xlabel('Month')
-ax.set_title('Cluster 3')
-ax.set_ylim(lim)
-del a, df
-#*****************************************************************************\
-df=df_C4
-a=df['CL_4'].groupby(df.index.month).count()/len(df)
+# ax = a.plot(kind='bar',colormap='jet',alpha=0.75, rot=0,ax=axes[1,0])
+# ax.set_ylabel('Frequency')
+# ax.set_xlabel('Month')
+# ax.set_title('Cluster 3')
+# ax.set_ylim(lim)
+# del a, df
+# #*****************************************************************************\
+# df=df_C4
+# a=df['CL_4'].groupby(df.index.month).count()/len(df)
 
-ax = a.plot(kind='bar',colormap='jet',alpha=0.75, rot=0,ax=axes[1,1])
-ax.set_ylabel('Frequency')
-ax.set_xlabel('Month')
-ax.set_title('Cluster 4')
-ax.set_ylim(lim)
-del a, df
+# ax = a.plot(kind='bar',colormap='jet',alpha=0.75, rot=0,ax=axes[1,1])
+# ax.set_ylabel('Frequency')
+# ax.set_xlabel('Month')
+# ax.set_title('Cluster 4')
+# ax.set_ylim(lim)
+# del a, df
 
-#fig.suptitle('All Soundings')
-fig.savefig(path_data_save + 'Cluster_by_month_all.png', format='png', dpi=600)
+# #fig.suptitle('All Soundings')
+# fig.savefig(path_data_save + 'Cluster_by_month_all.png', format='png', dpi=600)
 
-#*****************************************************************************\
-#*****************************************************************************\
-#Interanual variations
-#*****************************************************************************\
-#*****************************************************************************\
-row = 2
-column = 2
-fig, axes = plt.subplots(nrows=row, ncols=column, facecolor='w', figsize=(14,10))
-lim=[0,0.2]
+# #*****************************************************************************\
+# #*****************************************************************************\
+# #Interanual variations
+# #*****************************************************************************\
+# #*****************************************************************************\
+# row = 2
+# column = 2
+# fig, axes = plt.subplots(nrows=row, ncols=column, facecolor='w', figsize=(14,10))
+# lim=[0,0.2]
 
-#*****************************************************************************\
-df=df_C1
-a=df['CL_4'].groupby(df.index.year).count()/len(df)
+# #*****************************************************************************\
+# df=df_C1
+# a=df['CL_4'].groupby(df.index.year).count()/len(df)
 
-ax = a.plot(kind='bar',colormap='jet',alpha=0.75, ax=axes[0,0])
-ax.set_ylabel('Frequency')
-ax.set_xlabel('Year')
-ax.set_title('Cluster 1')
-ax.set_ylim(lim)
-del a, df
+# ax = a.plot(kind='bar',colormap='jet',alpha=0.75, ax=axes[0,0])
+# ax.set_ylabel('Frequency')
+# ax.set_xlabel('Year')
+# ax.set_title('Cluster 1')
+# ax.set_ylim(lim)
+# del a, df
 
-#*****************************************************************************\
-df=df_C2
-a=df['CL_4'].groupby(df.index.year).count()/len(df)
+# #*****************************************************************************\
+# df=df_C2
+# a=df['CL_4'].groupby(df.index.year).count()/len(df)
 
-ax = a.plot(kind='bar',colormap='jet',alpha=0.75, ax=axes[0,1])
-ax.set_ylabel('Frequency')
-ax.set_xlabel('Year')
-ax.set_title('Cluster 2')
-ax.set_ylim(lim)
-del a, df
-
-
-#*****************************************************************************\
-df=df_C3
-a=df['CL_4'].groupby(df.index.year).count()/len(df)
-
-ax = a.plot(kind='bar',colormap='jet',alpha=0.75, ax=axes[1,0])
-ax.set_ylabel('Frequency')
-ax.set_xlabel('Year')
-ax.set_title('Cluster 3')
-ax.set_ylim(lim)
-del a, df
-
-#*****************************************************************************\
-df=df_C3
-a=df['CL_4'].groupby(df.index.year).count()/len(df)
-
-ax = a.plot(kind='bar',colormap='jet',alpha=0.75, ax=axes[1,1])
-ax.set_ylabel('Frequency')
-ax.set_xlabel('Year')
-ax.set_title('Cluster 4')
-ax.set_ylim(lim)
-del a, df
+# ax = a.plot(kind='bar',colormap='jet',alpha=0.75, ax=axes[0,1])
+# ax.set_ylabel('Frequency')
+# ax.set_xlabel('Year')
+# ax.set_title('Cluster 2')
+# ax.set_ylim(lim)
+# del a, df
 
 
-fig.tight_layout()
-#fig.suptitle('All Soundings')
-fig.savefig(path_data_save + 'Cluster_by_year_all.png', format='png', dpi=600)
+# #*****************************************************************************\
+# df=df_C3
+# a=df['CL_4'].groupby(df.index.year).count()/len(df)
+
+# ax = a.plot(kind='bar',colormap='jet',alpha=0.75, ax=axes[1,0])
+# ax.set_ylabel('Frequency')
+# ax.set_xlabel('Year')
+# ax.set_title('Cluster 3')
+# ax.set_ylim(lim)
+# del a, df
+
+# #*****************************************************************************\
+# df=df_C3
+# a=df['CL_4'].groupby(df.index.year).count()/len(df)
+
+# ax = a.plot(kind='bar',colormap='jet',alpha=0.75, ax=axes[1,1])
+# ax.set_ylabel('Frequency')
+# ax.set_xlabel('Year')
+# ax.set_title('Cluster 4')
+# ax.set_ylim(lim)
+# del a, df
+
+
+# fig.tight_layout()
+# #fig.suptitle('All Soundings')
+# fig.savefig(path_data_save + 'Cluster_by_year_all.png', format='png', dpi=600)
 
 #*****************************************************************************\
 #*****************************************************************************\
