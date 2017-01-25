@@ -14,7 +14,6 @@ from scipy.interpolate import interp1d
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import random as rd
 import scipy.stats as st
-import numpy as np
 import scipy as sp
 import scipy.stats
 #from scipy import stats
@@ -526,6 +525,11 @@ df_mysound=df_myfro[np.isfinite(df_myfro['Clas'])]
 n_yotcfronts=len(df_yotcsound[np.isfinite(df_yotcsound['Dist Front'])])
 #Total Number Sounding at MAC-YOTC with front
 n_myfronts=len(df_mysound[np.isfinite(df_mysound['Dist Front'])])
+
+
+
+
+
 
 #*****************************************************************************\
 #Plot
@@ -1112,7 +1116,7 @@ for m in range(0,1):
 #*****************************************************************************\
 
 
-    fig = plt.figure(facecolor='w', figsize=(12,9))
+    fig = plt.figure(facecolor='w', figsize=(9,9))
     gs = gridspec.GridSpec(2, 1, height_ratios=[2,1])
 
     ax0=fig.add_subplot(gs[0])
@@ -1133,7 +1137,7 @@ for m in range(0,1):
     ax0.margins(0.03)
 
     #ax.plot(np.arange(0.5,20,1), NewValue_mac,'-ow', label='MAC')
-    ax0.errorbar(np.arange(0.5,20,1), NewValue_mac, yerr=NewValue_mac_std, fmt='-ow',label='Main Inv.')
+    ax0.errorbar(np.arange(0.5,20,1), NewValue_mac, yerr=NewValue_mac_std, fmt='-ow',label='Main Inv.',markeredgecolor='none')
     #ax0.legend(loc=1, numpoints=1)
 
 
@@ -1150,7 +1154,7 @@ for m in range(0,1):
 
     y=np.array(ncount_mac)
     x=np.array(ncount_mac.index.tolist())
-
+    x=x[::-1]
     ax1=fig.add_subplot(gs[1])
 
     ax1.bar(x,y,width)
@@ -1178,7 +1182,7 @@ for m in range(0,1):
 #*****************************************************************************\
 #*****************************************************************************\
 
-    fig = plt.figure(facecolor='w', figsize=(12,9))
+    fig = plt.figure(facecolor='w', figsize=(9,9))
     gs = gridspec.GridSpec(2, 1, height_ratios=[2,1])
 
     ax0=fig.add_subplot(gs[0])
@@ -1200,7 +1204,7 @@ for m in range(0,1):
     ax0.margins(0.03)
 
     #ax.plot(np.arange(0.5,20,1), NewValue_era,'-ow', label='ERA-i')
-    ax0.errorbar(np.arange(0.5,20,1), NewValue_era, yerr=NewValue_era_std, fmt='-ow',label='Main Inv.')
+    ax0.errorbar(np.arange(0.5,20,1), NewValue_era, yerr=NewValue_era_std, fmt='-ow',label='Main Inv.',markeredgecolor='none')
     #ax0.legend(loc=1, numpoints=1)
 
     plt.tight_layout()
@@ -1222,7 +1226,7 @@ for m in range(0,1):
 
     y=np.array(ncount_era)
     x=np.array(ncount_era.index.tolist())
-
+    x=x[::-1]
     ax1=fig.add_subplot(gs[1])
 
     ax1.bar(x,y,width)
@@ -1467,7 +1471,7 @@ for m in range(1,2):
 #*****************************************************************************\
 
 
-    fig, ax0 = plt.subplots(facecolor='w', figsize=(12,6))
+    fig, ax0 = plt.subplots(facecolor='w', figsize=(9,6))
     img = ax0.pcolor(MG_mac,cmap='jet', vmin=z_min[m], vmax=z_max[m])
 
     div = make_axes_locatable(ax0)
@@ -1485,7 +1489,7 @@ for m in range(1,2):
     ax0.margins(0.03)
 
     #ax.plot(np.arange(0.5,20,1), NewValue_mac,'-ow', label='MAC')
-    ax0.errorbar(np.arange(0.5,20,1), NewValue_mac, yerr=NewValue_mac_std, fmt='-ow',label='Main Inv.')
+    ax0.errorbar(np.arange(0.5,20,1), NewValue_mac, yerr=NewValue_mac_std, fmt='-ow',label='Main Inv.',markeredgecolor='none')
 
     plt.tight_layout()
 
@@ -1499,7 +1503,7 @@ for m in range(1,2):
 #*****************************************************************************\
 #*****************************************************************************\
 
-    fig, ax0 = plt.subplots(facecolor='w', figsize=(12,6))
+    fig, ax0 = plt.subplots(facecolor='w', figsize=(9,6))
     img = ax0.pcolor(MG_era,cmap='jet', vmin=z_min[m], vmax=z_max[m])
 
     div = make_axes_locatable(ax0)
@@ -1517,7 +1521,7 @@ for m in range(1,2):
     ax0.margins(0.03)
 
     #ax.plot(np.arange(0.5,20,1), NewValue_era,'-ow', label='ERA-i')
-    ax0.errorbar(np.arange(0.5,20,1), NewValue_era, yerr=NewValue_era_std, fmt='-ow',label='Main Inv.')
+    ax0.errorbar(np.arange(0.5,20,1), NewValue_era, yerr=NewValue_era_std, fmt='-ow',label='Main Inv.',markeredgecolor='none')
     #ax0.legend(loc=1, numpoints=1)
 
     plt.tight_layout()

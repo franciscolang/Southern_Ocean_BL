@@ -16,7 +16,9 @@ from pylab import plot,show, grid
 
 base_dir = os.path.expanduser('~')
 path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/YOTC/mat/'
-
+path_data_csv=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/003 Cluster/CSV/'
+path_data_clu=base_dir+'/Dropbox/Monash_Uni/SO/MAC/003 Cluster/'
 #*****************************************************************************\
 #Default Info
 mac = {'name': 'Macquarie Island, Australia', 'lat': -54.62, 'lon': 158.85}
@@ -324,7 +326,7 @@ v2=v[0:nl,:]
 #*****************************************************************************\
 #*****************************************************************************\
 #Standard Pressure Levels
-plev_std=np.array([950,925,900,850,800,750,700,650])
+plev_std=np.array([925,850,700])
 #hlev_std=np.array([925,850])
 
 #*****************************************************************************\
@@ -411,22 +413,25 @@ for j in range(0,ni[2]):
         dwpo_pres[ind,j]=dwpo_interp_pres(plev_std[ind])
 
 
-    relh_pres[relh_pres[:,j]>np.nanmax(yr),j]=np.nan
-    relh_pres[relh_pres[:,j]<np.nanmin(yr),j]=np.nan
+    # relh_pres[relh_pres[:,j]>np.nanmax(yr),j]=np.nan
+    # relh_pres[relh_pres[:,j]<np.nanmin(yr),j]=np.nan
 
-    temp_pres[temp_pres[:,j]>np.nanmax(yt),j]=np.nan
-    temp_pres[temp_pres[:,j]<np.nanmin(yt),j]=np.nan
+    relh_pres[relh_pres[:,j]>100,j]=100
+    relh_pres[relh_pres[:,j]<0,j]=0
 
-    u_pres[u_pres[:,j]>np.nanmax(yw),j]=np.nan
-    u_pres[u_pres[:,j]<np.nanmin(yw),j]=np.nan
-    v_pres[v_pres[:,j]>np.nanmax(yd),j]=np.nan
-    v_pres[v_pres[:,j]<np.nanmin(yd),j]=np.nan
+    # temp_pres[temp_pres[:,j]>np.nanmax(yt),j]=np.nan
+    # temp_pres[temp_pres[:,j]<np.nanmin(yt),j]=np.nan
 
-    mixr_pres[mixr_pres[:,j]>np.nanmax(ym),j]=np.nan
-    mixr_pres[mixr_pres[:,j]<np.nanmin(ym),j]=np.nan
+    # u_pres[u_pres[:,j]>np.nanmax(yw),j]=np.nan
+    # u_pres[u_pres[:,j]<np.nanmin(yw),j]=np.nan
+    # v_pres[v_pres[:,j]>np.nanmax(yd),j]=np.nan
+    # v_pres[v_pres[:,j]<np.nanmin(yd),j]=np.nan
 
-    dwpo_pres[dwpo_pres[:,j]>np.nanmax(yp),j]=np.nan
-    dwpo_pres[dwpo_pres[:,j]<np.nanmin(yp),j]=np.nan
+    # mixr_pres[mixr_pres[:,j]>np.nanmax(ym),j]=np.nan
+    # mixr_pres[mixr_pres[:,j]<np.nanmin(ym),j]=np.nan
+
+    # dwpo_pres[dwpo_pres[:,j]>np.nanmax(yp),j]=np.nan
+    # dwpo_pres[dwpo_pres[:,j]<np.nanmin(yp),j]=np.nan
 
     del xp, yt, ym, yw, yd, yr, yp
 
@@ -497,90 +502,6 @@ timestamp = [datenum_to_datetime(t) for t in timesd]
 time_my = np.array(timestamp)
 time_my_ori = np.array(timestamp)
 
-# for i in range(0,ni[2]):
-#     #Cuando cae 23 horas del 31 de diciembre agrega un anio
-#     if (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==12:
-#         y1=time_my[i].year
-#         time_my[i]=time_my[i].replace(year=y1+1,hour=0, month=1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==1:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==3:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==5:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==7:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==8:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==10:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==4:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==6:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==9:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==11:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==28 and time_my[i].month==2:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-#     #Bisiesto 2008
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2008:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2004:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2000:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==1996:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==1992:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-
-#     #Cuando cae 23 horas, mueve hora a las 00 del dia siguiente
-#     if time_my[i].hour==23 or time_my[i].hour==22:
-#         d1=time_my[i].day
-#         time_my[i]=time_my[i].replace(hour=0,day=d1+1)
-#     else:
-#         time_my[i]=time_my[i]
-#     #Cuando cae 11 horas, mueve hora a las 12 del mismo dia
-#     if time_my[i].hour==11 or time_my[i].hour==10 or time_my[i].hour==13 or time_my[i].hour==14:
-#         time_my[i]=time_my[i].replace(hour=12)
-#     else:
-#         time_my[i]=time_my[i]
-
-#     #Cuando cae 1 horas, mueve hora a las 0 del mismo dia
-#     if time_my[i].hour==1 or time_my[i].hour==2:
-#         time_my[i]=time_my[i].replace(hour=0)
-#     else:
-#         time_my[i]=time_my[i]
 
 #*****************************************************************************\
 #*****************************************************************************\
@@ -589,89 +510,23 @@ time_my_ori = np.array(timestamp)
 #*****************************************************************************\
 date_index_all = pd.date_range('1995-01-01 00:00', periods=11688, freq='12H')
 #*****************************************************************************\
-# #Dataframe YOTC 2008-2010
-# t_list=temp_yotc.tolist()
-# u_list=u_yotc.tolist()
-# v_list=v_yotc.tolist()
-# rh_list=relhum_yotc.tolist()
-# mr_list=mixr_yotc.tolist()
-# thetav_list=pot_temp_v_yotc.tolist()
-# theta_list=pot_temp_yotc.tolist()
-# dthetav_list=dthetav_yotc.tolist()
-# vertshear_list=vertshear_yotc.tolist()
-
-# dy={'Clas':yotc_clas,
-# 'Depth':yotc_depth,
-# '1 Inv BL': yotc_hght_1invBL,
-# '2 Inv BL': yotc_hght_2invBL,
-# '1 Inv DL': yotc_hght_1invDL,
-# '2 Inv DL': yotc_hght_2invDL,
-# '1ra Inv': yotc_hght_1inv,
-# '2da Inv': yotc_hght_2inv,
-# 'Strg 1inv': yotc_strg_1inv,
-# 'Strg 2inv': yotc_strg_2inv,
-# 'temp':t_list,
-# 'thetav':thetav_list,
-# 'theta':theta_list,
-# 'dthetav':dthetav_list,
-# 'vertshear':vertshear_list,
-# 'u':u_list,
-# 'v':u_list,
-# 'RH':rh_list,
-# 'mixr':mr_list}
-
-# df_yotc = pd.DataFrame(data=dy,index=date_yotc)
-# df_yotc.index.name = 'Date'
-#*****************************************************************************\
-#Dataframe YOTC All
-# df_yotc_all=df_yotc.reindex(date_index_all)
-# df_yotc_all.index.name = 'Date'
-#*****************************************************************************\
-#Dataframe MAC YOTC levels
-# t_list=temp_my.tolist()
-# u_list=u_my.tolist()
-# v_list=v_my.tolist()
-# rh_list=relhum_my.tolist()
-# mr_list=mixr_my.tolist()
-# theta_list=pot_temp_my.tolist()
-# thetav_list=pot_temp_v_my.tolist()
-
 
 dmy={'pres_s':pres_sur_my,
 'temp_s':temp_sur_my,
 'relh_s':relh_sur_my,
-'temp_950':temp_my[:,0],
-'temp_925':temp_my[:,1],
-'temp_900':temp_my[:,2],
-'temp_850':temp_my[:,3],
-'temp_800':temp_my[:,4],
-'temp_750':temp_my[:,5],
-'temp_700':temp_my[:,6],
-'temp_650':temp_my[:,7],
-'relh_950':relh_my[:,0],
-'relh_925':relh_my[:,1],
-'relh_900':relh_my[:,2],
-'relh_850':relh_my[:,3],
-'relh_800':relh_my[:,4],
-'relh_750':relh_my[:,5],
-'relh_700':relh_my[:,6],
-'relh_650':relh_my[:,7],
-'u_950':u_my[:,0],
-'u_925':u_my[:,1],
-'u_900':u_my[:,2],
-'u_850':u_my[:,3],
-'u_800':u_my[:,4],
-'u_750':u_my[:,5],
-'u_700':u_my[:,6],
-'u_650':u_my[:,7],
-'v_950':v_my[:,0],
-'v_925':v_my[:,1],
-'v_900':v_my[:,2],
-'v_850':v_my[:,3],
-'v_800':v_my[:,4],
-'v_750':v_my[:,5],
-'v_700':v_my[:,6],
-'v_650':v_my[:,7]}
+'temp_925':temp_my[:,0],
+'temp_850':temp_my[:,1],
+'temp_700':temp_my[:,2],
+'relh_925':relh_my[:,0],
+'relh_850':relh_my[:,1],
+'relh_700':relh_my[:,2],
+'u_925':u_my[:,0],
+'u_850':u_my[:,1],
+'u_700':u_my[:,2],
+'v_925':v_my[:,0],
+'v_850':v_my[:,1],
+'v_700':v_my[:,2]}
+
 
 
 dfmyclu = pd.DataFrame(data=dmy,index=time_my)
@@ -684,7 +539,7 @@ del time_my
 #*****************************************************************************\
 #Saving CSV
 
-dfmy_clu.to_csv('../../../../003 Cluster/dfmy_clu_19952010.csv', sep=',', encoding='utf-8')
+dfmy_clu.to_csv(path_data_save + 'dfmy_clu_19952010_925850700.csv', sep=',', encoding='utf-8')
 
 
 
@@ -694,148 +549,140 @@ dfmy_clu.to_csv('../../../../003 Cluster/dfmy_clu_19952010.csv', sep=',', encodi
 
 
 
+#*****************************************************************************\
+#*****************************************************************************\
+#Cambiar fechas
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\timestamp = [datenum_to_datetime(t) for t in timesd]
+time_my = np.array(timestamp)
+time_my_ori = np.array(timestamp)
+
+for i in range(0,ni[2]):
+    #Cuando cae 23 horas del 31 de diciembre agrega un anio
+    if (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==12:
+        y1=time_my[i].year
+        time_my[i]=time_my[i].replace(year=y1+1,hour=0, month=1,day=1)
+
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==1:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==3:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==5:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==7:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==8:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==10:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==4:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==6:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==9:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==11:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==28 and time_my[i].month==2:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+    #Bisiesto 2008
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2008:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2004:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2000:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==1996:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
+    if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==1992:
+        m1=time_my[i].month
+        time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
 
 
+    #Cuando cae 23 horas, mueve hora a las 00 del dia siguiente
+    if time_my[i].hour==23 or time_my[i].hour==22:
+        d1=time_my[i].day
+        time_my[i]=time_my[i].replace(hour=0,day=d1+1)
+    else:
+        time_my[i]=time_my[i]
+    #Cuando cae 11 horas, mueve hora a las 12 del mismo dia
+    if time_my[i].hour==11 or time_my[i].hour==10 or time_my[i].hour==13 or time_my[i].hour==14:
+        time_my[i]=time_my[i].replace(hour=12)
+    else:
+        time_my[i]=time_my[i]
+
+    #Cuando cae 1 horas, mueve hora a las 0 del mismo dia
+    if time_my[i].hour==1 or time_my[i].hour==2:
+        time_my[i]=time_my[i].replace(hour=0)
+    else:
+        time_my[i]=time_my[i]
+
+#*****************************************************************************\
+#Reescribe fechas para ajustarlas a los frentes
+
+dfmyclu_newd = pd.DataFrame(data=dmy,index=time_my)
+# Eliminate Duplicate Soundings
+dfmyclu_newd=dfmyclu_newd.reset_index().drop_duplicates(cols='index',take_last=True).set_index('index')
+
+dfmyclu_newd=dfmyclu_newd.reindex(date_index_all)
+dfmyclu_newd.index.name = 'Date'
 
 
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#Reading Fronts File
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+
+#*****************************************************************************\
+#Cold Front
+df_cfront= pd.read_csv(path_data_csv + 'df_cfront_19952010.csv', sep='\t', parse_dates=['Date'])
+df_cfront= df_cfront.set_index('Date')
+
+dfmy_cfro_clu=pd.concat([dfmyclu_newd, df_cfront],axis=1)
 
 
+dfmy_cfro_clu[(dfmy_cfro_clu['Dist CFront']>=10) | (dfmy_cfro_clu['Dist CFront']<=-10)]=np.nan
+#*****************************************************************************\
+#Warm Front
+df_wfront= pd.read_csv(path_data_csv + 'df_wfront_19952010.csv', sep='\t', parse_dates=['Date'])
+df_wfront= df_wfront.set_index('Date')
+
+dfmy_wfro_clu=pd.concat([dfmyclu_newd, df_wfront],axis=1)
+
+dfmy_wfro_clu[(dfmy_wfro_clu['Dist WFront']>=10) | (dfmy_wfro_clu['Dist WFront']<=-10)]=np.nan
 
 
+#*****************************************************************************\
 
-# #*****************************************************************************\
-# #*****************************************************************************\
-# #Cambiar fechas
-# #*****************************************************************************\
-# #*****************************************************************************\
-# #*****************************************************************************\timestamp = [datenum_to_datetime(t) for t in timesd]
-# time_my = np.array(timestamp)
-# time_my_ori = np.array(timestamp)
+dfmy_cfro_clu.to_csv(path_data_save+'coldfront_cluster.csv', sep=',', encoding='utf-8')
 
-# for i in range(0,ni[2]):
-#     #Cuando cae 23 horas del 31 de diciembre agrega un anio
-#     if (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==12:
-#         y1=time_my[i].year
-#         time_my[i]=time_my[i].replace(year=y1+1,hour=0, month=1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==1:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==3:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==5:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==7:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==8:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==31 and time_my[i].month==10:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==4:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==6:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==9:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==30 and time_my[i].month==11:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==28 and time_my[i].month==2:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-#     #Bisiesto 2008
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2008:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2004:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==2000:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==1996:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-#     if  (time_my[i].hour==23 or time_my[i].hour==22) and time_my[i].day==29 and time_my[i].month==2 and time_my[i].year==1992:
-#         m1=time_my[i].month
-#         time_my[i]=time_my[i].replace(hour=0, month=m1+1,day=1)
-
-
-#     #Cuando cae 23 horas, mueve hora a las 00 del dia siguiente
-#     if time_my[i].hour==23 or time_my[i].hour==22:
-#         d1=time_my[i].day
-#         time_my[i]=time_my[i].replace(hour=0,day=d1+1)
-#     else:
-#         time_my[i]=time_my[i]
-#     #Cuando cae 11 horas, mueve hora a las 12 del mismo dia
-#     if time_my[i].hour==11 or time_my[i].hour==10 or time_my[i].hour==13 or time_my[i].hour==14:
-#         time_my[i]=time_my[i].replace(hour=12)
-#     else:
-#         time_my[i]=time_my[i]
-
-#     #Cuando cae 1 horas, mueve hora a las 0 del mismo dia
-#     if time_my[i].hour==1 or time_my[i].hour==2:
-#         time_my[i]=time_my[i].replace(hour=0)
-#     else:
-#         time_my[i]=time_my[i]
-
-# #*****************************************************************************\
-# #Reescribe fechas para ajustarlas a los frentes
-
-# dfmyclu_newd = pd.DataFrame(data=dmy,index=time_my)
-# # Eliminate Duplicate Soundings
-# dfmyclu_newd=dfmyclu_newd.reset_index().drop_duplicates(cols='index',take_last=True).set_index('index')
-
-# dfmyclu_newd=dfmyclu_newd.reindex(date_index_all)
-# dfmyclu_newd.index.name = 'Date'
-
-
-# #*****************************************************************************\
-# #*****************************************************************************\
-# #*****************************************************************************\
-# #Reading Fronts File
-# #*****************************************************************************\
-# #*****************************************************************************\
-# #*****************************************************************************\
-# path_data_csv=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
-# #*****************************************************************************\
-# #Cold Front
-# df_cfront= pd.read_csv(path_data_csv + 'df_cfront_19952010.csv', sep='\t', parse_dates=['Date'])
-# df_cfront= df_cfront.set_index('Date')
-
-# dfmy_cfro_clu=pd.concat([dfmyclu_newd, df_cfront],axis=1)
-# #*****************************************************************************\
-# #Warm Front
-# df_wfront= pd.read_csv(path_data_csv + 'df_wfront_19952010.csv', sep='\t', parse_dates=['Date'])
-# df_wfront= df_wfront.set_index('Date')
-
-# dfmy_wfro_clu=pd.concat([dfmyclu_newd, df_wfront],axis=1)
-
-
-# #*****************************************************************************\
-# #Cold Fronts separation
-# #*****************************************************************************\
-# dfmy_precfro_clu = dfmy_cfro_clu[dfmy_cfro_clu['Dist CFront']<0]
-# dfmy_poscfro_clu = dfmy_cfro_clu[dfmy_cfro_clu['Dist CFront']>0]
-# #*****************************************************************************\
-# path_data_clu=base_dir+'/Dropbox/Monash_Uni/SO/MAC/003 Cluster/'
-# dfmy_poscfro_clu.to_csv(path_data_clu+'dfmy_poscfro_clu.csv', sep=',', encoding='utf-8')
-# dfmy_precfro_clu.to_csv(path_data_clu+'dfmy_precfro_clu.csv', sep=',', encoding='utf-8')
+dfmy_wfro_clu.to_csv(path_data_save+'warmfront_cluster.csv', sep=',', encoding='utf-8')

@@ -8,11 +8,12 @@ import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 from scipy import stats
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import scipy.stats as st
 
 
 base_dir = os.path.expanduser('~')
 path_data=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
-path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/fronts_ok/MCR/'
+path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/fronts_ok/'
 
 #*****************************************************************************\
 #Default Info
@@ -25,21 +26,29 @@ lonMac=158.95;
 df_front= pd.read_csv(path_data + 'df_cfront_19952010.csv', sep='\t', parse_dates=['Date'])
 df_front= df_front.set_index('Date')
 #*****************************************************************************\
-df_yotc= pd.read_csv(path_data + 'MCR/df_era_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+df_yotc= pd.read_csv(path_data + 'MCR/df_era_19952010.csv', sep='\t', parse_dates=['Date'])
+
+df_yotc2= pd.read_csv(path_data + 'MCR/df_era_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+
 df_my= pd.read_csv(path_data + 'MCR/df_macera_19952010_5k.csv', sep='\t', parse_dates=['Date'])
 
 df_yotc= df_yotc.set_index('Date')
+df_yotc2= df_yotc2.set_index('Date')
 df_my= df_my.set_index('Date')
 #*****************************************************************************\
 #Merge datraframe mac with
 df_yotcfro=pd.concat([df_yotc, df_front],axis=1)
+df_yotc2fro=pd.concat([df_yotc2, df_front],axis=1)
 df_myfro=pd.concat([df_my, df_front],axis=1)
 
 df_yotcfro['Dist Front']=df_yotcfro['Dist CFront']*-1
+df_yotc2fro['Dist Front']=df_yotc2fro['Dist CFront']*-1
 df_myfro['Dist Front']=df_myfro['Dist CFront']*-1
 
 df_yotcfro[(df_yotcfro['Dist Front']>10)]=np.nan
 df_yotcfro[(df_yotcfro['Dist Front']<-10)]=np.nan
+df_yotc2fro[(df_yotc2fro['Dist Front']>10)]=np.nan
+df_yotc2fro[(df_yotc2fro['Dist Front']<-10)]=np.nan
 df_myfro[(df_myfro['Dist Front']>10)]=np.nan
 df_myfro[(df_myfro['Dist Front']<-10)]=np.nan
 
@@ -54,6 +63,14 @@ df_yotc_1inv = df_1i[np.isfinite(df_1i['Dist Front'])]
 
 df_1s= df_yotcfro[np.isfinite(df_yotcfro['Strg 1inv'])]
 df_yotc_1str = df_1s[np.isfinite(df_1s['Dist Front'])]
+
+
+df_1i= df_yotc2fro[np.isfinite(df_yotc2fro['1ra Inv'])]
+df_yotc2_1inv = df_1i[np.isfinite(df_1i['Dist Front'])]
+
+
+df_1s= df_yotc2fro[np.isfinite(df_yotc2fro['Strg 1inv'])]
+df_yotc2_1str = df_1s[np.isfinite(df_1s['Dist Front'])]
 
 
 #*****************************************************************************\
@@ -239,4 +256,126 @@ ax5.axvline(0, color='k')
 fig.tight_layout()
 plt.subplots_adjust(wspace=0.05, hspace=0)
 #fig.savefig(path_data_save + 'heights_fronts_era.eps', format='eps', dpi=1200)
+
+
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#                           Plot line Height
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+
+x1=np.array(df_yotc_1inv['Dist Front'])
+y=np.array(df_yotc_1inv['1ra Inv'])
+
+bin_means_era, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_era, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+#*****************************************************************************\
+x1=np.array(df_yotc2_1inv['Dist Front'])
+y=np.array(df_yotc2_1inv['1ra Inv'])
+
+bin_means_era2, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_era2, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+#*****************************************************************************\
+x1=np.array(df_my_1inv['Dist Front'])
+y=np.array(df_my_1inv['1ra Inv'])
+
+bin_means_mac, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_mac, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+
+bin_edges=np.arange(-9.5, 10.5, 1)
+#*****************************************************************************\
+fig=plt.figure( facecolor='w',figsize=(10, 6))
+ax=fig.add_subplot(111)
+ax.plot(bin_edges,bin_means_mac,'-o', color='#1f77b4')
+ax.plot(bin_edges,bin_means_era,'-o',color='tomato')
+# ax.plot(bin_edges,bin_means_era2,'-o',color='#9edae5')
+
+ax.errorbar(bin_edges, bin_means_mac, yerr=bin_std_mac, fmt='-o',label='MAC', color='#1f77b4')
+ax.errorbar(bin_edges, bin_means_era, yerr=bin_std_era*1.2, fmt='-o',label='ERA-i',color='tomato')
+# ax.errorbar(bin_edges, bin_means_era2, yerr=bin_std_era2, fmt='-o',label='ERA-i2',color='#9edae5')
+
+ax.set_xticks(np.arange(-10,12,2))
+ax.set_xticklabels(np.arange(-10,12,2), size=16)
+ax.set_ylim([0,5000])
+ax.set_yticks(np.arange(0,5500,500))
+ax.set_yticklabels(np.arange(0,5500,500), size=16)
+ax.set_ylabel('Height (m)',fontsize = 18)
+ax.set_xlabel('Distance to front: cold to warm sector (deg)', size=18)
+ax.legend(loc=3,fontsize = 16, numpoints=1)
+ax.axvline(0,color='k')
+ax.grid()
+fig.tight_layout()
+fig.savefig(path_data_save + 'heights_cfronts.eps', format='eps', dpi=1200)
+
+
+
+
+
+
+
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#                           Plot line Strenght
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+
+x1=np.array(df_yotc_1inv['Dist Front'])
+y=np.array(df_yotc_1inv['Strg 1inv'])
+
+bin_means_era, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_era, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+#*****************************************************************************\
+x1=np.array(df_yotc2_1inv['Dist Front'])
+y=np.array(df_yotc2_1inv['Strg 1inv'])
+
+bin_means_era2, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_era2, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+#*****************************************************************************\
+x1=np.array(df_my_1inv['Dist Front'])
+y=np.array(df_my_1inv['Strg 1inv'])
+
+bin_means_mac, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_mac, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+
+bin_edges=np.arange(-9.5, 10.5, 1)
+#*****************************************************************************\
+fig=plt.figure( facecolor='w',figsize=(10, 6))
+ax=fig.add_subplot(111)
+ax.plot(bin_edges,bin_means_mac,'-o', color='#1f77b4')
+ax.plot(bin_edges,bin_means_era2,'-o',color='tomato')
+# ax.plot(bin_edges,bin_means_era2,'-o',color='#9edae5')
+
+ax.errorbar(bin_edges, bin_means_mac, yerr=bin_std_mac, fmt='-o',label='MAC', color='#1f77b4')
+ax.errorbar(bin_edges, bin_means_era2, yerr=bin_std_era2, fmt='-o',label='ERA-i',color='tomato')
+
+ax.set_xticks(np.arange(-10,12,2))
+ax.set_xticklabels(np.arange(-10,12,2), size=16)
+ax.set_ylim([0,0.12])
+ax.set_yticks(np.arange(0,0.14,0.03))
+ax.set_yticklabels(np.arange(0,0.14,0.03), size=16)
+ax.set_ylabel('strength (K m$^{-1}$)',fontsize = 16)
+ax.set_xlabel('Distance to front: cold to warm sector (deg)', size=18)
+ax.legend(loc=3,fontsize = 16, numpoints=1)
+ax.axvline(0,color='k')
+ax.grid()
+fig.tight_layout()
+#fig.savefig(path_data_save + 'streght_cfronts.eps', format='eps', dpi=1200)
+
+
+
+
 plt.show()

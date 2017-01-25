@@ -23,10 +23,26 @@ lonMac=158.95;
 #*****************************************************************************\
 # Reading CSV
 #*****************************************************************************\
-df_macyotc_final= pd.read_csv(path_data + 'df_macyotc_20062010.csv', sep='\t', parse_dates=['Date'])
-df_mac_final= pd.read_csv(path_data + 'df_mac_20062010.csv', sep='\t', parse_dates=['Date'])
-df_yotc_all= pd.read_csv(path_data + 'df_yotc_20082010.csv', sep='\t', parse_dates=['Date'])
-df_yotc= pd.read_csv(path_data + 'df_yotc_20062010.csv', sep='\t', parse_dates=['Date'])
+# df_macyotc_final= pd.read_csv(path_data + 'df_macyotc_20062010.csv', sep='\t', parse_dates=['Date'])
+# df_mac_final= pd.read_csv(path_data + 'df_mac_20062010.csv', sep='\t', parse_dates=['Date'])
+# df_yotc_all= pd.read_csv(path_data + 'df_yotc_20082010.csv', sep='\t', parse_dates=['Date'])
+# df_yotc= pd.read_csv(path_data + 'df_yotc_20062010.csv', sep='\t', parse_dates=['Date'])
+
+
+
+# df_macyotc_final= pd.read_csv(path_data + 'df_macyotc_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+
+df_macyotc_final= pd.read_csv(path_data + 'df_macera_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+
+
+df_mac_final= pd.read_csv(path_data + 'df_mac_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+df_yotc_all= pd.read_csv(path_data + 'df_yotc_20082010_5k.csv', sep='\t', parse_dates=['Date'])
+df_yotc= pd.read_csv(path_data + 'df_yotc_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+
+
+
+
+
 #*****************************************************************************\
 #*****************************************************************************\
 #                           CYCLONES
@@ -123,17 +139,18 @@ idx=[np.where(df_cyc1['dist']==v)[0][0] for v in target]
 df_cyc2 = df_cyc1.iloc[idx].copy()
 
 # Eliminate Duplicate Soundings
-df_cyc3=df_cyc2.reset_index().drop_duplicates(cols='index',take_last=True).set_index('index')
+df_cyc3=df_cyc2.reset_index().drop_duplicates(subset='index',keep='last').set_index('index')
 
 #Date index del periodo 2006-2010
-date_index_all = pd.date_range('2006-01-01 00:00', periods=3652, freq='12H')
+#date_index_all = pd.date_range('2008-05-01 00:00', periods=1460, freq='12H')
+date_index_all = pd.date_range('2006-01-01 00:00', periods=3651, freq='12H')
 df_cyc4=df_cyc3.reindex(date_index_all)
 #*****************************************************************************\
 #Calcular distancia from low
 df_cyc4['dy']=(-df_cyc3['lat']+latMac)
 df_cyc4['dx']=(-df_cyc3['lon']+lonMac)
 
-df_cyc4.index.name = 'Fecha'
+df_cyc4.index.name = 'Date'
 df_mac= df_mac_final.set_index('Date')
 df_yotc= df_yotc_all.set_index('Date')
 #df_yotc= df_yotc.set_index('Date')
@@ -148,12 +165,22 @@ df_yotccyc=pd.concat([df_yotc, df_cyc4],axis=1)
 #Unir datraframe mac-yotc con cyclones
 df_mycyc=pd.concat([df_my, df_cyc4],axis=1)
 
+
+
+
+
+df_mycyc=df_mycyc.reindex(date_index_all)
+df_maccyc=df_maccyc.reindex(date_index_all)
+df_yotccycc=df_yotccyc.reindex(date_index_all)
+
+
 #*****************************************************************************\
 #Saving CSV
 #*****************************************************************************\
 
-df_maccyc.to_csv(path_data + 'df_maccyc.csv', sep='\t', encoding='utf-8')
-df_yotccyc.to_csv(path_data + 'df_yotccyc.csv', sep='\t', encoding='utf-8')
-df_mycyc.to_csv(path_data + 'df_mycyc.csv', sep='\t', encoding='utf-8')
+df_maccyc.to_csv(path_data + 'df_maccyc_5k.csv', sep='\t', encoding='utf-8')
+df_yotccyc.to_csv(path_data + 'df_yotccyc_5k.csv', sep='\t', encoding='utf-8')
+
+df_mycyc.to_csv(path_data + 'df_mycyc_5k.csv', sep='\t', encoding='utf-8')
 
 

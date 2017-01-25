@@ -8,6 +8,9 @@ import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 from scipy import stats
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import scipy.stats as st
+import scipy as sp
+import scipy.stats
 
 
 base_dir = os.path.expanduser('~')
@@ -25,9 +28,9 @@ lonMac=158.95;
 df_front= pd.read_csv(path_data + 'df_cfront_19952010.csv', sep='\t', parse_dates=['Date'])
 df_front= df_front.set_index('Date')
 #*****************************************************************************\
-df_mac= pd.read_csv(path_data + 'MCR/df_mac_19952010_2.csv', sep='\t', parse_dates=['Date'])
-df_yotc= pd.read_csv(path_data + 'MCR/df_yotc_19952010_2.csv', sep='\t', parse_dates=['Date'])
-df_my= pd.read_csv(path_data + 'MCR/df_macyotc_19952010_2.csv', sep='\t', parse_dates=['Date'])
+df_mac= pd.read_csv(path_data + 'MCR/df_mac_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+df_yotc= pd.read_csv(path_data + 'MCR/df_yotc_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+df_my= pd.read_csv(path_data + 'MCR/df_macyotc_19952010_5k.csv', sep='\t', parse_dates=['Date'])
 
 df_mac= df_mac.set_index('Date')
 df_yotc= df_yotc.set_index('Date')
@@ -52,6 +55,15 @@ df_yotcfro[(df_yotcfro['Dist Front']<-10)]=np.nan
 df_myfro[(df_myfro['Dist Front']>10)]=np.nan
 df_myfro[(df_myfro['Dist Front']<-10)]=np.nan
 
+
+
+
+date_index_yotc = pd.date_range('2008-05-01 00:00', periods=1460, freq='12H')
+
+
+df_macfro=df_macfro.reindex(date_index_yotc)
+df_yotcfro=df_yotcfro.reindex(date_index_yotc)
+df_myfro=df_myfro.reindex(date_index_yotc)
 
 #*****************************************************************************\
 #Clasification by type
@@ -153,7 +165,7 @@ per_macfro=n_macfronts/float(n_macsound)*100
 per_yotcfro=n_yotcfronts/float(n_yotcsound)*100
 per_myfro=n_myfronts/float(n_mysound)*100
 
-print per_macfro,per_yotcfro, per_myfro
+print per_yotcfro, per_myfro
 
 
 
@@ -221,7 +233,7 @@ df1=10
 df2=20
 width = 1
 row = 1
-column = 3
+column = 2
 
 error_config = {'ecolor': '0.4'}
 error_config2 = {'ecolor': '0'}
@@ -234,35 +246,35 @@ bins=20
 #*****************************************************************************\
 #*****************************************************************************\
 
-fig, axes = plt.subplots(row, column, facecolor='w', figsize=(16,4))
-ax1, ax3, ax5 = axes.flat
+fig, axes = plt.subplots(row, column, facecolor='w', figsize=(12,4))
+ax3, ax5 = axes.flat
 #*****************************************************************************\
-x1=np.array(df_mac_1inv['Dist Front'])
-y=np.array(df_mac_1inv['1ra Inv'])
+# x1=np.array(df_mac_1inv['Dist Front'])
+# y=np.array(df_mac_1inv['1ra Inv'])
 
 
-# 1 Inversion
-bin_means, bin_edges, binnumber = stats.binned_statistic(x1, y, statistic='mean', bins=bins)
-bin_std, _, _ = stats.binned_statistic(x1, y, statistic=np.std, bins=bins)
+# # 1 Inversion
+# bin_means, bin_edges, binnumber = stats.binned_statistic(x1, y, statistic='mean', bins=bins)
+# bin_std, _, _ = stats.binned_statistic(x1, y, statistic=np.std, bins=bins)
 
-bin_edges=np.arange(xx1, xx2+1, 1)
+# bin_edges=np.arange(xx1, xx2+1, 1)
 
-ax1.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='postfront',yerr=[np.zeros(10), bin_std[0:df1]], error_kw=error_config)
+# ax1.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='postfront',yerr=[np.zeros(10), bin_std[0:df1]], error_kw=error_config)
 
-ax1.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='pretfront',yerr=[np.zeros(10), bin_std[df1:df2]], error_kw=error_config)
+# ax1.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='pretfront',yerr=[np.zeros(10), bin_std[df1:df2]], error_kw=error_config)
 
 
 
-ax1.tick_params(axis='both', which='major', labelsize=14)
-ax1.set_xticks(bx)
-ax1.set_yticks(by)
-ax1.set_ylim([y1,y2])
-#ax1.set_xlabel('Distance to front:cold to warm sector (deg)',fontsize = 12)
-ax1.set_ylabel('height (mts.)',fontsize = 12)
-ax1.set_title('MAC',fontsize = 14 ,fontweight='bold')
-ax1.grid()
-ax1.set_xlim([xx1,xx2])
-ax1.axvline(0, color='k')
+# ax1.tick_params(axis='both', which='major', labelsize=14)
+# ax1.set_xticks(bx)
+# ax1.set_yticks(by)
+# ax1.set_ylim([y1,y2])
+# #ax1.set_xlabel('Distance to front:cold to warm sector (deg)',fontsize = 12)
+# ax1.set_ylabel('height (mts.)',fontsize = 12)
+# ax1.set_title('MAC',fontsize = 14 ,fontweight='bold')
+# ax1.grid()
+# ax1.set_xlim([xx1,xx2])
+# ax1.axvline(0, color='k')
 #*****************************************************************************\
 #*****************************************************************************\
 # YOTC
@@ -277,18 +289,18 @@ bin_std, _, _ = stats.binned_statistic(x1, y, statistic=np.std, bins=bins)
 
 bin_edges=np.arange(xx1, xx2+1, 1)
 
-ax3.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='postfront',yerr=[np.zeros(10), bin_std[0:df1]], error_kw=error_config)
+ax3.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='post-front',yerr=[np.zeros(10), bin_std[0:df1]], error_kw=error_config)
 
-ax3.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='pretfront',yerr=[np.zeros(10), bin_std[df1:df2]], error_kw=error_config)
+ax3.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='pre-front',yerr=[np.zeros(10), bin_std[df1:df2]], error_kw=error_config)
 
 
 ax3.tick_params(axis='both', which='major', labelsize=14)
 ax3.set_xticks(bx)
 ax3.set_yticks(by)
 ax3.set_ylim([y1,y2])
-ax3.yaxis.set_ticklabels([])
+#ax3.yaxis.set_ticklabels([])
 ax3.set_xlabel('Distance to front: cold to warm sector (deg)',fontsize = 12)
-#ax3.set_ylabel('Height (mts.)',fontsize = 12)
+ax3.set_ylabel('height (m)',fontsize = 12)
 ax3.set_title('YOTC',fontsize = 14 ,fontweight='bold')
 ax3.grid()
 ax3.set_xlim([xx1,xx2])
@@ -308,9 +320,9 @@ bin_std, _, _ = stats.binned_statistic(x1, y, statistic=np.std, bins=bins)
 
 bin_edges=np.arange(xx1, xx2+1, 1)
 
-ax5.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='postfront',yerr=[np.zeros(10), bin_std[0:df1]], error_kw=error_config)
+ax5.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='post-front',yerr=[np.zeros(10), bin_std[0:df1]], error_kw=error_config)
 
-ax5.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='pretfront',yerr=[np.zeros(10), bin_std[df1:df2]], error_kw=error_config)
+ax5.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='pre-front',yerr=[np.zeros(10), bin_std[df1:df2]], error_kw=error_config)
 
 
 ax5.tick_params(axis='both', which='major', labelsize=14)
@@ -319,10 +331,10 @@ ax5.set_yticks(by)
 ax5.set_ylim([y1,y2])
 #ax5.set_xlim([x1,x2])
 ax5.yaxis.set_ticklabels([])
-#ax5.set_xlabel('Distance to front:cold to warm sector (deg)',fontsize = 12)
+ax5.set_xlabel('Distance to front: cold to warm sector (deg)',fontsize = 12)
 #ax5.set_ylabel('Height (mts.)',fontsize = 12)
 ax5.legend(loc='upper right')
-ax5.set_title('MAC$_{AVE}$',fontsize = 14 ,fontweight='bold')
+ax5.set_title('MAC',fontsize = 14 ,fontweight='bold')
 ax5.grid()
 ax5.set_xlim([xx1,xx2])
 ax5.axvline(0, color='k')
@@ -335,10 +347,64 @@ fig.savefig(path_data_save + 'heights_fronts.eps', format='eps', dpi=1200)
 
 #*****************************************************************************\
 #*****************************************************************************\
+# Both
+#*****************************************************************************\
+#*****************************************************************************\
+#YOTC
+x1=np.array(df_yotc_1inv['Dist Front'])
+y=np.array(df_yotc_1inv['1ra Inv'])
+
+bin_means_yotc, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_yotc, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+del x1, y
+
+#MAC-YOTC
+x1=np.array(df_my_1inv['Dist Front'])
+y=np.array(df_my_1inv['1ra Inv'])
+bin_means_mac, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_mac, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+bin_edges=np.arange(-9.5, 10.5, 1)
+
+
+fig=plt.figure(figsize=(10, 6))
+ax0=fig.add_subplot(111)
+# ax0.plot(bin_edges,bin_means_mac,'-o', label='MAC')
+# ax0.plot(bin_edges,bin_means_era,'-or', label='YOTC')
+
+ax0.errorbar(bin_edges, bin_means_mac, yerr=bin_std_mac, fmt='-o',label='MAC',color='cornflowerblue', markersize=6)
+ax0.errorbar(bin_edges, bin_means_yotc, yerr=bin_std_yotc, fmt='-o',label='YOTC',color='tomato', markersize=6)
+
+ax0.set_ylabel('height (m)',fontsize = 14)
+ax0.set_xlabel('Distance to front: cold to warm sector (deg)',fontsize = 14)
+ax0.legend(loc=1,fontsize = 12, numpoints=1)
+ax0.axvline(0, color='k')
+ax0.set_ylim(0,4000)
+ax0.set_yticks(np.arange(0,4500,500))
+ax0.set_xticks(np.arange(-10,11,2))
+ax0.grid()
+
+
+fig.tight_layout()
+plt.subplots_adjust(wspace=0.05, hspace=0)
+fig.savefig(path_data_save + 'heights_both_fronts.eps', format='eps', dpi=1200)
+
+
+
+
+
+
+
+
+
+
+
 #*****************************************************************************\
 #*****************************************************************************\
 #*****************************************************************************\
-#                            Inversion Height Position
+#*****************************************************************************\
+#*****************************************************************************\
+#                            Inversion Height Freq
 #*****************************************************************************\
 #*****************************************************************************\
 #*****************************************************************************\
@@ -360,13 +426,13 @@ df1=10
 df2=20
 width = 1
 row = 1
-column = 3
+column = 2
 
 error_config = {'ecolor': '0.4'}
 error_config2 = {'ecolor': '0'}
 
-fig, axes = plt.subplots(row, column, facecolor='w', figsize=(16,4))
-ax1, ax3, ax5 = axes.flat
+fig, axes = plt.subplots(row, column, facecolor='w', figsize=(12,4))
+ax3, ax5 = axes.flat
 #*****************************************************************************\
 #*****************************************************************************\
 # MAC
@@ -374,34 +440,34 @@ ax1, ax3, ax5 = axes.flat
 #*****************************************************************************\
 #De los Mac Soundings, deja solo los con un front
 #np.count_nonzero(~np.isnan(y))
-df_macsoundfro=df_macsound[np.isfinite(df_macsound['Dist Front'])]
-df_macsoundfro1inv=df_macsoundfro[np.isfinite(df_macsoundfro['1ra Inv'])]
+# df_macsoundfro=df_macsound[np.isfinite(df_macsound['Dist Front'])]
+# df_macsoundfro1inv=df_macsoundfro[np.isfinite(df_macsoundfro['1ra Inv'])]
 
-x1=np.array(df_macsoundfro['Dist Front'])
+# x1=np.array(df_macsoundfro['Dist Front'])
 
-x2=np.array(df_macsoundfro1inv['Dist Front'])
-y2=np.array(df_macsoundfro1inv['1ra Inv'])
+# x2=np.array(df_macsoundfro1inv['Dist Front'])
+# y2=np.array(df_macsoundfro1inv['1ra Inv'])
 
-bin_count2, bin_edges2, _ = stats.binned_statistic(x2, y2, statistic='count', bins=bins)
+# bin_count2, bin_edges2, _ = stats.binned_statistic(x2, y2, statistic='count', bins=bins)
 
-bin_edges2=np.arange(xx1, xx2+1, 1)
+# bin_edges2=np.arange(xx1, xx2+1, 1)
 
-per_count=bin_count2/float(len(x1))
+# per_count=bin_count2/float(len(x1))
 
-ax1.bar(bin_edges2[0:df1],per_count[0:df1],width,alpha=0.5, color=color1,label='prefront')
+# ax1.bar(bin_edges2[0:df1],per_count[0:df1],width,alpha=0.5, color=color1,label='prefront')
 
-ax1.bar(bin_edges2[df1:df2],per_count[df1:df2],width,alpha=0.5, color=color2,label='postfront')
+# ax1.bar(bin_edges2[df1:df2],per_count[df1:df2],width,alpha=0.5, color=color2,label='postfront')
 
-ax1.tick_params(axis='both', which='major', labelsize=14)
-ax1.set_xticks(bx)
-ax1.set_yticks(by)
-#ax1.set_ylim([y1,y2])
-#ax1.set_xlabel('Distance from front (deg)',fontsize = 12)
-ax1.set_ylabel('relative frequency',fontsize = 12)
-ax1.set_title('MAC',fontsize = 14 ,fontweight='bold')
-ax1.grid()
-ax1.set_xlim([xx1,xx2])
-ax1.axvline(0, color='k')
+# ax1.tick_params(axis='both', which='major', labelsize=14)
+# ax1.set_xticks(bx)
+# ax1.set_yticks(by)
+# #ax1.set_ylim([y1,y2])
+# #ax1.set_xlabel('Distance from front (deg)',fontsize = 12)
+# ax1.set_ylabel('relative frequency',fontsize = 12)
+# ax1.set_title('MAC',fontsize = 14 ,fontweight='bold')
+# ax1.grid()
+# ax1.set_xlim([xx1,xx2])
+# ax1.axvline(0, color='k')
 
 #*****************************************************************************\
 #*****************************************************************************\
@@ -425,18 +491,18 @@ bin_edges2=np.arange(xx1, xx2+1, 1)
 per_count=bin_count2/float(len(x1))
 
 
-ax3.bar(bin_edges2[0:df1],per_count[0:df1],width,alpha=0.5, color=color1,label='prefront')
+ax3.bar(bin_edges2[0:df1],per_count[0:df1],width,alpha=0.5, color=color1,label='pre-front')
 
-ax3.bar(bin_edges2[df1:df2],per_count[df1:df2],width,alpha=0.5, color=color2,label='postfront')
+ax3.bar(bin_edges2[df1:df2],per_count[df1:df2],width,alpha=0.5, color=color2,label='post-front')
 
 ax3.tick_params(axis='both', which='major', labelsize=14)
 ax3.set_xticks(bx)
 ax3.set_yticks(by)
-ax3.yaxis.set_ticklabels([])
+#ax3.yaxis.set_ticklabels([])
 #ax1.set_ylim([y1,y2])
 #ax3.legend(loc='upper left')
 ax3.set_xlabel('Distance to front: cold to warm sector (deg)',fontsize = 12)
-#ax3.set_ylabel('Relative frequency',fontsize = 12)
+ax3.set_ylabel('relative frequency',fontsize = 12)
 ax3.set_title('YOTC',fontsize = 14 ,fontweight='bold')
 ax3.grid()
 ax3.set_xlim([xx1,xx2])
@@ -461,19 +527,19 @@ bin_edges2=np.arange(xx1, xx2+1, 1)
 
 per_count=bin_count2/float(len(x1))
 
-ax5.bar(bin_edges2[0:df1],per_count[0:df1],width,alpha=0.5, color=color1,label='prefront')
+ax5.bar(bin_edges2[0:df1],per_count[0:df1],width,alpha=0.5, color=color1,label='post-front')
 
-ax5.bar(bin_edges2[df1:df2],per_count[df1:df2],width,alpha=0.5, color=color2,label='postfront')
+ax5.bar(bin_edges2[df1:df2],per_count[df1:df2],width,alpha=0.5, color=color2,label='pre-front')
 
 ax5.tick_params(axis='both', which='major', labelsize=14)
 ax5.set_xticks(bx)
 ax5.set_yticks(by)
 ax5.yaxis.set_ticklabels([])
 #ax1.set_ylim([y1,y2])
-#ax5.set_xlabel('Distance from front (deg)',fontsize = 12)
+ax5.set_xlabel('Distance to front: cold to warm sector (deg)',fontsize = 12)
 #ax5.set_ylabel('Relative frequency',fontsize = 12)
 ax5.legend(loc='upper right')
-ax5.set_title('MAC$_{AVE}$',fontsize = 14 ,fontweight='bold')
+ax5.set_title('MAC',fontsize = 14 ,fontweight='bold')
 ax5.grid()
 ax5.set_xlim([xx1,xx2])
 ax5.axvline(0, color='k')
@@ -516,7 +582,7 @@ bx=np.arange(xx1,xx2+1,2)
 
 
 y1=0
-y2=0.14
+y2=0.05
 by=np.arange(y1,y2+0.01,0.03)
 
 
@@ -524,13 +590,13 @@ df1=10
 df2=20
 width = 1
 row = 1
-column = 3
+column = 2
 
 error_config = {'ecolor': '0.4'}
 error_config2 = {'ecolor': '0'}
 
-color1='lightgreen'
-color2='forestgreen'
+# color1='lightgreen'
+# color2='forestgreen'
 
 #*****************************************************************************\
 #*****************************************************************************\
@@ -539,41 +605,41 @@ color2='forestgreen'
 #*****************************************************************************\
 
 
-fig, axes = plt.subplots(row, column, facecolor='w', figsize=(16,4))
-ax1, ax3, ax5 = axes.flat
+fig, axes = plt.subplots(row, column, facecolor='w', figsize=(12,4))
+ax3, ax5 = axes.flat
 #*****************************************************************************\
 del x1, y, bin_std
-x1=np.array(df_mac_1str['Dist Front'])
-y=np.array(df_mac_1str['Strg 1inv'])
+# x1=np.array(df_mac_1str['Dist Front'])
+# y=np.array(df_mac_1str['Strg 1inv'])
 
-# 1 Inversion
-bin_means, bin_edges, binnumber = stats.binned_statistic(x1, y, statistic='mean', bins=bins)
-bin_std1, _, _ = stats.binned_statistic(x1, y, statistic=np.std, bins=bins)
-
-
-for i in range(0, len(bin_std1)):
-    if bin_std1[i]>=0.1:
-        bin_std1[i]=bin_std1[i]/float(3)
-    else:
-        bin_std1[i]=bin_std1[i]
-
-bin_edges=np.arange(xx1, xx2+1, 1)
-
-ax1.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='postfront',yerr=[np.zeros(10), bin_std1[0:df1]], error_kw=error_config)
-
-ax1.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='prefront',yerr=[np.zeros(10), bin_std1[df1:df2]], error_kw=error_config)
+# # 1 Inversion
+# bin_means, bin_edges, binnumber = stats.binned_statistic(x1, y, statistic='mean', bins=bins)
+# bin_std1, _, _ = stats.binned_statistic(x1, y, statistic=np.std, bins=bins)
 
 
-ax1.tick_params(axis='both', which='major', labelsize=14)
-ax1.set_xticks(bx)
-ax1.set_ylim([y1,y2])
+# for i in range(0, len(bin_std1)):
+#     if bin_std1[i]>=0.1:
+#         bin_std1[i]=bin_std1[i]/float(3)
+#     else:
+#         bin_std1[i]=bin_std1[i]
 
-#ax1.set_xlabel('Distance from front (deg)',fontsize = 12)
-ax1.set_ylabel('strength (K m$^{-1}$)',fontsize = 12)
-ax1.set_title('MAC',fontsize = 14 ,fontweight='bold')
-ax1.grid()
-ax1.set_xlim([xx1,xx2])
-ax1.axvline(0, color='k')
+# bin_edges=np.arange(xx1, xx2+1, 1)
+
+# ax1.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='postfront',yerr=[np.zeros(10), bin_std1[0:df1]], error_kw=error_config)
+
+# ax1.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='prefront',yerr=[np.zeros(10), bin_std1[df1:df2]], error_kw=error_config)
+
+
+# ax1.tick_params(axis='both', which='major', labelsize=14)
+# ax1.set_xticks(bx)
+# ax1.set_ylim([y1,y2])
+
+# #ax1.set_xlabel('Distance from front (deg)',fontsize = 12)
+# ax1.set_ylabel('strength (K m$^{-1}$)',fontsize = 12)
+# ax1.set_title('MAC',fontsize = 14 ,fontweight='bold')
+# ax1.grid()
+# ax1.set_xlim([xx1,xx2])
+# ax1.axvline(0, color='k')
 
 #*****************************************************************************\
 #*****************************************************************************\
@@ -591,19 +657,19 @@ bin_std, _, _ = stats.binned_statistic(x1, y, statistic=np.std, bins=bins)
 
 bin_edges=np.arange(xx1, xx2+1, 1)
 
-ax3.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='postfront',yerr=[np.zeros(10), bin_std[0:df1]], error_kw=error_config)
+ax3.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color3,label='postfront',yerr=[np.zeros(10), bin_std[0:df1]], error_kw=error_config)
 
-ax3.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='prefront',yerr=[np.zeros(10), bin_std[df1:df2]], error_kw=error_config)
+ax3.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color4,label='prefront',yerr=[np.zeros(10), bin_std[df1:df2]], error_kw=error_config)
 
 
 
 ax3.tick_params(axis='both', which='major', labelsize=14)
 ax3.set_xticks(bx)
 ax3.set_ylim([y1,y2])
-ax3.yaxis.set_ticklabels([])
+#ax3.yaxis.set_ticklabels([])
 #ax3.legend(loc='upper left')
 ax3.set_xlabel('Distance to front: cold to warm sector (deg)',fontsize = 12)
-#ax3.set_ylabel('strength (K m$^{-1}$)',fontsize = 12)
+ax3.set_ylabel('strength (K m$^{-1}$)',fontsize = 12)
 ax3.set_title('YOTC',fontsize = 14 ,fontweight='bold')
 ax3.grid()
 ax3.set_xlim([xx1,xx2])
@@ -623,18 +689,18 @@ bin_std, _, _ = stats.binned_statistic(x1, y, statistic=np.std, bins=bins)
 
 bin_edges=np.arange(xx1, xx2+1, 1)
 
-ax5.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color1,label='postfront',yerr=[np.zeros(10), bin_std[0:df1]], error_kw=error_config)
+ax5.bar(bin_edges[0:df1],bin_means[0:df1],width,alpha=0.5, color=color3,label='post-front',yerr=[np.zeros(10), bin_std[0:df1]], error_kw=error_config)
 
-ax5.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color2,label='prefront',yerr=[np.zeros(10), bin_std[df1:df2]], error_kw=error_config)
+ax5.bar(bin_edges[df1:df2],bin_means[df1:df2],width,alpha=0.5, color=color4,label='pre-front',yerr=[np.zeros(10), bin_std[df1:df2]], error_kw=error_config)
 
 ax5.tick_params(axis='both', which='major', labelsize=14)
 ax5.set_xticks(bx)
 ax5.set_ylim([y1,y2])
 ax5.yaxis.set_ticklabels([])
-#ax5.set_xlabel('Distance from front (deg)',fontsize = 12)
+ax5.set_xlabel('Distance to front: cold to warm sector (deg)',fontsize = 12)
 #ax5.set_ylabel('strength (K m$^{-1}$)',fontsize = 12)
 ax5.legend(loc='upper right')
-ax5.set_title('MAC$_{AVE}$',fontsize = 14 ,fontweight='bold')
+ax5.set_title('MAC',fontsize = 14 ,fontweight='bold')
 ax5.grid()
 ax5.set_xlim([xx1,xx2])
 ax5.axvline(0, color='k')
@@ -642,4 +708,55 @@ ax5.axvline(0, color='k')
 fig.tight_layout()
 plt.subplots_adjust(wspace=0.05, hspace=0)
 fig.savefig(path_data_save + 'strength_fronts.eps', format='eps', dpi=1200)
+
+
+
+#*****************************************************************************\
+#*****************************************************************************\
+# Both
+#*****************************************************************************\
+#*****************************************************************************\
+#YOTC
+x1=np.array(df_yotc_1str['Dist Front'])
+y=np.array(df_yotc_1str['Strg 1inv'])
+
+bin_means_yotc, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_yotc, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+del x1, y
+
+#MAC-YOTC
+x1=np.array(df_my_1str['Dist Front'])
+y=np.array(df_my_1str['Strg 1inv'])
+
+bin_means_mac, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_mac, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+bin_edges=np.arange(-9.5, 10.5, 1)
+
+
+fig=plt.figure(figsize=(10, 6))
+ax0=fig.add_subplot(111)
+# ax0.plot(bin_edges,bin_means_mac,'-o', label='MAC')
+# ax0.plot(bin_edges,bin_means_era,'-or', label='YOTC')
+
+ax0.errorbar(bin_edges, bin_means_mac, yerr=bin_std_mac, fmt='-o',label='MAC',color='cornflowerblue', markersize=6)
+ax0.errorbar(bin_edges, bin_means_yotc, yerr=bin_std_yotc, fmt='-o',label='YOTC',color='tomato', markersize=6)
+
+ax0.set_ylabel('strength (K m$^{-1}$)',fontsize = 14)
+ax0.set_xlabel('Distance to front: cold to warm sector (deg)',fontsize = 14)
+ax0.legend(loc=1,fontsize = 12, numpoints=1)
+ax0.axvline(0, color='k')
+ax0.set_ylim(0,0.045)
+ax0.set_yticks(np.arange(0,0.05,0.005))
+ax0.set_xticks(np.arange(-10,11,2))
+ax0.grid()
+
+
+fig.tight_layout()
+plt.subplots_adjust(wspace=0.05, hspace=0)
+fig.savefig(path_data_save + 'strenght_both_fronts.eps', format='eps', dpi=1200)
 plt.show()
+
+
+
+

@@ -26,7 +26,7 @@ df_front= pd.read_csv(path_data + 'df_cfront_19952010.csv', sep='\t', parse_date
 df_front= df_front.set_index('Date')
 #*****************************************************************************\
 df_mac= pd.read_csv(path_data + 'MCR/df_mac_19952010_5k.csv', sep='\t', parse_dates=['Date'])
-df_yotc= pd.read_csv(path_data + 'MCR/df_era_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+df_yotc= pd.read_csv(path_data + 'MCR/df_era_19952010.csv', sep='\t', parse_dates=['Date'])
 df_my= pd.read_csv(path_data + 'MCR/df_macera_19952010_5k.csv', sep='\t', parse_dates=['Date'])
 
 df_mac= df_mac.set_index('Date')

@@ -17,17 +17,20 @@ import scipy.stats as st
 import numpy as np
 import scipy as sp
 import scipy.stats
+from scipy import interpolate
+#from scipy import stats
 from pylab import plot,show, grid, xlabel, ylabel, xlim, ylim, yticks, legend
+from matplotlib import gridspec
 
 base_dir = os.path.expanduser('~')
+path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/ERAI/Main_Inv/'
+
+
 Yfin=2011
-n_rd=2 #Number of cases to take 65
-n_rdyi=5 #Number of cases to take Yi 70
+n_rd=30 #Number of cases to take 65
+n_rdyi=70 #Number of cases to take Yi 70
 #*****************************************************************************\
-#Default Info
-mac = {'name': 'Macquarie Island, Australia', 'lat': -54.62, 'lon': 158.85}
-lat_mac = mac['lat']
-lon_mac = mac['lon']
+#Default Infouarie Island, Australia', 'lat': -54.62, 'lon': 158.85}
 
 ptemp_thold_main=0.010           # K/m
 ptemp_thold_sec=0.005            # K/m
@@ -255,35 +258,35 @@ v=wspd*(np.sin(np.radians(270-wdir_initial)))
 #*****************************************************************************\
 #*****************************************************************************\
 
-hlev_yotc=hght_ei
+# hlev_yotc=hght_ei
 
-prutemp=np.empty((len(hlev_yotc),0))
-pruwspd=np.empty((len(hlev_yotc),0))
-pruwdir=np.empty((len(hlev_yotc),0))
-prumixr=np.empty((len(hlev_yotc),0))
+# prutemp=np.empty((len(hlev_yotc),0))
+# pruwspd=np.empty((len(hlev_yotc),0))
+# pruwdir=np.empty((len(hlev_yotc),0))
+# prumixr=np.empty((len(hlev_yotc),0))
 
 
-for j in range(0,ni[2]):
-#for j in range(0,100):
-#height initialization
-    x=hght[:,j]
-    x[-1]=np.nan
-    new_x=hlev_yotc
-#Interpolation YOTC levels
-    yt=temp[:,j]
-    rest=interp1d(x,yt)(new_x)
-    prutemp=np.append(prutemp,rest)
+# for j in range(0,ni[2]):
+# #for j in range(0,100):
+# #height initialization
+#     x=hght[:,j]
+#     x[-1]=np.nan
+#     new_x=hlev_yotc
+# #Interpolation YOTC levels
+#     yt=temp[:,j]
+#     rest=interp1d(x,yt)(new_x)
+#     prutemp=np.append(prutemp,rest)
 
-    ym=mixr[:,j]
-    resm=interp1d(x,ym)(new_x)
-    prumixr=np.append(prumixr,resm)
+#     ym=mixr[:,j]
+#     resm=interp1d(x,ym)(new_x)
+#     prumixr=np.append(prumixr,resm)
 
-tempmac_ylev_2=prutemp.reshape(-1,len(hlev_yotc)).transpose()
-mixrmac_ylev_2=prumixr.reshape(-1,len(hlev_yotc)).transpose()
+# tempmac_ylev_2=prutemp.reshape(-1,len(hlev_yotc)).transpose()
+# mixrmac_ylev_2=prumixr.reshape(-1,len(hlev_yotc)).transpose()
 
 #*****************************************************************************\
 
-#Interpolation to YOTC Levels
+# #Interpolation to YOTC Levels
 temp_pres=np.zeros((len(pres_ei),ni[2]),'float')
 mixr_pres=np.zeros((len(pres_ei),ni[2]),'float')
 u_pres=np.zeros((len(pres_ei),ni[2]),'float')
@@ -379,8 +382,8 @@ main_my_inv_hght=np.empty(ni[2])*np.nan
 #*****************************************************************************\
 
 
-mixrmac_ylev_2=mixrmac_ylev_2
-tempmac_ylev_2=tempmac_ylev_2
+mixrmac_ylev_2=mixrmac_ylev
+tempmac_ylev_2=tempmac_ylev
 
 for j in range(0,ni[2]):
 #Calculate new variables
@@ -461,7 +464,151 @@ q_my=spec_hum_my.T*1000
 #tempv_my=tempv_my.T+273.16
 
 #*****************************************************************************\
-#Cambiar fechas
+#*****************************************************************************\
+#*****************************************************************************\
+#                               Reading Height
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+path_data_csv=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+
+
+
+#*****************************************************************************\
+#Reading CSV
+#*****************************************************************************\
+df_front= pd.read_csv(path_data_csv + 'df_cfront_19952010.csv', sep='\t', parse_dates=['Date'])
+df_front= df_front.set_index('Date')
+#*****************************************************************************\
+df_yotc= pd.read_csv(path_data_csv + 'MCR/df_era_19952010.csv', sep='\t', parse_dates=['Date'])
+df_my= pd.read_csv(path_data_csv + 'MCR/df_macera_19952010_5k.csv', sep='\t', parse_dates=['Date'])
+
+df_yotc= df_yotc.set_index('Date')
+df_my= df_my.set_index('Date')
+#*****************************************************************************\
+#Merge datraframe mac with
+df_yotcfro=pd.concat([df_yotc, df_front],axis=1)
+df_myfro=pd.concat([df_my, df_front],axis=1)
+
+df_yotcfro['Dist Front']=df_yotcfro['Dist CFront']*-1
+df_myfro['Dist Front']=df_myfro['Dist CFront']*-1
+
+df_yotcfro[(df_yotcfro['Dist Front']>10)]=np.nan
+df_yotcfro[(df_yotcfro['Dist Front']<-10)]=np.nan
+df_myfro[(df_myfro['Dist Front']>10)]=np.nan
+df_myfro[(df_myfro['Dist Front']<-10)]=np.nan
+
+
+#*****************************************************************************\
+#Clasification by type
+#*****************************************************************************\
+
+df_1i= df_yotcfro[np.isfinite(df_yotcfro['1ra Inv'])]
+df_yotc_1inv = df_1i[np.isfinite(df_1i['Dist Front'])]
+
+
+df_1s= df_yotcfro[np.isfinite(df_yotcfro['Strg 1inv'])]
+df_yotc_1str = df_1s[np.isfinite(df_1s['Dist Front'])]
+
+
+#*****************************************************************************\
+df_1i= df_myfro[np.isfinite(df_myfro['1ra Inv'])]
+df_my_1inv = df_1i[np.isfinite(df_1i['Dist Front'])]
+
+df_1s= df_myfro[np.isfinite(df_myfro['Strg 1inv'])]
+df_my_1str = df_1s[np.isfinite(df_1s['Dist Front'])]
+
+
+#*****************************************************************************\
+#Percentages
+#*****************************************************************************\
+#Total Number Sounding at YOTC of 1460
+n_yotcsound=len(df_yotcfro[np.isfinite(df_yotcfro['Clas'])])
+#Total Number Sounding at MAC of 3652
+n_mysound=len(df_myfro[np.isfinite(df_myfro['Clas'])])
+
+#Sounding YOTC
+df_yotcsound=df_yotcfro[np.isfinite(df_yotcfro['Clas'])]
+#Sounding MAC-YOTC
+df_mysound=df_myfro[np.isfinite(df_myfro['Clas'])]
+
+
+#Total Number Sounding at YOTC with front
+n_yotcfronts=len(df_yotcsound[np.isfinite(df_yotcsound['Dist Front'])])
+#Total Number Sounding at MAC-YOTC with front
+n_myfronts=len(df_mysound[np.isfinite(df_mysound['Dist Front'])])
+
+#*****************************************************************************\
+#Plot
+#*****************************************************************************\
+
+
+x1=np.array(df_yotc_1inv['Dist Front'])
+y=np.array(df_yotc_1inv['1ra Inv'])
+
+bin_means_era, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_era, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+
+
+x1=np.array(df_my_1inv['Dist Front'])
+y=np.array(df_my_1inv['1ra Inv'])
+bin_means_mac, bin_edges, binnumber = st.binned_statistic(x1, y, statistic='mean', bins=20)
+bin_std_mac, _, _ = st.binned_statistic(x1, y, statistic=np.std, bins=20)
+
+
+bin_edges=np.arange(-9.5, 10.5, 1)
+
+
+fig=plt.figure(figsize=(10, 6))
+ax0=fig.add_subplot(111)
+ax0.plot(bin_edges,bin_means_mac,'-o', label='MAC')
+ax0.plot(bin_edges,bin_means_era,'-or', label='ERA-i')
+
+ax0.errorbar(bin_edges, bin_means_mac, yerr=bin_std_mac, fmt='-ob',label='MAC')
+ax0.errorbar(bin_edges, bin_means_era, yerr=bin_std_era, fmt='-or',label='ERA-i')
+
+ax0.legend(loc=3,fontsize = 10, numpoints=1)
+ax0.grid()
+plt.savefig(path_data_save + 'heights.eps', format='eps', dpi=1200)
+
+#*****************************************************************************\
+# Rescale
+#*****************************************************************************\
+OldMax=0
+OldMin=5000
+NewMax=0
+NewMin=20
+
+
+OldValue_era=bin_means_era
+OldValue_mac=bin_means_mac
+
+OldValue_era_std=bin_std_era
+OldValue_mac_std=bin_std_mac
+
+
+OldRange = (OldMax - OldMin)
+NewRange = (NewMax - NewMin)
+
+NewValue_era = (((OldValue_era - OldMin) * NewRange) / OldRange) + NewMin
+NewValue_mac = (((OldValue_mac - OldMin) * NewRange) / OldRange) + NewMin
+
+NewValue_era_std = (((OldValue_era_std - OldMin) * NewRange) / OldRange) + NewMin
+NewValue_mac_std = (((OldValue_mac_std - OldMin) * NewRange) / OldRange) + NewMin
+
+fig=plt.figure(figsize=(8, 6))
+ax0=fig.add_subplot(111)
+ax0.plot(bin_edges,NewValue_era,'-o', label='MAC')
+#ax0.plot(bin_edges,bin_means_era,'-or', label='ERA-i')
+ax0.legend(loc=3,fontsize = 10)
+ax0.grid()
+#plt.show()
+
+#*****************************************************************************\
+#*****************************************************************************\
+#                                   Cambiar fechas #*****************************************************************************\
+#*****************************************************************************\
 timestamp = [datenum_to_datetime(t) for t in timesd]
 time_my = np.array(timestamp)
 time_my_ori = np.array(timestamp)
@@ -578,8 +725,8 @@ dthetav_list=dthetav_ei.tolist()
 vertshear_list=vshear_ei.tolist()
 
 dy={'Clas':ei_clas,
-'MI Hght':ei_inv_hght,
-'MI Strg':ei_inv_strg,
+# 'MI Hght':ei_inv_hght,
+# 'MI Strg':ei_inv_strg,
 'temp':t_list,
 'thetav':thetav_list,
 'theta':theta_list,
@@ -603,8 +750,8 @@ df_erai.index.name = 'Date'
 
 #*****************************************************************************\
 dyc={'Clas ERA':ei_clas,
-'MI Hght ERA':ei_inv_hght,
-'MI Strg ERA':ei_inv_strg,
+# 'MI Hght ERA':ei_inv_hght,
+# 'MI Strg ERA':ei_inv_strg,
 'temp ERA':t_list,
 'thetav ERA':thetav_list,
 'theta ERA':theta_list,
@@ -640,8 +787,8 @@ dthetav_list=dthetav_my.tolist()
 vertshear_list=vertshear_my.tolist()
 
 dmy={'Clas':mac_clas,
-'MI Hght':mac_inv_hght,
-'MI Strg':mac_inv_strg,
+# 'MI Hght':mac_inv_hght,
+# 'MI Strg':mac_inv_strg,
 'temp':t_list,
 'thetav':thetav_list,
 'theta':theta_list,
@@ -665,8 +812,8 @@ df_macei.index.name = 'Date'
 #*****************************************************************************\
 
 dmc={'Clas MAC':mac_clas,
-'MI Hght MAC':mac_inv_hght,
-'MI Strg MAC':mac_inv_strg,
+# 'MI Hght MAC':mac_inv_hght,
+# 'MI Strg MAC':mac_inv_strg,
 'temp MAC':t_list,
 'thetav MAC':thetav_list,
 'theta MAC':theta_list,
@@ -722,7 +869,7 @@ print np.count_nonzero(~np.isnan(dfc_macera['Clas ERA'])),  np.count_nonzero(~np
 #*****************************************************************************\
 #*****************************************************************************\
 #*****************************************************************************\
-path_data_csv=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/'
+
 df_front= pd.read_csv(path_data_csv + 'df_cfront_19952010.csv', sep='\t', parse_dates=['Date'])
 df_front= df_front.set_index('Date')
 
@@ -741,9 +888,9 @@ df_macni_fro=pd.concat([dfc_macnint, df_front],axis=1)
 #*****************************************************************************\
 #*****************************************************************************\
 #*****************************************************************************\
-from matplotlib.projections import register_projection
-from skewx_projection_matplotlib_lt_1d4 import SkewXAxes
-register_projection(SkewXAxes)
+# from matplotlib.projections import register_projection
+# from skewx_projection_matplotlib_lt_1d4 import SkewXAxes
+# register_projection(SkewXAxes)
 
 # nc=700
 # Tmacni=np.array(df_macni_fro['temp'][nc])
@@ -786,7 +933,7 @@ register_projection(SkewXAxes)
 #                                   Profiles and Fronts
 #*****************************************************************************\
 #*****************************************************************************\
-path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/figures/ERAI/Main_Inv/'
+
 
 #*****************************************************************************\
 #Definition Variables for Loop
@@ -799,11 +946,11 @@ name_var_all=['Relative Humidity','Specific Humidity','Pot. Temp','Temperature']
 name_var_sim=['RH','Q','PT','T','VPT']
 
 
-units_var=['%','g/kg','K','K']
+units_var=['%','g kg$^{-1}$','K','K']
 z_min=np.array([0,0,270,240])
 z_max=np.array([100,5,310,280])
 formati=['%.0f','%.1f','%.0f','%.0f']
-formati2=['%.0f','%.1f','%.1f','%.1f']
+formati2=['%.0f','%.2f','%.1f','%.1f']
 
 dx=np.array([2,0.05,0.1,0.1])
 
@@ -813,8 +960,8 @@ z_min2=np.array([0,0,270,210])
 z_max2=np.array([100,5,350,280])
 
 
-#for m in range(0,len(name_var)):
-for m in range(0,1):
+for m in range(0,len(name_var)):
+#for m in range(0,1):
 #*****************************************************************************\
 # Means Complete Period MAC
 #*****************************************************************************\
@@ -826,7 +973,7 @@ for m in range(0,1):
 
     MG_mac=np.empty([len(ncount),len(pres_ei)])*np.nan
     RH=np.empty([max(ncount),len(pres_ei)])*np.nan
-    MIH=np.empty([max(ncount),len(ncount)])*np.nan
+    #MIH=np.empty([max(ncount),len(ncount)])*np.nan
     #MIH_mac=np.empty([len(ncount)])*np.nan
 
     k1=0
@@ -837,18 +984,15 @@ for m in range(0,1):
         for i in range(0, len(df)):
             if df['catdist_fron'][i]==j:
                 RH[k2,:]=np.array(df_meifro[name_var[m]][i])
-                MIH[k2,j]=np.array(df_meifro['MI Hght'][i])
-                #print MIH
-
+                #MIH[k2,j]=np.array(df_meifro['MI Hght'][i])
                 k2=k2+1
             MG_mac[k1,:]=np.nanmean(RH, axis=0)
 
         k1=k1+1
         k2=0
 
-    MIH_mac=np.nanmean(MIH, axis=0)
-
-    MIH_mac=MIH_mac[::-1]
+    # MIH_mac=np.nanmean(MIH, axis=0)
+    # MIH_mac=MIH_mac[::-1]
 #*****************************************************************************\
 # Means Complete Period ERA-i
 #*****************************************************************************\
@@ -860,7 +1004,7 @@ for m in range(0,1):
 
     MG_era=np.empty([len(ncount),len(pres_ei)])*np.nan
     RH=np.empty([max(ncount),len(pres_ei)])*np.nan
-    MIH=np.empty([max(ncount),len(ncount)])*np.nan
+    #MIH=np.empty([max(ncount),len(ncount)])*np.nan
 
     k1=0
     k2=0
@@ -870,38 +1014,24 @@ for m in range(0,1):
         for i in range(0, len(df)):
             if df['catdist_fron'][i]==j:
                 RH[k2,:]=np.array(df_eraifro[name_var[m]][i])
-                MIH[k2,j]=np.array(df_eraifro['MI Hght'][i])
+                #MIH[k2,j]=np.array(df_eraifro['MI Hght'][i])
                 k2=k2+1
             MG_era[k1,:]=np.nanmean(RH, axis=0)
         k1=k1+1
         k2=0
-    MIH_era=np.nanmean(MIH, axis=0)
-    MIH_era=MIH_era[::-1]
+    #MIH_era=np.nanmean(MIH, axis=0)
+    #MIH_era=MIH_era[::-1]
 #*****************************************************************************\
 # Plot
 #************************#****************************************************\
-    fig=plt.figure(figsize=(10, 6))
-    ax0=fig.add_subplot(111)
 
-    ax0.plot(MIH_mac,'-o', label='MAC')
-    ax0.plot(MIH_era,'-or', label='ERA-i')
-    ax0.legend(loc=1,fontsize = 10)
-    ax0.grid()
-    plt.show()
-
-
-
-
-
-
-#************************#****************************************************\
     fig=plt.figure(figsize=(8, 6))
     ax0=fig.add_subplot(111)
 
     ax0.plot(MG_mac[5,:],pres_ei,'-o', label='MAC')
     ax0.plot(MG_era[5,:],pres_ei,'-or', label='ERA-i')
     ax0.set_ylim(1050,600)
-    ax0.set_yticks(np.linspace(100, 1000, 10))
+    ax0.set_yticks(np.linspace(600, 1000, 10))
     ax0.set_xlim(z_min2[m],z_max2[m])
     ax0.set_ylabel('Pressure (hPa)',fontsize = 10)
     ax0.set_xlabel(name_var_all[m] + ' ('+ units_var[m] +')',fontsize = 10)
@@ -919,7 +1049,7 @@ for m in range(0,1):
     ax1.plot(MG_mac[15,:],pres_ei,'-o', label='MAC')
     ax1.plot(MG_era[15,:],pres_ei,'-or', label='ERA-i')
     ax1.set_ylim(1050,600)
-    ax1.set_yticks(np.linspace(100, 1000, 10))
+    ax1.set_yticks(np.linspace(600, 1000, 10))
     ax1.set_xlim(z_min2[m],z_max2[m])
     ax1.set_ylabel('Pressure (hPa)',fontsize = 10)
     ax1.set_xlabel(name_var_all[m] + ' ('+ units_var[m] +')',fontsize = 10)
@@ -1237,10 +1367,8 @@ for m in range(0,1):
 #*****************************************************************************\
 # Mask Method 1 (Huang et al. 2015)
 #*****************************************************************************\
-    fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
+    fig, ax = plt.subplots(facecolor='w', figsize=(9,6))
     # make a color map of fixed colors
-
-
     img = ax.pcolor(tmask,cmap=cmap)
 
     div = make_axes_locatable(ax)
@@ -1261,49 +1389,6 @@ for m in range(0,1):
     plt.savefig(path_data_save + name_var[m]+'_dif_M1.eps', format='eps', dpi=1200)
 
 #*****************************************************************************\
-# Mask Method 2 (Bootstrapping instead of a t-test)
-#*****************************************************************************\
-
-    fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-    img = ax.pcolor(tmask2,cmap=cmap)
-
-    div = make_axes_locatable(ax)
-    cax = div.append_axes("right", size="3%", pad=0.05)
-    cbar = plt.colorbar(img, cax=cax, format="%.0f",ticks=[0,1])
-    #cbar.ax.set_title('(%)', size=12)
-
-    ax.set_title(name_var_sim[m]+' significant differences (Means dif. is zero)', size=18)
-    ax.set_xticklabels(np.arange(-15,15,5))
-    #ax.set_yticklabels(xtick)
-    ax.set_ylabel('Altitude (m)', size=12)
-    ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-    ax.margins(0.05)
-    plt.tight_layout()
-    #plt.savefig(path_data_save + name_var[m]+'_dif_M2.eps', format='eps', dpi=1200)
-#*****************************************************************************\
-# Mask Method 3 (Bootstrapping t-test)
-#*****************************************************************************\
-
-    fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
-    img = ax.pcolor(tmask3,cmap=cmap)
-
-    div = make_axes_locatable(ax)
-    cax = div.append_axes("right", size="3%", pad=0.05)
-    cbar = plt.colorbar(img, cax=cax, format="%.0f",ticks=[0,1])
-    #cbar.ax.set_title('(%)', size=12)
-
-    ax.set_title(name_var_sim[m]+' significant differences (T-test)', size=18)
-    ax.set_xticklabels(np.arange(-15,15,5), size=12)
-    #ax.set_yticklabels(xtick)
-    ax.set_ylabel('Altitude (m)', size=18)
-    ax.set_xlabel('Position across cold front from cold to warm sector (deg)', size=18)
-
-    ax.margins(0.05)
-    plt.tight_layout()
-    #plt.savefig(path_data_save + name_var[m]+'_dif_M3.eps', format='eps', dpi=1200)
-
-#*****************************************************************************\
 #*****************************************************************************\
 # Statistically significant differences
 #*****************************************************************************\
@@ -1311,7 +1396,7 @@ for m in range(0,1):
     z = MG_ssd[:-1, :-1]
     #z_mini, z_maxi = np.rint(-np.abs(z).max()), np.rint(np.abs(z).max())
     z_mini, z_maxi = -np.abs(z).max(), np.abs(z).max()
-    fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
+    fig, ax = plt.subplots(facecolor='w', figsize=(9,6))
 
     cmap = plt.get_cmap('RdBu', 21) # X discrete colors
     img = ax.pcolor(MG_ssd,cmap=cmap, vmin=z_mini, vmax=z_maxi)
@@ -1323,10 +1408,12 @@ for m in range(0,1):
     cbar.ax.set_title('  '+units_var[m], size=10)
     #ax.set_axis_bgcolor("#bdb76b")
     cbar.ax.tick_params(labelsize=10)
+
+
     ax.set_title(name_var_all[m]+' Differences (MAC minus ERA-i)', size=12)
-    ax.set_xticklabels(np.arange(-15,15,5), size=10)
+    ax.set_xticklabels(np.arange(-15,15,5), size=12)
     ax.set_yticks(np.arange(0,21,4))
-    ax.set_yticklabels(np.arange(0,6000,1000), size=10)
+    ax.set_yticklabels(np.arange(0,6000,1000), size=12)
     ax.set_ylabel('Altitude (m)', size=12)
     ax.set_xlabel('Distance to front: cold to warm sector (deg)', size=12)
 
@@ -1337,32 +1424,44 @@ for m in range(0,1):
 
     print name_var_all[m], np.nanmax(MG_ssd),np.nanmin(MG_ssd)
 
+    print np.mean(MG_ssd)
+
 #*****************************************************************************\
 #*****************************************************************************\
 # Profiles
 #*****************************************************************************\
 #*****************************************************************************\
 
-
-    #z_min=0
-    #z_max=100
-    fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
+    fig, ax = plt.subplots(facecolor='w', figsize=(9,6))
     img = ax.pcolor(MG_mac,cmap='jet', vmin=z_min[m], vmax=z_max[m])
 
     div = make_axes_locatable(ax)
-    cax = div.append_axes("right", size="6%", pad=0.05)
-    cbar = plt.colorbar(img, cax=cax, format=formati[m])
-    cbar.ax.set_title('  '+units_var[m], size=10)
-    cbar.ax.tick_params(labelsize=10)
-    ax.set_title(name_var_all[m]+' (MAC)', size=12)
-    ax.set_xticklabels(np.arange(-15,15,5), size=10)
+    cax = div.append_axes("bottom", size="5%", pad=0.5)
+    cbar = plt.colorbar(img, cax=cax, format=formati[m], orientation='horizontal')
+    cbar.set_label(units_var[m], size=12)
+
+    # div = make_axes_locatable(ax)
+    # cax = div.append_axes("right", size="6%", pad=0.05)
+    # cbar = plt.colorbar(img, cax=cax, format=formati[m])
+    # cbar.ax.set_title('  '+units_var[m], size=10)
+
+
+    # cbar.ax.tick_params(labelsize=10)
+
+
+
+    ax.set_title(name_var_all[m]+' - MAC', size=12)
+    ax.set_xticklabels(np.arange(-15,15,5), size=12)
     ax.set_yticks(np.arange(0,21,4))
-    ax.set_yticklabels(np.arange(0,6000,1000), size=10)
+    ax.set_yticklabels(np.arange(0,6000,1000), size=12)
     ax.set_ylabel('Altitude (m)', size=12)
     ax.set_xlabel('Distance to front: cold to warm sector (deg)', size=12)
     ax.axvline(10,color='white')
     ax.margins(0.05)
     plt.tight_layout()
+
+    ax.errorbar(np.arange(0.5,20,1), NewValue_mac, yerr=NewValue_mac_std, fmt='-ow',label='Main Inv.',markeredgecolor='none')
+    #ax.legend(loc=1, numpoints=1)
 
 
     plt.savefig(path_data_save + name_var[m]+'_MAC.eps', format='eps', dpi=1200)
@@ -1371,15 +1470,22 @@ for m in range(0,1):
 #*****************************************************************************\
 
 
-    fig, ax = plt.subplots(facecolor='w', figsize=(12,6))
+    fig, ax = plt.subplots(facecolor='w', figsize=(9,6))
     img = ax.pcolor(MG_era,cmap='jet', vmin=z_min[m], vmax=z_max[m])
 
+    # div = make_axes_locatable(ax)
+    # cax = div.append_axes("right", size="6%", pad=0.05)
+    # cbar = plt.colorbar(img, cax=cax, format=formati[m])
+    # cbar.ax.set_title('  '+units_var[m], size=10)
+    # cbar.ax.tick_params(labelsize=10)
+
+
     div = make_axes_locatable(ax)
-    cax = div.append_axes("right", size="6%", pad=0.05)
-    cbar = plt.colorbar(img, cax=cax, format=formati[m])
-    cbar.ax.set_title('  '+units_var[m], size=10)
-    cbar.ax.tick_params(labelsize=10)
-    ax.set_title(name_var_all[m]+' (ERA-i)', size=12)
+    cax = div.append_axes("bottom", size="5%", pad=0.5)
+    cbar = plt.colorbar(img, cax=cax, format=formati[m], orientation='horizontal')
+    cbar.set_label(units_var[m], size=12)
+
+    ax.set_title(name_var_all[m]+' - ERA-i', size=12)
     ax.set_xticklabels(np.arange(-15,15,5), size=10)
     ax.set_yticks(np.arange(0,21,4))
     ax.set_yticklabels(np.arange(0,6000,1000), size=10)
@@ -1388,9 +1494,588 @@ for m in range(0,1):
     ax.axvline(10,color='white')
     ax.margins(0.05)
 
+
+    #ax.plot(np.arange(0.5,20,1), NewValue_era,'-ow', label='ERA-i')
+    ax.errorbar(np.arange(0.5,20,1), NewValue_era, yerr=NewValue_era_std*1.2, fmt='-ow',label='Main Inv.',markeredgecolor='none')
+    #ax.legend(loc=1, numpoints=1)
+
     plt.tight_layout()
     plt.savefig(path_data_save + name_var[m]+'_ERA.eps', format='eps', dpi=1200)
     print 'ERA-i', np.nanmax(MG_era),np.nanmin(MG_era)
     #plt.show()
 
     #plt.close()
+
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#                           Relative Humidity
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+for m in range(0,1):
+#*****************************************************************************\
+# Means Complete Period MAC
+#*****************************************************************************\
+    df=df_meifro
+    bins=np.arange(-10,11,1)
+
+    df['catdist_fron'] = pd.cut(df['Dist CFront'], bins, labels=bins[0:-1])
+    ncount=pd.value_counts(df['catdist_fron'])
+
+    MG_mac=np.empty([len(ncount),len(pres_ei)])*np.nan
+    RH=np.empty([max(ncount),len(pres_ei)])*np.nan
+    #MIH=np.empty([max(ncount),len(ncount)])*np.nan
+    #MIH_mac=np.empty([len(ncount)])*np.nan
+
+    k1=0
+    k2=0
+
+    for j in range(-10,10):
+
+        for i in range(0, len(df)):
+            if df['catdist_fron'][i]==j:
+                RH[k2,:]=np.array(df_meifro[name_var[m]][i])
+                #MIH[k2,j]=np.array(df_meifro['MI Hght'][i])
+                k2=k2+1
+            MG_mac[k1,:]=np.nanmean(RH, axis=0)
+
+        k1=k1+1
+        k2=0
+
+    # MIH_mac=np.nanmean(MIH, axis=0)
+    # MIH_mac=MIH_mac[::-1]
+#*****************************************************************************\
+# Means Complete Period ERA-i
+#*****************************************************************************\
+
+    df=df_eraifro
+
+    df['catdist_fron'] = pd.cut(df['Dist CFront'], bins, labels=bins[0:-1])
+    ncount=pd.value_counts(df['catdist_fron'])
+
+    MG_era=np.empty([len(ncount),len(pres_ei)])*np.nan
+    RH=np.empty([max(ncount),len(pres_ei)])*np.nan
+    #MIH=np.empty([max(ncount),len(ncount)])*np.nan
+
+    k1=0
+    k2=0
+
+    for j in range(-10,10):
+
+        for i in range(0, len(df)):
+            if df['catdist_fron'][i]==j:
+                RH[k2,:]=np.array(df_eraifro[name_var[m]][i])
+                #MIH[k2,j]=np.array(df_eraifro['MI Hght'][i])
+                k2=k2+1
+            MG_era[k1,:]=np.nanmean(RH, axis=0)
+        k1=k1+1
+        k2=0
+    #MIH_era=np.nanmean(MIH, axis=0)
+    #MIH_era=MIH_era[::-1]
+#*****************************************************************************\
+# Plot
+#************************#****************************************************\
+
+    fig=plt.figure(figsize=(8, 6))
+    ax0=fig.add_subplot(111)
+
+    ax0.plot(MG_mac[5,:],pres_ei,'-o', label='MAC')
+    ax0.plot(MG_era[5,:],pres_ei,'-or', label='ERA-i')
+    ax0.set_ylim(1050,600)
+    ax0.set_yticks(np.linspace(600, 1000, 10))
+    ax0.set_xlim(z_min2[m],z_max2[m])
+    ax0.set_ylabel('Pressure (hPa)',fontsize = 10)
+    ax0.set_xlabel(name_var_all[m] + ' ('+ units_var[m] +')',fontsize = 10)
+    ax0.legend(loc=3,fontsize = 10)
+    ax0.set_title('Prefront - ' +name_var_all[m] , size=12)
+    ax0.grid()
+
+    plt.savefig(path_data_save + name_var[m]+'_prof_pre.eps', format='eps', dpi=1200)
+    print name_var_all[m], np.nanmin(MG_mac[5,:]),np.nanmax(MG_mac[5,:])
+    print name_var_all[m], np.nanmin(MG_era[5,:]),np.nanmax(MG_era[5,:])
+#*****************************************************************************\
+    fig=plt.figure(figsize=(8, 6))
+    ax1=fig.add_subplot(111)
+
+    ax1.plot(MG_mac[15,:],pres_ei,'-o', label='MAC')
+    ax1.plot(MG_era[15,:],pres_ei,'-or', label='ERA-i')
+    ax1.set_ylim(1050,600)
+    ax1.set_yticks(np.linspace(600, 1000, 10))
+    ax1.set_xlim(z_min2[m],z_max2[m])
+    ax1.set_ylabel('Pressure (hPa)',fontsize = 10)
+    ax1.set_xlabel(name_var_all[m] + ' ('+ units_var[m] +')',fontsize = 10)
+    ax1.legend(loc=3,fontsize = 10)
+    ax1.set_title('Postfront - ' + name_var_all[m] , size=12)
+    ax1.grid()
+
+    plt.savefig(path_data_save + name_var[m]+'_prof_post.eps', format='eps', dpi=1200)
+
+    print name_var_all[m], np.nanmin(MG_mac[15,:]),np.nanmax(MG_mac[15,:])
+    print name_var_all[m], np.nanmin(MG_era[15,:]),np.nanmax(MG_era[15,:])
+#*****************************************************************************\
+#Both
+#*****************************************************************************\
+    dfc=df_macerafro
+    bins=np.arange(-10,11,1)
+
+    dfc=dfc[np.isfinite((dfc['Clas MAC']))]
+    dfc['catdist_fron'] = pd.cut(dfc['Dist CFront'], bins, labels=bins[0:-1])
+    ncount=pd.value_counts(dfc['catdist_fron'])
+
+#*****************************************************************************\
+#*****************************************************************************\
+# Generating 3D arrays (Crea un arreglo 3D con los valores de cada pixel para cada distancia)
+#*****************************************************************************\
+#*****************************************************************************\
+
+    df=dfc
+    RHmac=np.empty([max(ncount),len(pres_ei),len(ncount)])*np.nan
+    RHera=np.empty([max(ncount),len(pres_ei),len(ncount)])*np.nan
+    RHD=np.empty([max(ncount),len(pres_ei),len(ncount)])*np.nan
+
+    k1=0
+    for j in range(-10,10):
+        for i in range(0, len(df)):
+            if df['catdist_fron'][i]==j:
+                RHmac[k1,:,j]=np.array(df[name_var_mac[m]][i]) #(max(ncount),37,20)
+                RHera[k1,:,j]=np.array(df[name_var_era[m]][i])
+                RHD[k1,:,j]=np.array(df[name_var_mac[m]][i])-np.array(df[name_var_era[m]][i])
+                k1=k1+1
+
+        k1=0
+
+    # plot(RHmac[0,:,0],pres_ei,'-o')
+    # plot(RHera[0,:,0],pres_ei,'-or')
+    # show()
+
+    #Combination MAC and ERA to calculate Huang et al, 2015
+    RHmacera=np.concatenate([RHera,RHmac],axis=0)
+
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#                           Sampling Means
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+    max_lev=17
+    #Redefine los niveles hasta 5 km
+    RHmac=RHmac[:,0:max_lev,:]
+    RHera=RHera[:,0:max_lev,:]
+    RHmacera=RHmacera[:,0:max_lev,:]
+
+
+
+
+    width = 1
+    xx1=-10
+    xx2=10
+    bx=np.arange(xx1,xx2+1,5)
+#*****************************************************************************\
+    #Select random sample
+
+
+    n_mean=1000 #Number of means
+
+
+    MY=np.empty([n_mean,max_lev,len(ncount)])*np.nan
+
+    RHD_rd=np.empty([n_rd,max_lev,len(ncount)])*np.nan
+    RHD_rdmean=np.empty([n_mean,max_lev,len(ncount)])*np.nan
+
+    RD_meandif=np.empty([n_mean,max_lev,len(ncount)])*np.nan
+    #RD_rddif=np.empty([n_mean,max_lev,len(ncount)])*np.nan
+
+    RH_rdera=np.empty([n_rd,max_lev,len(ncount)])*np.nan
+    RH_rdmac=np.empty([n_rd,max_lev,len(ncount)])*np.nan
+    RD_meanera=np.empty([n_mean,max_lev,len(ncount)])*np.nan
+    RD_meanmac=np.empty([n_mean,max_lev,len(ncount)])*np.nan
+
+    RH_rdera_yi=np.empty([n_rdyi,max_lev,len(ncount)])*np.nan
+    RH_rdmac_yi=np.empty([n_rdyi,max_lev,len(ncount)])*np.nan
+    RD_meanera_yi=np.empty([n_mean,max_lev,len(ncount)])*np.nan
+    RD_meanmac_yi=np.empty([n_mean,max_lev,len(ncount)])*np.nan
+    RD_meandif_yi=np.empty([n_mean,max_lev,len(ncount)])*np.nan
+
+
+    for i in range(0,n_mean):
+        for dis in range(0,len(ncount)):
+            for lev in range(0,max_lev):
+
+                    RHD_rd[:,lev,dis]=rd.sample(RHD[~np.isnan(RHD[:,lev,dis]),lev,dis], n_rd)
+
+                    #Sample each one
+                    RH_rdera[:,lev,dis]=rd.sample(RHera[~np.isnan(RHera[:,lev,dis]),lev,dis], n_rd)
+                    RH_rdmac[:,lev,dis]=rd.sample(RHmac[~np.isnan(RHmac[:,lev,dis]),lev,dis], n_rd)
+
+
+                    #Yi's Method
+                    RH_rdmac_yi[:,lev,dis]=rd.sample(RHmacera[~np.isnan(RHmacera[:,lev,dis]),lev,dis], n_rdyi)
+                    RH_rdera_yi[:,lev,dis]=rd.sample(RHmacera[~np.isnan(RHmacera[:,lev,dis]),lev,dis], n_rdyi)
+
+                    MY[i,lev,dis]=np.mean(RH_rdmac_yi[:,lev,dis])-np.mean(RH_rdera_yi[:,lev,dis])
+
+
+        RHD_rdmean[i,:,:]=np.nanmean(RHD_rd,axis=0) #Random means
+        #Sample Dif
+        RD_meandif[i,:,:]=np.nanmean(RH_rdmac,axis=0)-np.nanmean(RH_rdera,axis=0) #Random means both
+
+        #RHD_rdmean[i,:,:]=np.nanmean(RH_rd,axis=0) #Random means
+        RD_meanmac[i,:,:]=np.nanmean(RH_rdmac,axis=0) #Random means MAC
+        RD_meanera[i,:,:]=np.nanmean(RH_rdera,axis=0) #Random means ERA
+
+        #Yi's Method
+        RD_meanera_yi[i,:,:]=np.nanmean(RH_rdera_yi,axis=0) #Random means ERA
+        RD_meanmac_yi[i,:,:]=np.nanmean(RH_rdmac_yi,axis=0) #Random means MAC
+        #(1000,17,20)
+
+        #Sample Dif
+        RD_meandif_yi[i,:,:]=np.nanmean(RH_rdmac_yi,axis=0)-np.nanmean(RH_rdera_yi,axis=0) #Random means both
+
+        #print i, RD_meandif_yi[i,0,0], MY[i,0,0]
+
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+# Rescale Matrix
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+    MG_mac=MG_mac[:,0:max_lev].T
+    MG_era=MG_era[:,0:max_lev].T
+
+    _,ndeg=MG_mac.shape #(17,20)
+    hght_int=hght_ei[0:max_lev]
+    hght_new=np.arange(250,5250,250) #(23,)
+
+    MG_intmac=np.empty([len(hght_new),ndeg])*np.nan
+    MG_intera=np.empty([len(hght_new),ndeg])*np.nan
+
+
+    for i in range(0,ndeg):
+        MG_interp_pres_mac=si.UnivariateSpline(hght_int,MG_mac[:,i],k=5)
+        MG_interp_pres_era=si.UnivariateSpline(hght_int,MG_era[:,i],k=5)
+
+        for ind in range(0,len(hght_new)):
+            MG_intmac[ind,i]= MG_interp_pres_mac(hght_new[ind])
+            MG_intera[ind,i]= MG_interp_pres_era(hght_new[ind])
+
+    MG_mac=MG_intmac
+    MG_era=MG_intera
+#*****************************************************************************\
+
+    MG_int_meandif_yi=np.empty([n_mean,len(hght_new),ndeg])*np.nan
+    #
+    for i in range(0,n_mean):
+        for j in range(0,ndeg):
+            MG_int_meandif_yi_hght=si.UnivariateSpline(hght_int,RD_meandif_yi[i,:,j],k=5)
+
+
+            for ind in range(0,len(hght_new)):
+                MG_int_meandif_yi[i,ind,j]= MG_int_meandif_yi_hght(hght_new[ind])
+
+    RD_meandif_yi=MG_int_meandif_yi
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#               Difference statistically significant
+#*****************************************************************************\
+#*****************************************************************************\
+    # Differences general means
+    MG_meandif=MG_mac-MG_era
+    #MG_meandif=MG_meandif[:,0:max_lev].T
+
+
+#*****************************************************************************\
+# Method 1 (Bootstrapping Yi) (Huang et al., 2014)
+#*****************************************************************************\
+
+    tmask=np.empty([len(hght_new),len(ncount)])*np.nan
+
+    for lev in range(0,len(hght_new)):
+        for dis in range(0,len(ncount)):
+            Xo=MG_meandif[lev,dis] #Media del total
+            # x=RD_meanmac_yi[:,lev,dis]-RD_meanera_yi[:,lev,dis]
+
+            # x_mean=np.nanmean(RD_meanmac_yi[:,lev,dis]-RD_meanera_yi[:,lev,dis])
+            # x_std=np.nanstd(RD_meanmac_yi[:,lev,dis]-RD_meanmac_yi[:,lev,dis])
+
+            x=RD_meandif_yi[:,lev,dis]
+            x_mean=np.nanmean(x)
+            x_std=np.nanstd(x)
+
+            CI= sp.stats.norm.interval(0.95,loc=x_mean,scale=x_std)
+            CI2= sp.stats.norm.interval(0.95,loc=x_mean,scale=x_std)
+
+            if CI[0]<= Xo <= CI[1]:
+                tmask[lev,dis]=True #1 se cumple la Ho, no son estadisticamente dif.
+            else:
+                tmask[lev,dis]=False
+
+
+
+
+#*****************************************************************************\
+# Method 2 (Bootstrapping instead of a t-test)
+#*****************************************************************************\
+    tmask2=np.empty([max_lev,len(ncount)])*np.nan
+
+    for lev in range(0,max_lev):
+        for dis in range(0,len(ncount)):
+            # x=RD_meandif[:,lev,dis]
+
+            # x_mean=np.nanmean(RD_meandif[:,lev,dis])
+            # x_std=np.nanstd(RD_meandif[:,lev,dis])
+
+            x=RHD_rdmean[:,lev,dis]
+            x_mean=np.nanmean(RHD_rdmean[:,lev,dis])
+            x_std=np.nanstd(RHD_rdmean[:,lev,dis])
+
+            CI= sp.stats.norm.interval(0.95,loc=x_mean,scale=x_std)
+
+            if CI[0]<= 0 <= CI[1]:
+                tmask2[lev,dis]=True #1 se cumple la Ho, no son estadisticamente dif.
+            else:
+                tmask2[lev,dis]=False
+
+
+#*****************************************************************************\
+# Method 3  (Bootstrapping t-test)
+#*****************************************************************************\
+    tmask3=np.empty([max_lev,len(ncount)])*np.nan
+    from scipy.stats import ttest_ind, ttest_rel
+
+    for lev in range(0,max_lev):
+        for dis in range(0,len(ncount)):
+            a=RD_meanmac[:,lev,dis]
+            b=RD_meanera[:,lev,dis]
+
+            t, p = ttest_ind(a,b, equal_var=True)
+
+            #print("ttest_ind:            t = %g  p = %g" % (t, p))
+
+            if p>=0.05:
+            #if t<p:
+                tmask3[lev,dis]=True
+            else:
+                tmask3[lev,dis]=False
+#*****************************************************************************\
+    # MG_mac=MG_mac[:,0:max_lev].T
+    # MG_era=MG_era[:,0:max_lev].T
+
+    tmask=tmask[...,::-1]
+    tmask2=tmask2[...,::-1]
+    tmask3=tmask3[...,::-1]
+    MG_mac=MG_mac[...,::-1]
+    MG_era=MG_era[...,::-1]
+
+    tmask[0,:]=True
+
+    import numpy.ma as ma
+    MG_ssd=ma.masked_array((MG_mac-MG_era),mask=tmask)
+
+
+#*****************************************************************************\
+#*****************************************************************************\
+#                               Plots
+#*****************************************************************************\
+#*****************************************************************************\
+# Distributions
+#*****************************************************************************\
+    #Level 16 is 5500 mts.
+
+    #Example
+    i=16
+    j=4
+
+    Xo=MG_meandif[i,j]
+    x=RD_meandif_yi[:,i,j]
+    x_mean=np.nanmean(x)
+    x_std=np.nanstd(x)
+    CI= sp.stats.norm.interval(0.95,loc=x_mean,scale=x_std)
+
+    mu, sigma = x_mean, x_std
+    n, bins, patches =plt.hist(x, 50, normed=1,facecolor='green', alpha=0.75)
+    y = mlab.normpdf( bins, mu, sigma)
+    l = plt.plot(bins, y, 'r--', linewidth=1)
+
+    plt.axvline(np.mean(x), color='r', linewidth=2)
+    plt.axvline(CI[0], color='b', linewidth=2)
+    plt.axvline(CI[1], color='b', linewidth=2)
+    plt.axvline(Xo, color='k', linewidth=4)
+
+    plt.xlabel('Differences between means')
+    plt.ylabel('Probability')
+    #plt.title(r'$\mathrm{Histogram}\ \mu=0,\ \sigma=1$')
+    #plt.axis([40, 160, 0, 0.03])
+    plt.grid(True)
+    #plt.show()
+#*****************************************************************************\
+#*****************************************************************************\
+# Methods
+#*****************************************************************************\
+#*****************************************************************************\
+    from matplotlib import colors
+    #xtick=[hght_new[0],hght_new[4],hght_new[8],hght_new[12],hght_new[16],hght_new[20],hght_new[22],6000]
+    cmap = plt.get_cmap('bwr', 2)
+
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+# Profiles
+#*****************************************************************************\
+#*****************************************************************************\
+
+    fig = plt.figure(facecolor='w', figsize=(9,9))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[2,1])
+
+    ax0=fig.add_subplot(gs[0])
+    img = ax0.pcolor(MG_mac,cmap='jet', vmin=z_min[m], vmax=z_max[m])
+
+    div = make_axes_locatable(ax0)
+    cax = div.append_axes("bottom", size="5%", pad=0.05)
+    cbar = plt.colorbar(img, cax=cax, format=formati[m], orientation='horizontal')
+    cbar.set_label(units_var[m], size=12)
+
+    # div = make_axes_locatable(ax)
+    # cax = div.append_axes("right", size="6%", pad=0.05)
+    # cbar = plt.colorbar(img, cax=cax, format=formati[m])
+    # cbar.ax.set_title('  '+units_var[m], size=10)
+
+
+    # cbar.ax.tick_params(labelsize=10)
+
+
+
+    ax0.set_title(name_var_all[m]+' - MAC', size=12)
+    ax0.set_xticklabels(np.arange(-15,15,5), size=12)
+    ax0.set_yticks(np.arange(0,21,4))
+    ax0.set_yticklabels(np.arange(0,6000,1000), size=12)
+    ax0.set_ylabel('Altitude (m)', size=12)
+    #ax0.set_xlabel('Distance to front: cold to warm sector (deg)', size=12)
+    ax0.axvline(10,color='white')
+    ax0.margins(0.05)
+    plt.tight_layout()
+
+    ax0.errorbar(np.arange(0.5,20,1), NewValue_mac, yerr=NewValue_mac_std, fmt='-ow',label='Main Inv.',markeredgecolor='none')
+    #ax0.legend(loc=1, numpoints=1)
+
+
+    #plt.savefig(path_data_save + name_var[m]+'_MAC.eps', format='eps', dpi=1200)
+
+    print 'MAC', np.nanmax(MG_mac),np.nanmin(MG_mac)
+
+
+#*****************************************************************************\
+    #Histogram
+#*****************************************************************************\
+    df=df_meifro[np.isfinite(df_meifro['Clas'])]
+
+    #df['catdist_fron'] = pd.cut(df['Dist CFront'], bins, labels=bins[0:-1])
+    ncount_mac=pd.value_counts(df['catdist_fron']).sort_index()
+
+    y=np.array(ncount_mac)
+    x=np.array(ncount_mac.index.tolist())
+    x=x[::-1]
+    ax1=fig.add_subplot(gs[1])
+
+    ax1.bar(x,y,width)
+
+    ax1.tick_params(axis='both', which='major', labelsize=12)
+    ax1.set_xticks(bx)
+    ax1.set_ylim([0, 200])
+    ax1.set_yticklabels(np.arange(0,250,50), size=12)
+    ax1.axvline(0, color='k')
+    ax1.set_ylabel('Occurrences',fontsize = 12)
+    ax1.set_xlabel('Distance to front: cold to warm sector (deg)', size=12)
+    ax1.grid()
+    ax1.margins(0.03)
+    plt.tight_layout()
+    plt.savefig(path_data_save + name_var[m]+'_MAC2.eps', format='eps', dpi=1200)
+
+    #plt.show()
+
+
+
+
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+#*****************************************************************************\
+
+
+
+    fig = plt.figure(facecolor='w', figsize=(9,9))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[2,1])
+
+    ax0=fig.add_subplot(gs[0])
+    img = ax0.pcolor(MG_era,cmap='jet', vmin=z_min[m], vmax=z_max[m])
+
+    div = make_axes_locatable(ax0)
+    cax = div.append_axes("bottom", size="5%", pad=0.05)
+    cbar = plt.colorbar(img, cax=cax, format=formati[m], orientation='horizontal')
+    cbar.set_label(units_var[m], size=12)
+
+    ax0.set_title(name_var_all[m]+' - ERA-i', size=12)
+    ax0.set_xticklabels(np.arange(-15,15,5), size=12)
+    ax0.set_yticks(np.arange(0,21,4))
+    ax0.set_yticklabels(np.arange(0,6000,1000), size=12)
+    ax0.set_ylabel('Altitude (m)', size=12)
+    #ax.set_xlabel('Distance to front: cold to warm sector (deg)', size=12)
+    ax0.axvline(10,color='white')
+    ax0.margins(0.05)
+
+
+    #ax.plot(np.arange(0.5,20,1), NewValue_era,'-ow', label='ERA-i')
+    ax0.errorbar(np.arange(0.5,20,1), NewValue_era, yerr=NewValue_era_std*1.2, fmt='-ow',label='Main Inv.',markeredgecolor='none')
+    #ax.legend(loc=1, numpoints=1)
+
+    plt.tight_layout()
+
+    print 'ERA-i', np.nanmax(MG_era),np.nanmin(MG_era)
+
+#*****************************************************************************\
+    #Histogram
+#*****************************************************************************\
+
+    df=df_eraifro[np.isfinite(df_eraifro['Clas'])]
+
+    #df['catdist_fron'] = pd.cut(df['Dist CFront'], bins, labels=bins[0:-1])
+    # ncount=pd.value_counts(df['catdist_fron'])
+    ncount_era=pd.value_counts(df['catdist_fron']).sort_index()
+
+    y=np.array(ncount_era)
+    x=np.array(ncount_era.index.tolist())
+    x=x[::-1]
+    ax1=fig.add_subplot(gs[1])
+
+    ax1.bar(x,y,width)
+
+    ax1.tick_params(axis='both', which='major', labelsize=12)
+    ax1.set_xticks(bx)
+    ax1.set_ylim([0, 200])
+    ax1.set_yticklabels(np.arange(0,250,50), size=12)
+    ax1.axvline(0, color='k')
+    ax1.set_ylabel('Occurrences',fontsize = 12)
+    ax1.set_xlabel('Distance to front: cold to warm sector (deg)', size=12)
+    ax1.grid()
+    ax1.margins(0.03)
+    plt.tight_layout()
+    plt.savefig(path_data_save + name_var[m]+'_ERA2.eps', format='eps', dpi=1200)

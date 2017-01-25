@@ -149,7 +149,7 @@ for ind,line in enumerate(hlev_yotc):
         twenty_y_index=ind
         break
 for ind,line in enumerate(hlev_yotc):
-    if line>=5000:
+    if line>=2500:
         twoky=ind
         break
 
@@ -309,7 +309,7 @@ timesd=np.delete(timesd, indexdel1)
 
 #Delete when max height is lower than 2500 mts
 for j in range(0,ni[2]):
-    if np.nanmax(bom[:,1,j])<5000:
+    if np.nanmax(bom[:,1,j])<2500:
         indexdel2=np.append(indexdel2,j)
 
 bom=np.delete(bom, indexdel2,axis=2) #(3000,8,3545)
@@ -453,7 +453,7 @@ for j in range(0,ni[2]):
             twenty_m_index=np.append(twenty_m_index,z)
             break
     for z,line in enumerate(hght[:,j]):
-        if line>=5000:
+        if line>=2500:
             twokm=np.append(twokm,z)
             break
 
@@ -765,7 +765,7 @@ for ind,line in enumerate(hlev_yotc):
         twenty_my_index=ind
         break
 for ind,line in enumerate(hlev_yotc):
-    if line>=5000:
+    if line>=2500:
         twokmy=ind
         break
 
@@ -950,13 +950,23 @@ df_macyotc_final.index.name = 'Date'
 # df_mac_final.to_csv(path_data_save + 'df_mac_20062010.csv', sep='\t', encoding='utf-8')
 # df_macyotc_final.to_csv(path_data_save + 'df_macyotc_20062010.csv', sep='\t', encoding='utf-8')
 
+# #*****************************************************************************\
+# #*****************************************************************************\
+# #Saving CSV
+# path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/MCR/'
+
+# df_yotc.to_csv(path_data_save + 'df_era_20082010_5k_2.csv', sep='\t', encoding='utf-8')
+# df_yotc_all.to_csv(path_data_save + 'df_era_19952010_5k_2.csv', sep='\t', encoding='utf-8')
+# df_mac_final.to_csv(path_data_save + 'df_mac_19952010_5k_2.csv', sep='\t', encoding='utf-8')
+# df_macyotc_final.to_csv(path_data_save + 'df_macera_19952010_5k_2.csv', sep='\t', encoding='utf-8')
+
 #*****************************************************************************\
 #*****************************************************************************\
 #Saving CSV
 path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/00 CSV/MCR/'
 
-df_yotc.to_csv(path_data_save + 'df_era_20082010_5k_2.csv', sep='\t', encoding='utf-8')
-df_yotc_all.to_csv(path_data_save + 'df_era_19952010_5k_2.csv', sep='\t', encoding='utf-8')
-df_mac_final.to_csv(path_data_save + 'df_mac_19952010_5k_2.csv', sep='\t', encoding='utf-8')
-df_macyotc_final.to_csv(path_data_save + 'df_macera_19952010_5k_2.csv', sep='\t', encoding='utf-8')
+df_yotc.to_csv(path_data_save + 'df_era_20082010.csv', sep='\t', encoding='utf-8')
+df_yotc_all.to_csv(path_data_save + 'df_era_19952010.csv', sep='\t', encoding='utf-8')
+df_mac_final.to_csv(path_data_save + 'df_mac_19952010.csv', sep='\t', encoding='utf-8')
+df_macyotc_final.to_csv(path_data_save + 'df_macera_19952010.csv', sep='\t', encoding='utf-8')
 

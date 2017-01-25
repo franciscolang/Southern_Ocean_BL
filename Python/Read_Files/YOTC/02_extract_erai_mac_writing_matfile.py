@@ -13,10 +13,11 @@ from Scientific.IO.NetCDF import NetCDFFile
 
 base_dir = os.path.expanduser('~')
 path_data_save=base_dir+'/Dropbox/Monash_Uni/SO/MAC/Data/ERAI/'
-path_data='/media/flang/Fco Lang T1/ERA-I/'
+#path_data='/media/flang/Fco Lang T1/ERA-I/'
+path_data='/home/flang/fcolang/2010/'
 mac = {'name': 'Macquarie Island, Australia', 'lat': -54.62, 'lon': 158.85}
 
-for Y in range(1996,1997):
+for Y in range(2010,2011):
 
     file = Dataset(path_data+ str(Y) +'/T_' +str(Y)+ '_'+str(1).zfill(2)+'.nc', 'r')
 
@@ -50,7 +51,7 @@ for Y in range(1996,1997):
     print temp.shape, q.shape, 1
     print '----------------------'
 
-    for m in range(2,3):
+    for m in range(2,13):
 
 #******************************************************************************
 #Temperature
@@ -128,7 +129,7 @@ for Y in range(1996,1997):
         rh1 = file.variables['R_GDS0_ISBL'][:,:,lat_idx ,lon_idx]
         rh_name = file.variables['R_GDS0_ISBL'].long_name
         rh_units = file.variables['R_GDS0_ISBL'].units
-        print rh_name, rh_units
+        print rh_name, rh_units, rh1.shape
         file.close
 
 #******************************************************************************
@@ -167,7 +168,7 @@ for Y in range(1996,1997):
 #*****************************************************************************\******************************************************************************
 #Write mat-file MAC
 
- #   sio.savemat(path_data_save+ 'ERAImac_'+str(Y)+'.mat', {'time1':time1,'time2':time2,'temp':temp, 't_units':t_units,'u':u, 'u_units':u_units,'v':v, 'v_units':v_units,'rh':rh, 'rh_units':rh_units,'q':q, 'q_units':q_units,'levels':levels, 'lev_units':lev_units,'time1_units':time1_units,'time2_units':time2_units})
+    # sio.savemat(path_data_save+ 'ERAImac_'+str(Y)+'b.mat', {'time1':time1,'time2':time2,'temp':temp, 't_units':t_units,'u':u, 'u_units':u_units,'v':v, 'v_units':v_units,'rh':rh, 'rh_units':rh_units,'q':q, 'q_units':q_units,'levels':levels, 'lev_units':lev_units,'time1_units':time1_units,'time2_units':time2_units})
 
-    print Y
-    print '*************************************************'
+    #print Y
+    #print '*************************************************'
